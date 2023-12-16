@@ -23,3 +23,6 @@ Cargo.lock
 *.iws
 *.iml
 *.ipr
+
+## Visual Studio Code ###
+.vscode
