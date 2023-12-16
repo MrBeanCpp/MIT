@@ -17,3 +17,9 @@ Cargo.lock
 # Added by cargo
 
 /target
+
+## IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
