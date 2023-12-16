@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 type Index = HashMap<String, bool>;
+mod cli;
 fn main() {
-    println!("Hello, world!");
+    cli::handle_command();
 }
