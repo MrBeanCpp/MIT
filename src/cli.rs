@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use mit::commands::init::init;
 
 /// Rust实现的简易版本的Git，用于学习Rust语言
 #[derive(Parser)]
@@ -42,7 +43,7 @@ pub fn handle_command() {
     let cli = Cli::parse();
     match cli.command {
         Command::Init => {
-            println!("init");
+            let _ = init();
         }
         Command::Add { files , all } => {
             if files.contains(&".".to_string()) || all {
