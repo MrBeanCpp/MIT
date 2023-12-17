@@ -43,3 +43,14 @@ fn set_dir_hidden(dir: &str) -> io::Result<()> {
 fn set_dir_hidden(dir: &str) -> io::Result<()> { //linux下以'.'开头就已经是隐藏文件(夹)了
     Ok(())
 }
+
+#[cfg(target_os = "macos")]
+fn set_dir_hidden(dir: &str) -> io::Result<()> {
+    use std::process::Command;
+    Command::new("chflags")
+        .arg("hidden")
+        .arg(dir)
+        .spawn()?
+        .wait()?;
+    Ok(())
+}
