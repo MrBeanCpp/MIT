@@ -1,5 +1,5 @@
 [package]
-name = "mini_git"
+name = "mit" # mini_git
 version = "0.1.0"
 edition = "2021"
 
