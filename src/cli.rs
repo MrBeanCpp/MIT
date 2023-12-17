@@ -17,6 +17,9 @@ enum Command {
     Add {
         /// 要添加的文件
         files: Vec<String>,
+
+        #[clap(short, long)]
+        all: bool,
     },
     /// 删除文件
     Rm {
@@ -41,8 +44,12 @@ pub fn handle_command() {
         Command::Init => {
             println!("init");
         }
-        Command::Add { files } => {
-            println!("add: {:?}", files);
+        Command::Add { files , all } => {
+            if files.contains(&".".to_string()) || all {
+                println!("add all files");
+            } else {
+                println!("add: {:?}, all:{:?}", files, all);
+            }
         }
         Command::Rm { files, cached } => {
             println!("rm: {:?}, cached= {}", files, cached);
