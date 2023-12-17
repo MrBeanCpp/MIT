@@ -39,18 +39,7 @@ fn set_dir_hidden(dir: &str) -> io::Result<()> {
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
-fn set_dir_hidden(dir: &str) -> io::Result<()> { //linux下以'.'开头就已经是隐藏文件(夹)了
-    Ok(())
-}
-
-#[cfg(target_os = "macos")]
-fn set_dir_hidden(dir: &str) -> io::Result<()> {
-    use std::process::Command;
-    Command::new("chflags")
-        .arg("hidden")
-        .arg(dir)
-        .spawn()?
-        .wait()?;
+#[cfg( not(target_os = "windows"))]
+fn set_dir_hidden(dir: &str) -> io::Result<()> { //类unix系统下'.'开头就已经是隐藏文件(夹)了
     Ok(())
 }
