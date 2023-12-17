@@ -26,3 +26,9 @@ Cargo.lock
 
 ## Visual Studio Code ###
 .vscode
+
+## macos finder rubbish
+.DS_Store
+
+## for app test
+.mit
