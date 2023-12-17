@@ -1,0 +1,57 @@
+use super::utils::util;
+
+pub struct Store {
+    store_path: String,
+}
+
+impl Store {
+    pub fn new() -> Store {
+        if !util::storage_exist() {
+            panic!("不是合法的mit仓库");
+        }
+        let store_path = util::get_storage_path().unwrap();
+        Store {
+            store_path: store_path,
+        }
+    }
+    pub fn load(&self, hash: &String) -> String {
+        /* 读取文件内容 */
+        let mut path = self.store_path.clone();
+        path.push_str("/objects/");
+        path.push_str(hash);
+        match std::fs::read_to_string(path) {
+            Ok(content) => content,
+            Err(_) => panic!("储存库疑似损坏，无法读取文件"),
+        }
+    }
+    pub fn save(&self, content: &String) -> String {
+        /* 保存文件内容 */
+        let hash = util::calc_hash(content);
+        let mut path = self.store_path.clone();
+
+        path.push_str("/objects/");
+        path.push_str(&hash);
+        match std::fs::write(path, content) {
+            Ok(_) => hash,
+            Err(_) => panic!("储存库疑似损坏，无法写入文件"),
+        }
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let _ = Store::new();
+    }
+
+    #[test]
+    fn test_save_and_load() {
+        let store = Store::new();
+        let content = "hello world".to_string();
+        let hash = store.save(&content);
+        let content2 = store.load(&hash);
+        assert_eq!(content, content2, "内容不一致");
+    }
+}
