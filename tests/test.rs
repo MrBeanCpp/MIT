@@ -8,7 +8,7 @@ fn test_hash() {
     hasher.update(String::from("hello world"));
     let result = format!("{:x}", hasher.finalize());
     println!("{}", result);
-    println!("{}", mini_git::utils::util::calc_hash(&String::from("hello world")));
+    println!("{}", mit::utils::util::calc_hash(&String::from("hello world")));
 }
 
 #[test]
