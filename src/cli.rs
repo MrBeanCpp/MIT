@@ -9,18 +9,24 @@ struct Cli {
     #[clap(subcommand)]
     command: Command,
 }
-
+/// @see <a href="https://juejin.cn/post/7242623208825110586">Rust Clap库学习 - 掘金</a>
 #[derive(Subcommand)]
 enum Command {
     /// 初始化仓库
     Init,
     /// 添加文件到暂存区
+    /// @see <a href="https://juejin.cn/post/7053831273277554696">git add .，git add -A，git add -u，git add * 的区别与联系</a>
     Add {
         /// 要添加的文件
         files: Vec<String>,
 
-        #[clap(short, long)]
+        /// 将工作区中所有的文件改动提交至暂存区（包括新增、修改和删除）
+        #[clap(short = 'A', long)]
         all: bool,
+
+        /// 将工作区中已跟踪的文件(tracked)更新到暂存区（修改 & 删除）；But不包含新增
+        #[clap(short, long)]
+        update: bool,
     },
     /// 删除文件
     Rm {
@@ -45,7 +51,7 @@ pub fn handle_command() {
         Command::Init => {
             let _ = init();
         }
-        Command::Add { files , all } => {
+        Command::Add { files , all, update} => {
             if files.contains(&".".to_string()) || all {
                 println!("add all files");
             } else {

@@ -2,8 +2,8 @@ use std::{env, fs, io};
 
 /**
 初始化mit仓库 创建.mit/objects .mit/refs/heads .mit/HEAD
-并设置 .mit 为隐藏文件夹
-无法重复初始化
+<br>并设置 .mit 为隐藏文件夹
+<br>无法重复初始化
 */
 pub fn init() -> io::Result<()> {
     let dir = env::current_dir()?;
