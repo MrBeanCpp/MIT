@@ -34,6 +34,11 @@ pub fn get_storage_path() -> Result<String, std::io::Error> {
     }
 }
 
+pub fn format_time(time: &std::time::SystemTime) -> String {
+    let datetime: chrono::DateTime<chrono::Utc> = time.clone().into();
+    datetime.format("%Y-%m-%d %H:%M:%S.%3f").to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -48,5 +53,12 @@ mod tests {
                 _ => assert!(false, "Unexpected error"),
             },
         }
+    }
+
+    #[test]
+    fn test_format_time() {
+        let time = std::time::SystemTime::now();
+        let formatted_time = format_time(&time);
+        println!("{}", formatted_time);
     }
 }

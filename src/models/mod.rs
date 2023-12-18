@@ -1,4 +1,5 @@
 pub mod commit;
 pub mod blob;
 pub mod tree;
-mod object;
+pub mod object;
+pub mod index;

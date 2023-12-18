@@ -9,3 +9,4 @@ edition = "2021"
 sha1 = "0.10.6"
 hex = "0.4.3"
 clap = { version = "4.4.11", features = ["derive"] }
+chrono = "0.4.31"
