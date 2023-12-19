@@ -31,7 +31,7 @@ pub fn get_storage_path() -> Result<PathBuf, std::io::Error> {
     let mut current_dir = std::env::current_dir()?;
     loop {
         let mut git_path = current_dir.clone();
-        git_path.push(".mit");
+        git_path.push(ROOT_DIR);
         if git_path.exists() {
             return  Ok(git_path);
         }
