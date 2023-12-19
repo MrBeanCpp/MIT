@@ -27,7 +27,8 @@ impl Tree {
         Tree {
             hash: "".to_string(),
             entries: Vec::new(),
-        }
+        };
+        unimplemented!("Tree::new");
     }
 
     pub fn load(hash: &String) -> Tree {
