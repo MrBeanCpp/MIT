@@ -1,5 +1,5 @@
-use std::{env, fs, io};
 use crate::utils::util::ROOT_DIR;
+use std::{env, fs, io};
 
 /**
 初始化mit仓库 创建.mit/objects .mit/refs/heads .mit/HEAD
@@ -14,10 +14,7 @@ pub fn init() -> io::Result<()> {
         return Ok(());
     }
 
-    let dirs = [
-        mit_dir.join("objects"),
-        mit_dir.join("refs/heads"),
-    ];
+    let dirs = [mit_dir.join("objects"), mit_dir.join("refs/heads")];
     // 创建 .git 目录和子目录
     for dir in &dirs {
         fs::create_dir_all(dir)?;
@@ -32,15 +29,13 @@ pub fn init() -> io::Result<()> {
 #[cfg(target_os = "windows")]
 fn set_dir_hidden(dir: &str) -> io::Result<()> {
     use std::process::Command;
-    Command::new("attrib")
-        .arg("+H")
-        .arg(dir)
-        .spawn()?
-        .wait()?; // 等待命令执行完成
+    Command::new("attrib").arg("+H").arg(dir).spawn()?.wait()?; // 等待命令执行完成
     Ok(())
 }
 
-#[cfg( not(target_os = "windows"))]
-fn set_dir_hidden(dir: &str) -> io::Result<()> { //类unix系统下'.'开头就已经是隐藏文件(夹)了
+#[cfg(not(target_os = "windows"))]
+fn set_dir_hidden(dir: &str) -> io::Result<()> {
+    //类unix系统下'.'开头就已经是隐藏文件(夹)了
+    let _ = dir;
     Ok(())
 }
