@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use mit::commands::add::add;
 use mit::commands::init::init;
 
 /// Rust实现的简易版本的Git，用于学习Rust语言
@@ -52,11 +53,7 @@ pub fn handle_command() {
             let _ = init();
         }
         Command::Add { files , all, update} => {
-            if files.contains(&".".to_string()) || all {
-                println!("add all files");
-            } else {
-                println!("add: {:?}, all:{:?}", files, all);
-            }
+            add(files, all, update);
         }
         Command::Rm { files, cached } => {
             println!("rm: {:?}, cached= {}", files, cached);

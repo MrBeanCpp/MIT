@@ -1,4 +1,8 @@
+use std::{fs, io};
+use std::path::{Path, PathBuf};
 use sha1::{Digest, Sha1};
+
+pub const ROOT_DIR: &str = ".mit";
 
 pub fn calc_hash(data: &String) -> String {
     let mut hasher = Sha1::new();
@@ -13,6 +17,12 @@ pub fn storage_exist() -> bool {
     match rt {
         Ok(_) => true,
         Err(_) => false,
+    }
+}
+
+pub fn check_repo_exist() {
+    if !storage_exist() {
+        panic!("不是合法的mit仓库");
     }
 }
 
@@ -34,9 +44,41 @@ pub fn get_storage_path() -> Result<String, std::io::Error> {
     }
 }
 
+/// 获取项目工作区目录, 也就是.mit的父目录
+pub fn get_working_dir() -> Option<PathBuf> {
+    if let Some(path) = PathBuf::from(get_storage_path().unwrap()).parent() {
+        Some(path.to_path_buf())
+    } else {
+        None
+    }
+}
+
 pub fn format_time(time: &std::time::SystemTime) -> String {
     let datetime: chrono::DateTime<chrono::Utc> = time.clone().into();
     datetime.format("%Y-%m-%d %H:%M:%S.%3f").to_string()
+}
+
+/// 递归遍历给定目录及其子目录，列出所有文件，除了.mit
+pub fn list_files(path: &Path) -> io::Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+
+    if path.is_dir() {
+        if path.file_name().unwrap_or_default() == ROOT_DIR { // 跳过 .mit 目录
+            return Ok(files);
+        }
+        for entry in fs::read_dir(path)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                // 递归遍历子目录
+                files.extend(list_files(&path)?);
+            } else {
+                // 将文件的路径添加到列表中
+                files.push(path);
+            }
+        }
+    }
+    Ok(files)
 }
 
 #[cfg(test)]
@@ -60,5 +102,18 @@ mod tests {
         let time = std::time::SystemTime::now();
         let formatted_time = format_time(&time);
         println!("{}", formatted_time);
+    }
+
+    #[test]
+    fn test_list_files() {
+        let files = list_files(Path::new("F:\\Git-Test\\list-test"));
+        match files {
+            Ok(files) => {
+                for file in files {
+                    println!("{}", file.display());
+                }
+            }
+            Err(err) => println!("{}", err),
+        }
     }
 }

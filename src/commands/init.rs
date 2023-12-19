@@ -1,4 +1,5 @@
 use std::{env, fs, io};
+use crate::utils::util::ROOT_DIR;
 
 /**
 初始化mit仓库 创建.mit/objects .mit/refs/heads .mit/HEAD
@@ -7,7 +8,7 @@ use std::{env, fs, io};
 */
 pub fn init() -> io::Result<()> {
     let dir = env::current_dir()?;
-    let mit_dir = dir.join(".mit");
+    let mit_dir = dir.join(ROOT_DIR);
     if mit_dir.exists() {
         println!("!Already a mit repo - [{}]", dir.display());
         return Ok(());
