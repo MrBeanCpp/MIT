@@ -96,6 +96,18 @@ impl Index {
         let ser = serde_json::to_string(&self).unwrap();
         println!("{}", ser);
     }
+
+    /** 获取跟踪的文件列表 */
+    pub fn get_tracked_files(&self) -> Vec<PathBuf> {
+        // XXX 测试版本，有待修改
+        let mut files = Vec::new();
+        self.entries.keys().for_each(|file| {
+            if file.exists() {
+                files.push(file.clone());
+            }
+        });
+        files
+    }
 }
 
 #[cfg(test)]
@@ -114,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn test_save(){
+    fn test_save() {
         util::setup_test_with_mit();
         let mut index = Index::new();
         let metadata = fs::metadata("../.gitignore").unwrap();
@@ -126,6 +138,13 @@ mod tests {
             mode: "100644".to_string(),
         };
         index.add(PathBuf::from(".gitignore"), file_meta_data);
+        index.add(
+            PathBuf::from("../src/models/index.rs"),
+            FileMetaData::new(
+                &Blob::new(Path::new("../src/models/index.rs")),
+                Path::new("../src/models/index.rs"),
+            ),
+        );
         index.save();
     }
 }
