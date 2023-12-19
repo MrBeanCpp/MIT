@@ -1,4 +1,4 @@
-use super::object::Hash;
+use super::{index::Index, object::Hash};
 /*Commit
 * git中版本控制的单位。
 * 一份Commit中对应一份版Tree，记录了该版本所包含的文件；parent记录本次commit的来源，形成了版本树；
@@ -12,4 +12,18 @@ pub struct Commit {
     message: String,
     parent: Vec<Hash>, // parents commit hash
     tree: String,      // tree hash
+}
+
+impl Commit {
+    pub fn new(index: &Index, parent: Vec<Hash>, message: String) -> Commit {
+        unimplemented!()
+    }
+
+    pub fn load(hash: &String) -> Commit {
+        unimplemented!()
+    }
+
+    pub fn save(&self) {
+        unimplemented!()
+    }
 }
