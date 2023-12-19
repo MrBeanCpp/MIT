@@ -5,7 +5,7 @@ use std::{fs, io};
 pub const ROOT_DIR: &str = ".mit";
 pub const TEST_DIR: &str = "mit_test_storage"; // 执行测试的储存库
 
-pub fn setup_test_dir() {
+fn setup_test_dir() {
     let path = std::env::var("CARGO_MANIFEST_DIR").unwrap();
     let mut path = PathBuf::from(path);
     path.push(TEST_DIR);
