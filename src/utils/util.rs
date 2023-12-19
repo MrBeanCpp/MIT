@@ -26,14 +26,14 @@ pub fn check_repo_exist() {
     }
 }
 
-pub fn get_storage_path() -> Result<String, std::io::Error> {
+pub fn get_storage_path() -> Result<PathBuf, std::io::Error> {
     /*递归获取储存库 */
     let mut current_dir = std::env::current_dir()?;
     loop {
         let mut git_path = current_dir.clone();
         git_path.push(".mit");
         if git_path.exists() {
-            return Ok(git_path.to_str().unwrap().to_string());
+            return  Ok(git_path);
         }
         if !current_dir.pop() {
             return Err(std::io::Error::new(
@@ -89,7 +89,7 @@ mod tests {
     fn test_get_storage_path() {
         let path = get_storage_path();
         match path {
-            Ok(path) => println!("{}", path),
+            Ok(path) => println!("{:?}", path),
             Err(err) => match err.kind() {
                 std::io::ErrorKind::NotFound => println!("Not a git repository"),
                 _ => assert!(false, "Unexpected error"),

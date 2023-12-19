@@ -1,7 +1,9 @@
+use std::path::PathBuf;
+
 use super::utils::util;
 
 pub struct Store {
-    store_path: String,
+    store_path: PathBuf,
 }
 
 impl Store {
@@ -11,14 +13,14 @@ impl Store {
         }
         let store_path = util::get_storage_path().unwrap();
         Store {
-            store_path: store_path,
+            store_path,
         }
     }
     pub fn load(&self, hash: &String) -> String {
         /* 读取文件内容 */
         let mut path = self.store_path.clone();
-        path.push_str("/objects/");
-        path.push_str(hash);
+        path.push("objects");
+        path.push(hash);
         match std::fs::read_to_string(path) {
             Ok(content) => content,
             Err(_) => panic!("储存库疑似损坏，无法读取文件"),
@@ -26,11 +28,13 @@ impl Store {
     }
     pub fn save(&self, content: &String) -> String {
         /* 保存文件内容 */
+        println!("store_path: {:?}", self.store_path);
         let hash = util::calc_hash(content);
         let mut path = self.store_path.clone();
-
-        path.push_str("/objects/");
-        path.push_str(&hash);
+        println!("path: {:?}", path);
+        path.push("objects");
+        path.push(&hash);
+        println!("path: {:?}", path);
         match std::fs::write(path, content) {
             Ok(_) => hash,
             Err(_) => panic!("储存库疑似损坏，无法写入文件"),
