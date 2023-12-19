@@ -1,20 +1,20 @@
+use crate::models::blob::Blob;
+use crate::models::object::Hash;
+use crate::utils::util::{get_file_mode, get_working_dir};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
-use serde::{Deserialize, Serialize};
-use crate::models::blob::Blob;
-use crate::models::object::Hash;
-use crate::utils::util::{get_file_mode, get_working_dir};
 
 // 文件元数据结构
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FileMetaData {
-    pub hash: Hash,              // SHA-1 哈希值
+    pub hash: Hash,                // SHA-1 哈希值
     pub size: u64,                 // 文件大小
     pub created_time: SystemTime,  // 创建时间
     pub modified_time: SystemTime, // 修改时间
-    pub mode: String,                 // 文件模式
+    pub mode: String,              // 文件模式
 }
 
 impl FileMetaData {
@@ -25,7 +25,7 @@ impl FileMetaData {
             size: meta.len(),
             created_time: meta.created().unwrap(),
             modified_time: meta.modified().unwrap(),
-            mode: get_file_mode(file)
+            mode: get_file_mode(file),
         }
     }
 }
@@ -42,7 +42,7 @@ impl Index {
     pub(crate) fn new() -> Index {
         let mut index = Index {
             entries: HashMap::new(),
-            working_dir: get_working_dir().unwrap()
+            working_dir: get_working_dir().unwrap(),
         };
         index.load();
         return index;
@@ -67,7 +67,7 @@ impl Index {
     fn get_all(&self) -> &HashMap<PathBuf, FileMetaData> {
         &self.entries
     }
-    
+
     pub fn contains(&self, path: &Path) -> bool {
         self.entries.contains_key(path)
     }
@@ -87,12 +87,11 @@ impl Index {
         self.entries.insert(path, data);
     }
 
-    fn load(&mut self) {
-
-    }
+    fn load(&mut self) {}
 
     /// 二进制序列化
-    pub fn save(&self) { //要先转化为相对路径
+    pub fn save(&self) {
+        //要先转化为相对路径
         let ser = serde_json::to_string(&self).unwrap();
         println!("{}", ser);
     }
@@ -112,9 +111,9 @@ impl Index {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-    use crate::utils::util;
     use super::*;
+    use crate::utils::util;
+    use std::fs;
 
     #[test]
     fn test_index() {
