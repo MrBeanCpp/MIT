@@ -1,7 +1,8 @@
+use crate::models::object::Hash;
+use crate::store::Store;
+use crate::utils::util::calc_hash;
 use std::fs;
 use std::path::Path;
-use crate::models::object::Hash;
-use crate::utils::util::calc_hash;
 
 /**
     Blob
@@ -19,6 +20,21 @@ impl Blob {
         let hash = calc_hash(&data);
         Blob { hash, data }
     }
+
+    pub fn load(hash: &String) -> Blob {
+        let s = Store::new();
+        let data = s.load(hash);
+        Blob {
+            hash: hash.clone(),
+            data,
+        }
+    }
+
+    pub fn save(&self) {
+        let s = Store::new();
+        s.save(&self.data);
+    }
+
     pub fn get_hash(&self) -> String {
         self.hash.clone()
     }

@@ -41,7 +41,6 @@ impl Store {
 }
 #[cfg(test)]
 mod tests {
-    use crate::commands::init;
 
     use super::*;
 
