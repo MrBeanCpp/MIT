@@ -26,18 +26,18 @@ pub fn check_repo_exist() {
     }
 }
 
-pub fn get_storage_path() -> Result<PathBuf, std::io::Error> {
+pub fn get_storage_path() -> Result<PathBuf, io::Error> {
     /*递归获取储存库 */
     let mut current_dir = std::env::current_dir()?;
     loop {
         let mut git_path = current_dir.clone();
         git_path.push(ROOT_DIR);
         if git_path.exists() {
-            return  Ok(git_path);
+            return Ok(git_path);
         }
         if !current_dir.pop() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
                 "Not a git repository",
             ));
         }
@@ -46,7 +46,7 @@ pub fn get_storage_path() -> Result<PathBuf, std::io::Error> {
 
 /// 获取项目工作区目录, 也就是.mit的父目录
 pub fn get_working_dir() -> Option<PathBuf> {
-    if let Some(path) = PathBuf::from(get_storage_path().unwrap()).parent() {
+    if let Some(path) = get_storage_path().unwrap().parent() {
         Some(path.to_path_buf())
     } else {
         None
@@ -79,6 +79,38 @@ pub fn list_files(path: &Path) -> io::Result<Vec<PathBuf>> {
         }
     }
     Ok(files)
+}
+
+pub fn get_relative_path(path: &Path, dir: PathBuf) -> PathBuf {
+    let relative_path = path.strip_prefix(dir).unwrap();
+    relative_path.to_path_buf()
+}
+
+fn is_executable(path: &str) -> bool {
+    #[cfg(not(target_os = "windows"))]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::metadata(path)
+            .map(|metadata| metadata.permissions().mode() & 0o111 != 0)
+            .unwrap_or(false)
+    }
+
+    #[cfg(windows)]
+    {
+        let path = Path::new(path);
+        match path.extension().and_then(|s| s.to_str()) {
+            Some(ext) => ext.eq_ignore_ascii_case("exe") || ext.eq_ignore_ascii_case("bat"),
+            None => false,
+        }
+    }
+}
+
+pub fn get_file_mode(path: &Path) -> String {
+    if is_executable(path.to_str().unwrap()) {
+        "100755".to_string()
+    } else {
+        "100644".to_string()
+    }
 }
 
 #[cfg(test)]

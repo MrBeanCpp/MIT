@@ -4,21 +4,23 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
 use crate::models::object::Hash;
+use crate::utils::util::get_working_dir;
 
 // 文件元数据结构
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FileMetaData {
-    hash: Hash,              // SHA-1 哈希值
-    size: u64,                 // 文件大小
-    created_time: SystemTime,  // 创建时间
-    modified_time: SystemTime, // 修改时间
-    mode: String,                 // 文件模式
+    pub hash: Hash,              // SHA-1 哈希值
+    pub size: u64,                 // 文件大小
+    pub created_time: SystemTime,  // 创建时间
+    pub modified_time: SystemTime, // 修改时间
+    pub mode: String,                 // 文件模式
 }
 
 // 索引数据结构
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Index {
     entries: HashMap<PathBuf, FileMetaData>,
+    working_dir: PathBuf,
 }
 
 impl Index {
@@ -26,19 +28,20 @@ impl Index {
     pub(crate) fn new() -> Index {
         let mut index = Index {
             entries: HashMap::new(),
+            working_dir: get_working_dir().unwrap()
         };
         index.load();
         return index;
     }
 
     // 添加文件
-    fn add(&mut self, path: PathBuf, data: FileMetaData) {
+    pub fn add(&mut self, path: PathBuf, data: FileMetaData) {
         self.entries.insert(path, data);
     }
 
     // 删除文件
-    fn remove(&mut self, path: PathBuf) {
-        self.entries.remove(&path);
+    pub fn remove(&mut self, path: &Path) {
+        self.entries.remove(path);
     }
 
     // 获取文件元数据
@@ -55,12 +58,23 @@ impl Index {
         self.entries.contains_key(path)
     }
 
+    /// 获取所有已删除的文件
+    pub fn get_deleted_files(&self) -> Vec<PathBuf> {
+        let mut files = Vec::new();
+        self.entries.keys().for_each(|file| {
+            if !file.exists() {
+                files.push(file.clone());
+            }
+        });
+        files
+    }
+
     fn load(&mut self) {
 
     }
 
     /// 二进制序列化
-    fn save(&self) {
+    fn save(&self) { //要先转化为相对路径
         let ser = serde_json::to_string(&self).unwrap();
         println!("{}", ser);
     }
