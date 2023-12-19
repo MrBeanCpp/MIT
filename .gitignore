@@ -31,4 +31,4 @@ Cargo.lock
 .DS_Store
 
 ## for app test
-.mit
+mit_test_storage

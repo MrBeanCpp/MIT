@@ -12,9 +12,7 @@ impl Store {
             panic!("不是合法的mit仓库");
         }
         let store_path = util::get_storage_path().unwrap();
-        Store {
-            store_path,
-        }
+        Store { store_path }
     }
     pub fn load(&self, hash: &String) -> String {
         /* 读取文件内容 */
@@ -43,15 +41,26 @@ impl Store {
 }
 #[cfg(test)]
 mod tests {
+    use crate::commands::init;
+
     use super::*;
 
     #[test]
-    fn test_new() {
+    fn test_new_success() {
+        util::setup_test_with_mit();
+        let _ = Store::new();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_new_fail() {
+        util::setup_test_without_mit();
         let _ = Store::new();
     }
 
     #[test]
     fn test_save_and_load() {
+        let _ = util::setup_test_with_mit();
         let store = Store::new();
         let content = "hello world".to_string();
         let hash = store.save(&content);

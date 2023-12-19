@@ -1,8 +1,35 @@
-use std::{fs, io};
-use std::path::{Path, PathBuf};
 use sha1::{Digest, Sha1};
+use std::path::{Path, PathBuf};
+use std::{fs, io};
 
 pub const ROOT_DIR: &str = ".mit";
+pub const TEST_DIR: &str = "mit_test_storage"; // 执行测试的储存库
+
+pub fn setup_test_dir() {
+    let path = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let mut path = PathBuf::from(path);
+    path.push(TEST_DIR);
+    if !path.exists() {
+        fs::create_dir(&path).unwrap();
+    }
+    std::env::set_current_dir(&path).unwrap();
+}
+
+pub fn setup_test_with_mit() {
+    // 将执行目录切换到测试目录
+    setup_test_dir();
+    let _ = crate::commands::init::init();
+}
+
+pub fn setup_test_without_mit() {
+    // 将执行目录切换到测试目录，并清除测试目录下的.mit目录
+    setup_test_dir();
+    let mut path = std::env::current_dir().unwrap();
+    path.push(ROOT_DIR);
+    if path.exists() {
+        fs::remove_dir_all(&path).unwrap();
+    }
+}
 
 pub fn calc_hash(data: &String) -> String {
     let mut hasher = Sha1::new();
@@ -63,7 +90,8 @@ pub fn list_files(path: &Path) -> io::Result<Vec<PathBuf>> {
     let mut files = Vec::new();
 
     if path.is_dir() {
-        if path.file_name().unwrap_or_default() == ROOT_DIR { // 跳过 .mit 目录
+        if path.file_name().unwrap_or_default() == ROOT_DIR {
+            // 跳过 .mit 目录
             return Ok(files);
         }
         for entry in fs::read_dir(path)? {
