@@ -24,6 +24,14 @@ impl Store {
             Err(_) => panic!("储存库疑似损坏，无法读取文件"),
         }
     }
+
+    pub fn contains(&self, hash: &String) -> bool {
+        let mut path = self.store_path.clone();
+        path.push("objects");
+        path.push(hash);
+        path.exists()
+    }
+
     pub fn save(&self, content: &String) -> String {
         /* 保存文件内容 */
         println!("store_path: {:?}", self.store_path);
@@ -41,7 +49,6 @@ impl Store {
 }
 #[cfg(test)]
 mod tests {
-
     use super::*;
 
     #[test]

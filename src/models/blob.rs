@@ -15,10 +15,13 @@ pub struct Blob {
 }
 
 impl Blob {
+    /// 从源文件新建blob对象，并直接保存到/objects/中
     pub fn new(file: &Path) -> Blob {
         let data = fs::read_to_string(file).unwrap();
         let hash = calc_hash(&data);
-        Blob { hash, data }
+        let blob = Blob { hash, data };
+        blob.save();
+        blob
     }
 
     pub fn load(hash: &String) -> Blob {
@@ -32,7 +35,10 @@ impl Blob {
 
     pub fn save(&self) {
         let s = Store::new();
-        s.save(&self.data);
+        if !s.contains(&self.hash) {
+            let hash = s.save(&self.data);
+            assert_eq!(hash, self.hash);
+        }
     }
 
     pub fn get_hash(&self) -> String {

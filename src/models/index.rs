@@ -3,8 +3,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
+use crate::models::blob::Blob;
 use crate::models::object::Hash;
-use crate::utils::util::get_working_dir;
+use crate::utils::util::{get_file_mode, get_working_dir};
 
 // 文件元数据结构
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -14,6 +15,19 @@ pub struct FileMetaData {
     pub created_time: SystemTime,  // 创建时间
     pub modified_time: SystemTime, // 修改时间
     pub mode: String,                 // 文件模式
+}
+
+impl FileMetaData {
+    pub fn new(blob: &Blob, file: &Path) -> FileMetaData {
+        let meta = file.metadata().unwrap();
+        FileMetaData {
+            hash: blob.get_hash(),
+            size: meta.len(),
+            created_time: meta.created().unwrap(),
+            modified_time: meta.modified().unwrap(),
+            mode: get_file_mode(file)
+        }
+    }
 }
 
 // 索引数据结构
@@ -69,12 +83,16 @@ impl Index {
         files
     }
 
+    pub fn update(&mut self, path: PathBuf, data: FileMetaData) {
+        self.entries.insert(path, data);
+    }
+
     fn load(&mut self) {
 
     }
 
     /// 二进制序列化
-    fn save(&self) { //要先转化为相对路径
+    pub fn save(&self) { //要先转化为相对路径
         let ser = serde_json::to_string(&self).unwrap();
         println!("{}", ser);
     }
@@ -97,8 +115,9 @@ mod tests {
 
     #[test]
     fn test_save(){
+        util::setup_test_with_mit();
         let mut index = Index::new();
-        let metadata = fs::metadata(".gitignore").unwrap();
+        let metadata = fs::metadata("../.gitignore").unwrap();
         let file_meta_data = FileMetaData {
             hash: "123".to_string(),
             size: metadata.len(),
