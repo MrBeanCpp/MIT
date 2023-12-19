@@ -80,4 +80,19 @@ mod tests {
         println!("{:?}", util::format_time(&metadata.modified().unwrap()));
         println!("{:?}", metadata.len());
     }
+
+    #[test]
+    fn test_save(){
+        let mut index = Index::new();
+        let metadata = fs::metadata(".gitignore").unwrap();
+        let file_meta_data = FileMetaData {
+            hash: "123".to_string(),
+            size: metadata.len(),
+            created_time: metadata.created().unwrap(),
+            modified_time: metadata.modified().unwrap(),
+            mode: "100644".to_string(),
+        };
+        index.add(PathBuf::from(".gitignore"), file_meta_data);
+        index.save();
+    }
 }
