@@ -23,6 +23,7 @@ pub struct Tree {
 
 impl Tree {
     pub fn new(index: &Index) -> Tree {
+        // XXX wait for index to be implemented
         Tree {
             hash: "".to_string(),
             entries: Vec::new(),
