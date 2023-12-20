@@ -1,11 +1,16 @@
 use crate::head;
 use crate::models::{commit, index};
 
+use super::status;
+
+fn no_change() -> bool {
+    let change = status::changes_to_be_committed();
+    change.new.len() == 0 && change.modified.len() == 0 && change.deleted.len() == 0
+}
 pub fn commit(message: String, allow_enpty: bool) {
     let index = index::Index::new();
-    // XXX true 需要替换为 status::changes_to_be_committed()
-    if false && !allow_enpty {
-        println!("工作区没有任何改动，不需要提交");
+    if no_change() && !allow_enpty {
+        panic!("工作区没有任何改动，不需要提交");
     }
 
     let current_head = head::current_head();
@@ -25,5 +30,18 @@ pub fn commit(message: String, allow_enpty: bool) {
         };
         println!("commit to [{:?}] message{:?}", commit_target, message);
         println!("commit hash: {:?}", commit_hash);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::utils::util;
+
+    #[test]
+    #[should_panic]
+    fn test_commit_empty() {
+        util::setup_test_with_clean_mit();
+
+        super::commit("".to_string(), false);
     }
 }
