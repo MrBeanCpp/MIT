@@ -44,7 +44,7 @@ impl Commit {
     pub fn save(&mut self) -> String {
         // unimplemented!()
         let s = store::Store::new();
-        let commit_data = serde_json::to_string(&self).unwrap();
+        let commit_data = serde_json::to_string_pretty(&self).unwrap();
         let hash = s.save(&commit_data);
         self.hash = hash.clone();
         hash

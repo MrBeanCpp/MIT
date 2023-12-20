@@ -41,7 +41,7 @@ impl Tree {
 
     pub fn save(&self) -> String {
         let s = store::Store::new();
-        let tree_data = serde_json::to_string(&self).unwrap();
+        let tree_data = serde_json::to_string_pretty(&self).unwrap();
         let hash = s.save(&tree_data);
         hash
     }

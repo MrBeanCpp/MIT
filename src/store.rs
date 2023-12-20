@@ -34,13 +34,11 @@ impl Store {
 
     pub fn save(&self, content: &String) -> String {
         /* 保存文件内容 */
-        println!("store_path: {:?}", self.store_path);
         let hash = util::calc_hash(content);
         let mut path = self.store_path.clone();
-        println!("path: {:?}", path);
         path.push("objects");
         path.push(&hash);
-        println!("path: {:?}", path);
+        println!("Saved to: [{}]", path.display());
         match std::fs::write(path, content) {
             Ok(_) => hash,
             Err(_) => panic!("储存库疑似损坏，无法写入文件"),

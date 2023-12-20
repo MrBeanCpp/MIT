@@ -33,6 +33,7 @@ impl Blob {
         }
     }
 
+    /// 写入文件；优化：文件已存在时不做操作
     pub fn save(&self) {
         let s = Store::new();
         if !s.contains(&self.hash) {

@@ -1,6 +1,6 @@
 use crate::models::blob::Blob;
 use crate::models::object::Hash;
-use crate::utils::util::{get_file_mode, get_working_dir};
+use crate::utils::util;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -25,7 +25,7 @@ impl FileMetaData {
             size: meta.len(),
             created_time: meta.created().unwrap(),
             modified_time: meta.modified().unwrap(),
-            mode: get_file_mode(file),
+            mode: util::get_file_mode(file),
         }
     }
 }
@@ -42,7 +42,7 @@ impl Index {
     pub(crate) fn new() -> Index {
         let mut index = Index {
             entries: HashMap::new(),
-            working_dir: get_working_dir().unwrap(),
+            working_dir: util::get_working_dir().unwrap(),
         };
         index.load();
         return index;
@@ -112,12 +112,13 @@ impl Index {
         self.entries.insert(path, data);
     }
 
-    fn load(&mut self) {}
+    fn load(&mut self) {
+    }
 
     /// 二进制序列化
     pub fn save(&self) {
         //要先转化为相对路径
-        let ser = serde_json::to_string(&self).unwrap();
+        let ser = serde_json::to_string_pretty(&self).unwrap();
         println!("{}", ser);
     }
 
@@ -143,7 +144,7 @@ mod tests {
     #[test]
     fn test_index() {
         // 示例：获取文件的元数据
-        let metadata = fs::metadata("lines.txt").unwrap();
+        let metadata = fs::metadata(".gitignore").unwrap();
         println!("{:?}", util::format_time(&metadata.created().unwrap()));
         println!("{:?}", util::format_time(&metadata.modified().unwrap()));
         println!("{:?}", metadata.len());
@@ -151,7 +152,7 @@ mod tests {
 
     #[test]
     fn test_save() {
-        util::setup_test_with_mit();
+        util::setup_test_with_clean_mit();
         let mut index = Index::new();
         let metadata = fs::metadata("../.gitignore").unwrap();
         let file_meta_data = FileMetaData {
