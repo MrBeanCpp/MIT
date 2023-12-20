@@ -154,6 +154,7 @@ pub fn list_files(path: &Path) -> io::Result<Vec<PathBuf>> {
 }
 
 /// 获取相对于dir的相对路径
+/// XXX 是否只能用在windows？是否检查dir是否是path的父目录？
 pub fn get_relative_path(path: &Path, dir: &Path) -> PathBuf {
     let path = if path.is_relative() {
         get_absolute_path(path)

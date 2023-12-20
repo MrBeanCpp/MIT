@@ -3,7 +3,7 @@ use crate::models::{commit, index};
 
 pub fn commit(message: String, allow_enpty: bool) {
     let index = index::Index::new();
-    // XXX true 需要替换为 index.is_empty()
+    // XXX true 需要替换为 status::changes_to_be_committed()
     if false && !allow_enpty {
         println!("工作区没有任何改动，不需要提交");
     }
