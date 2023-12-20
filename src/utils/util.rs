@@ -6,7 +6,7 @@ pub const ROOT_DIR: &str = ".mit";
 pub const TEST_DIR: &str = "mit_test_storage"; // 执行测试的储存库
 
 fn setup_test_dir() {
-    let path = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let path = std::env::var("CARGO_MANIFEST_DIR").unwrap(); //获取项目根目录定位
     let mut path = PathBuf::from(path);
     path.push(TEST_DIR);
     if !path.exists() {
@@ -18,6 +18,12 @@ fn setup_test_dir() {
 pub fn setup_test_with_mit() {
     // 将执行目录切换到测试目录
     setup_test_dir();
+    let _ = crate::commands::init::init();
+}
+
+/// with 初始化的干净的mit
+pub fn setup_test_with_clean_mit() {
+    setup_test_without_mit();
     let _ = crate::commands::init::init();
 }
 
