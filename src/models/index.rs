@@ -42,7 +42,7 @@ pub struct Index {
 }
 
 impl Index {
-    // 创建索引
+    /// 从index文件加载
     pub(crate) fn new() -> Index {
         let mut index = Index {
             entries: HashMap::new(),
@@ -78,6 +78,7 @@ impl Index {
         Option::from(self.get(file)?.hash.clone())
     }
 
+    /// 验证文件的hash是否与index中的一致
     pub fn verify_hash(&self, file: &Path, hash: &Hash) -> bool {
         &self.get_hash(file).unwrap_or_default() == hash
     }
@@ -92,7 +93,7 @@ impl Index {
         self.entries.contains_key(&path)
     }
 
-    /// 获取所有已删除的文件
+    /// 与暂存区比较，获取工作区中被删除的文件
     pub fn get_deleted_files(&self) -> Vec<PathBuf> {
         let mut files = Vec::new();
         self.entries.keys().for_each(|file| {
@@ -125,6 +126,7 @@ impl Index {
         self.entries.insert(path, data);
     }
 
+    /// 从index文件加载数据
     fn load(&mut self) {
         let path = Index::get_path();
         if path.exists() {
@@ -133,13 +135,13 @@ impl Index {
             self.entries = relative_index.into_iter()
                 .map(|(path, value)| {
                     let abs_path = self.working_dir.join(path);
-                    println!("{}", abs_path.display());
                     (abs_path, value)
                 })
                 .collect();
         }
     }
 
+    /// 获取.mit/index文件绝对路径
     pub fn get_path() -> PathBuf {
         let mut path = util::get_storage_path().unwrap();
         path.push("index");

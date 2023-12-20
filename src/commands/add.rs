@@ -29,7 +29,7 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
             env::current_dir().unwrap()
         };
         println!("Working on [{}]\n", path.to_str().unwrap().bright_blue());
-        files = list_files(&*path).unwrap();
+        files = list_files(&path).unwrap();
         if update {
             files.retain(|file|{
                 index.contains(file)
@@ -47,18 +47,22 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
 }
 
 fn add_a_file(file: &Path, index: &mut Index) {
-    println!("add a file: {}", get_relative_path(file, &*get_working_dir().unwrap()).display());
+    let relative_path = get_relative_path(file, &get_working_dir().unwrap());
+
     if !file.exists() { //文件被删除
         index.remove(file);
+        println!("removed: {}", relative_path.display());
     } else { //文件存在
         if !index.contains(file) { //文件未被跟踪
             let blob = Blob::new(file);
             index.add(file.to_path_buf(), FileMetaData::new(&blob, file));
+            println!("add(stage): {}", relative_path.display());
         } else { //文件已被跟踪，可能被修改
             if index.is_modified(file) { //文件被修改，但不一定内容更改
                 let blob = Blob::new(file); //到这一步才创建blob是为了优化
                 if !index.verify_hash(file, &blob.get_hash()) { //比较hash 确认内容更改
                     index.update(file.to_path_buf(), FileMetaData::new(&blob, file));
+                    println!("add(modified): {}", relative_path.display());
                 }
             }
         }
