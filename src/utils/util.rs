@@ -1,10 +1,12 @@
 use sha1::{Digest, Sha1};
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::{fs, io};
+use std::{fs, io, option};
 
 pub const ROOT_DIR: &str = ".mit";
 pub const TEST_DIR: &str = "mit_test_storage"; // 执行测试的储存库
 
+/* tools for test */
 fn setup_test_dir() {
     color_backtrace::install(); // colorize backtrace
     let cargo_path = std::env::var("CARGO_MANIFEST_DIR");
@@ -57,6 +59,20 @@ pub fn setup_test_without_mit() {
     }
 }
 
+pub fn ensure_test_file(path: &Path, content: option::Option<&str>) {
+    // 以测试目录为根目录，创建文件
+    let mut file = fs::File::create(get_working_dir().unwrap().join(path))
+        .expect(format!("无法创建文件：{:?}", path).as_str());
+    if let Some(content) = content {
+        file.write(content.as_bytes()).unwrap();
+    } else {
+        // 写入文件名
+        file.write(path.file_name().unwrap().to_str().unwrap().as_bytes())
+            .unwrap();
+    }
+}
+
+/* tools for mit */
 pub fn calc_hash(data: &String) -> String {
     let mut hasher = Sha1::new();
     hasher.update(data);
@@ -147,6 +163,10 @@ pub fn get_relative_path(path: &Path, dir: &Path) -> PathBuf {
     relative_path.to_path_buf()
 }
 
+pub fn to_root_relative_path(path: &Path) -> PathBuf {
+    get_relative_path(path, &get_working_dir().unwrap())
+}
+
 fn is_executable(path: &str) -> bool {
     #[cfg(not(target_os = "windows"))]
     {
@@ -167,8 +187,15 @@ fn is_executable(path: &str) -> bool {
 }
 
 pub fn get_file_mode(path: &Path) -> String {
-    if is_executable(path.to_str().unwrap()) {
-        "100755".to_string()
+    // if is_executable(path.to_str().unwrap()) {
+    //     "100755".to_string()
+    // } else {
+    //     "100644".to_string()
+    // }
+    if path.is_dir() {
+        "40000".to_string() // 目录
+    } else if is_executable(path.to_str().unwrap()) {
+        "100755".to_string() // 可执行文件
     } else {
         "100644".to_string()
     }

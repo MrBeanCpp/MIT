@@ -1,12 +1,12 @@
 use crate::models::blob::Blob;
 use crate::models::object::Hash;
 use crate::utils::util;
+use crate::utils::util::get_relative_path;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
-use crate::utils::util::{get_relative_path};
 
 // 文件元数据结构
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -105,12 +105,12 @@ impl Index {
     }
 
     /// 与暂存区比较，确定文件自上次add以来是否被编辑（内容不一定修改，还需要算hash）
-    pub fn is_modified(&self, file: &Path) -> bool{
+    pub fn is_modified(&self, file: &Path) -> bool {
         if let Some(self_data) = self.get(file) {
             if let Ok(meta) = file.metadata() {
-                let same =  self_data.created_time == meta.created().unwrap_or(SystemTime::now())
-                && self_data.modified_time == meta.modified().unwrap_or(SystemTime::now())
-                && self_data.size == meta.len();
+                let same = self_data.created_time == meta.created().unwrap_or(SystemTime::now())
+                    && self_data.modified_time == meta.modified().unwrap_or(SystemTime::now())
+                    && self_data.size == meta.len();
 
                 !same
             } else {
@@ -131,8 +131,10 @@ impl Index {
         let path = Index::get_path();
         if path.exists() {
             let json = fs::read_to_string(path).expect("无法读取index");
-            let relative_index: HashMap<PathBuf, FileMetaData> = serde_json::from_str(&json).expect("无法解析index");
-            self.entries = relative_index.into_iter()
+            let relative_index: HashMap<PathBuf, FileMetaData> =
+                serde_json::from_str(&json).expect("无法解析index");
+            self.entries = relative_index
+                .into_iter()
                 .map(|(path, value)| {
                     let abs_path = self.working_dir.join(path);
                     (abs_path, value)
@@ -151,7 +153,9 @@ impl Index {
     /// 二进制序列化
     pub fn save(&mut self) {
         //要先转化为相对路径
-        let relative_index: HashMap<PathBuf, FileMetaData> = self.entries.iter()
+        let relative_index: HashMap<PathBuf, FileMetaData> = self
+            .entries
+            .iter()
             .map(|(path, value)| {
                 let relative_path = get_relative_path(path, &self.working_dir);
                 (relative_path, value.clone())
@@ -200,19 +204,15 @@ mod tests {
     #[test]
     fn test_save() {
         util::setup_test_with_clean_mit();
-
         let mut index = Index::new();
         let path = PathBuf::from("../mit_test_storage/.mit/HEAD"); //测试../相对路径的处理
         index.add(path.clone(), FileMetaData::new(&Blob::new(&path), &path));
 
-        let path = PathBuf::from("中文路径测试.txt");
-        index.add(
-            path.clone(),
-            FileMetaData::new(
-                &Blob::new(&path),
-                &path,
-            ),
-        );
+        let 中文路径 = "中文路径.txt";
+        util::ensure_test_file(Path::new(中文路径), None);
+        let path = PathBuf::from(中文路径);
+        index.add(path.clone(), FileMetaData::new(&Blob::new(&path), &path));
         index.save();
+        println!("{:?}", index.entries);
     }
 }
