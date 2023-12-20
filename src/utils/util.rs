@@ -59,6 +59,7 @@ pub fn check_repo_exist() {
     }
 }
 
+/// 获取.mit目录路径
 pub fn get_storage_path() -> Result<PathBuf, io::Error> {
     /*递归获取储存库 */
     let mut current_dir = std::env::current_dir()?;

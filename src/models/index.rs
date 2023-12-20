@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
-use crate::utils::util::get_relative_path;
+use crate::utils::util::{get_relative_path};
 
 // 文件元数据结构
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -114,6 +114,13 @@ impl Index {
     }
 
     fn load(&mut self) {
+
+    }
+
+    pub fn get_path() -> PathBuf {
+        let mut path = util::get_storage_path().unwrap();
+        path.push("index");
+        path
     }
 
     /// 二进制序列化
@@ -121,13 +128,13 @@ impl Index {
         //要先转化为相对路径
         let relative_index: HashMap<PathBuf, FileMetaData> = self.entries.iter()
             .map(|(path, value)| {
-                println!("path: {:?}", path);
                 let relative_path = get_relative_path(path, &self.working_dir);
                 (relative_path, value.clone())
             })
             .collect();
-        let ser = serde_json::to_string_pretty(&relative_index).unwrap();
-        println!("{}", ser);
+        let json = serde_json::to_string_pretty(&relative_index).unwrap();
+
+        fs::write(Index::get_path(), json).expect("无法写入index");
     }
 
     /** 获取跟踪的文件列表 */
@@ -150,7 +157,7 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn test_index() {
+    fn test_meta_get() {
         // 示例：获取文件的元数据
         let metadata = fs::metadata(".gitignore").unwrap();
         println!("{:?}", util::format_time(&metadata.created().unwrap()));
@@ -163,21 +170,16 @@ mod tests {
         util::setup_test_with_clean_mit();
 
         let mut index = Index::new();
+        let path = PathBuf::from(".mit/HEAD");
         let metadata = fs::metadata(".mit/HEAD").unwrap();
-        let file_meta_data = FileMetaData {
-            hash: "123".to_string(),
-            size: metadata.len(),
-            created_time: metadata.created().unwrap(),
-            modified_time: metadata.modified().unwrap(),
-            mode: "100644".to_string(),
-        };
-        index.add(PathBuf::from(".mit/HEAD"), file_meta_data);
+        index.add(path.clone(), FileMetaData::new(&Blob::new(&path), &path));
+
         let path = PathBuf::from("../mit_test_storage/中文路径测试.txt");
         index.add(
             path.clone(),
             FileMetaData::new(
                 &Blob::new(&path),
-                Path::new(&path),
+                &path,
             ),
         );
         index.save();
