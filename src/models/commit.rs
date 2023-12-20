@@ -21,7 +21,7 @@ pub struct Commit {
 
 impl Commit {
     pub fn new(index: &Index, parent: Vec<Hash>, message: String) -> Commit {
-        let tree = Tree::new(index);
+        let mut tree = Tree::new(index);
         let tree_hash = tree.save();
         Commit {
             hash: "".to_string(),
