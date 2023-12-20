@@ -114,7 +114,18 @@ impl Index {
     }
 
     fn load(&mut self) {
-
+        let path = Index::get_path();
+        if path.exists() {
+            let json = fs::read_to_string(path).expect("无法读取index");
+            let relative_index: HashMap<PathBuf, FileMetaData> = serde_json::from_str(&json).expect("无法解析index");
+            self.entries = relative_index.into_iter()
+                .map(|(path, value)| {
+                    let abs_path = self.working_dir.join(path);
+                    println!("{}", abs_path.display());
+                    (abs_path, value)
+                })
+                .collect();
+        }
     }
 
     pub fn get_path() -> PathBuf {
@@ -163,6 +174,13 @@ mod tests {
         println!("{:?}", util::format_time(&metadata.created().unwrap()));
         println!("{:?}", util::format_time(&metadata.modified().unwrap()));
         println!("{:?}", metadata.len());
+    }
+
+    #[test]
+    fn test_load() {
+        util::setup_test_with_mit();
+        let index = Index::new();
+        println!("{:?}", index);
     }
 
     #[test]
