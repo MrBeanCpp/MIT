@@ -59,8 +59,16 @@ impl Index {
     }
 
     // 获取文件元数据
-    fn get(&self, path: PathBuf) -> Option<&FileMetaData> {
-        self.entries.get(&path)
+    fn get(&self, path: &Path) -> Option<&FileMetaData> {
+        self.entries.get(path)
+    }
+
+    pub fn get_hash(&self, file: &Path) -> Option<Hash> {
+        Option::from(self.get(file)?.hash.clone())
+    }
+
+    pub fn verify_hash(&self, file: &Path, hash: &Hash) -> bool {
+        &self.get_hash(file).unwrap_or_default() == hash
     }
 
     // 获取所有文件元数据
@@ -81,6 +89,23 @@ impl Index {
             }
         });
         files
+    }
+
+    /// 与暂存区比较，确定文件自上次add以来是否被编辑（内容不一定修改，还需要算hash）
+    pub fn is_modified(&self, file: &Path) -> bool{
+        if let Some(self_data) = self.get(file) {
+            if let Ok(meta) = file.metadata() {
+                let same =  self_data.created_time == meta.created().unwrap_or(SystemTime::now())
+                && self_data.modified_time == meta.modified().unwrap_or(SystemTime::now())
+                && self_data.size == meta.len();
+
+                return !same;
+            } else {
+                true
+            }
+        } else {
+            true
+        }
     }
 
     pub fn update(&mut self, path: PathBuf, data: FileMetaData) {
