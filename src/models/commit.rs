@@ -20,6 +20,28 @@ pub struct Commit {
 }
 
 impl Commit {
+    pub fn get_hash(&self) -> String {
+        self.hash.clone()
+    }
+    pub fn get_tree_hash(&self) -> String {
+        self.tree.clone()
+    }
+    pub fn get_tree(&self) -> Tree {
+        Tree::load(&self.tree)
+    }
+    pub fn get_parent_hash(&self) -> Vec<Hash> {
+        self.parent.clone()
+    }
+    pub fn get_message(&self) -> String {
+        self.message.clone()
+    }
+    pub fn get_author(&self) -> String {
+        self.author.clone()
+    }
+    pub fn get_committer(&self) -> String {
+        self.committer.clone()
+    }
+
     pub fn new(index: &Index, parent: Vec<Hash>, message: String) -> Commit {
         let mut tree = Tree::new(index);
         let tree_hash = tree.save();

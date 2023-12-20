@@ -1,5 +1,6 @@
 use crate::head;
 use crate::models::{commit, index};
+
 pub fn commit(message: String, allow_enpty: bool) {
     let index = index::Index::new();
     // XXX true 需要替换为 index.is_empty()

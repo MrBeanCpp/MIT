@@ -1,4 +1,7 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::HashMap,
+    path::{Component, PathBuf},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -85,6 +88,7 @@ impl Tree {
     pub fn get_hash(&self) -> String {
         self.hash.clone()
     }
+
     pub fn new(index: &Index) -> Tree {
         let file_entries: Vec<PathBuf> = index
             .get_tracked_files()
@@ -111,15 +115,15 @@ impl Tree {
         hash
     }
 
-    /**获取Tree对应的所有文件 */
-    pub fn get_file_entries(&self) -> Vec<PathBuf> {
+    /**递归获取Tree对应的所有文件 */
+    pub fn get_recursive_file_entries(&self) -> Vec<PathBuf> {
         let mut files = Vec::new();
         for entry in self.entries.iter() {
             if entry.filemode.0 == "blob" {
                 files.push(PathBuf::from(entry.name.clone()));
             } else {
                 let sub_tree = Tree::load(&entry.object_hash);
-                let sub_files = sub_tree.get_file_entries();
+                let sub_files = sub_tree.get_recursive_file_entries();
 
                 files.append(
                     sub_files
@@ -131,6 +135,30 @@ impl Tree {
             }
         }
         files
+    }
+
+    pub fn get_recursive_blobs(&self) -> Vec<(PathBuf, super::blob::Blob)> {
+        let mut blobs = Vec::new();
+        for entry in self.entries.iter() {
+            if entry.filemode.0 == "blob" {
+                let blob = super::blob::Blob::load(&entry.object_hash);
+                blobs.push((PathBuf::from(entry.name.clone()), blob));
+            } else {
+                let sub_tree = Tree::load(&entry.object_hash);
+                let sub_blobs = sub_tree.get_recursive_blobs();
+
+                blobs.append(
+                    sub_blobs
+                        .iter()
+                        .map(|(path, blob)| {
+                            (PathBuf::from(entry.name.clone()).join(path), blob.clone())
+                        })
+                        .collect::<Vec<(PathBuf, super::blob::Blob)>>()
+                        .as_mut(),
+                );
+            }
+        }
+        blobs
     }
 }
 
@@ -187,7 +215,7 @@ mod test {
     }
 
     #[test]
-    fn test_get_file_entries() {
+    fn test_get_recursive_file_entries() {
         util::setup_test_with_clean_mit();
         let mut index = super::Index::new();
         let test_files = vec!["b.txt", "mit_src/a.txt"];
@@ -204,9 +232,38 @@ mod test {
         let tree_hash = tree.get_hash();
 
         let loaded_tree = super::Tree::load(&tree_hash);
-        let files = loaded_tree.get_file_entries();
+        let files = loaded_tree.get_recursive_file_entries();
         assert!(files.len() == test_files.len());
         assert!(files[0].to_str().unwrap() == test_files[0]);
         assert!(files[1].to_str().unwrap() == test_files[1]);
+    }
+
+    #[test]
+    fn test_get_recursive_blobs() {
+        util::setup_test_with_clean_mit();
+        let mut index = super::Index::new();
+        let test_files = vec!["b.txt", "mit_src/a.txt"];
+        let mut test_blobs = vec![];
+        for test_file in test_files.clone() {
+            let test_file = PathBuf::from(test_file);
+            util::ensure_test_file(&test_file, None);
+            let blob = Blob::new(&test_file);
+            test_blobs.push(blob.clone());
+            index.add(
+                test_file.clone(),
+                FileMetaData::new(&Blob::new(&test_file), &test_file),
+            );
+        }
+
+        let tree = super::Tree::new(&index);
+        let tree_hash = tree.get_hash();
+
+        let loaded_tree = super::Tree::load(&tree_hash);
+        let blobs = loaded_tree.get_recursive_blobs();
+        assert!(blobs.len() == test_files.len());
+        assert!(blobs[0].0.to_str().unwrap() == test_files[0]);
+        assert!(blobs[1].0.to_str().unwrap() == test_files[1]);
+        assert!(blobs[0].1.get_hash() == test_blobs[0].get_hash());
+        assert!(blobs[1].1.get_hash() == test_blobs[1].get_hash());
     }
 }
