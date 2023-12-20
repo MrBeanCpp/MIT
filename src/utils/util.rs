@@ -6,6 +6,7 @@ pub const ROOT_DIR: &str = ".mit";
 pub const TEST_DIR: &str = "mit_test_storage"; // 执行测试的储存库
 
 fn setup_test_dir() {
+    color_backtrace::install(); // colorize backtrace
     let path = std::env::var("CARGO_MANIFEST_DIR").unwrap(); //获取项目根目录定位
     let mut path = PathBuf::from(path);
     path.push(TEST_DIR);
