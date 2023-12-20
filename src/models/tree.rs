@@ -110,6 +110,28 @@ impl Tree {
         self.hash = hash.clone();
         hash
     }
+
+    /**获取Tree对应的所有文件 */
+    pub fn get_file_entries(&self) -> Vec<PathBuf> {
+        let mut files = Vec::new();
+        for entry in self.entries.iter() {
+            if entry.filemode.0 == "blob" {
+                files.push(PathBuf::from(entry.name.clone()));
+            } else {
+                let sub_tree = Tree::load(&entry.object_hash);
+                let sub_files = sub_tree.get_file_entries();
+
+                files.append(
+                    sub_files
+                        .iter()
+                        .map(|file| PathBuf::from(entry.name.clone()).join(file))
+                        .collect::<Vec<PathBuf>>()
+                        .as_mut(),
+                );
+            }
+        }
+        files
+    }
 }
 
 #[cfg(test)]
@@ -162,5 +184,29 @@ mod test {
         assert!(loaded_tree.entries.len() == tree.entries.len());
         assert!(tree.entries[0].name == loaded_tree.entries[0].name);
         assert!(tree.entries[1].name == loaded_tree.entries[1].name);
+    }
+
+    #[test]
+    fn test_get_file_entries() {
+        util::setup_test_with_clean_mit();
+        let mut index = super::Index::new();
+        let test_files = vec!["b.txt", "mit_src/a.txt"];
+        for test_file in test_files.clone() {
+            let test_file = PathBuf::from(test_file);
+            util::ensure_test_file(&test_file, None);
+            index.add(
+                test_file.clone(),
+                FileMetaData::new(&Blob::new(&test_file), &test_file),
+            );
+        }
+
+        let tree = super::Tree::new(&index);
+        let tree_hash = tree.get_hash();
+
+        let loaded_tree = super::Tree::load(&tree_hash);
+        let files = loaded_tree.get_file_entries();
+        assert!(files.len() == test_files.len());
+        assert!(files[0].to_str().unwrap() == test_files[0]);
+        assert!(files[1].to_str().unwrap() == test_files[1]);
     }
 }
