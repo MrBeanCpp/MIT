@@ -25,7 +25,7 @@ fn update_branch_head(branch_name: &String, commit_hash: &String) {
     std::fs::write(branch, commit_hash).expect("无法写入branch");
 }
 
-fn get_branch_head(branch_name: &String) -> std::option::Option<String> {
+fn get_branch_head(branch_name: &String) -> String {
     // 返回当前分支的commit hash
     let mut branch = util::get_storage_path().unwrap();
     branch.push("refs");
@@ -33,9 +33,9 @@ fn get_branch_head(branch_name: &String) -> std::option::Option<String> {
     branch.push(branch_name);
     if branch.exists() {
         let commit_hash = std::fs::read_to_string(branch).expect("无法读取branch");
-        Some(commit_hash)
+        commit_hash
     } else {
-        None
+        "".to_string() // 分支不存在或者没有commit
     }
 }
 
@@ -44,7 +44,7 @@ pub fn current_head_commit() -> String {
     let head = current_head();
     match head {
         Head::Branch(branch_name) => {
-            let commit_hash = get_branch_head(&branch_name).unwrap();
+            let commit_hash = get_branch_head(&branch_name);
             commit_hash
         }
         Head::Detached(commit_hash) => commit_hash,
@@ -87,7 +87,7 @@ pub fn list_local_branches() -> Vec<String> {
 pub fn change_head_to_branch(branch_name: &String) {
     let mut head = util::get_storage_path().unwrap();
     head.push("HEAD");
-    let branch_head = get_branch_head(branch_name).unwrap();
+    let branch_head = get_branch_head(branch_name);
     std::fs::write(head, format!("ref: refs/heads/{}", branch_name)).expect("无法写入HEAD");
     update_head_commit(&branch_head);
 }
@@ -108,13 +108,13 @@ mod test {
         util::setup_test_with_mit();
         let branch_name = "test_branch".to_string() + &rand::random::<u32>().to_string();
         let branch_head = super::get_branch_head(&branch_name);
-        assert!(branch_head.is_none());
+        assert!(branch_head.is_empty());
 
         let commit_hash = "1234567890".to_string();
         super::update_branch_head(&branch_name, &commit_hash);
         let branch_head = super::get_branch_head(&branch_name);
-        assert!(branch_head.is_some());
-        assert!(branch_head.unwrap() == commit_hash);
+        assert!(!branch_head.is_empty());
+        assert!(branch_head == commit_hash);
     }
 
     #[test]
@@ -157,5 +157,16 @@ mod test {
             },
             "当前不在分支上"
         );
+    }
+
+    #[test]
+    fn test_update_branch_head() {
+        util::setup_test_with_mit();
+        let branch_name = "test_branch".to_string() + &rand::random::<u32>().to_string();
+        let commit_hash = "1234567890".to_string();
+        super::update_branch_head(&branch_name, &commit_hash);
+        let branch_head = super::get_branch_head(&branch_name);
+        assert!(!branch_head.is_empty());
+        assert!(branch_head == commit_hash);
     }
 }
