@@ -178,7 +178,7 @@ pub fn get_absolute_path(path: &Path) -> PathBuf {
     if path.is_absolute() {
         path.to_path_buf()
     } else {
-        let abs_path = path.canonicalize().unwrap();
+        let abs_path = path.canonicalize().unwrap(); //这一步会统一路径分隔符
         clean_win_abs_path_pre(abs_path)
     }
 }

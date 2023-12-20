@@ -31,7 +31,10 @@ impl FileMetaData {
     }
 }
 
-// 索引数据结构
+/**
+    Index
+注意：逻辑处理均为绝对路径，但是存储时为相对路径
+ */
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Index {
     entries: HashMap<PathBuf, FileMetaData>,
@@ -49,8 +52,14 @@ impl Index {
         return index;
     }
 
+    /// 预处理路径，统一形式为绝对路径
+    fn preprocess_path(path: &Path) -> PathBuf {
+        util::get_absolute_path(&path)
+    }
+
     // 添加文件
-    pub fn add(&mut self, path: PathBuf, data: FileMetaData) {
+    pub fn add(&mut self, mut path: PathBuf, data: FileMetaData) {
+        path = Index::preprocess_path(&path);
         self.entries.insert(path, data);
     }
 
@@ -61,7 +70,8 @@ impl Index {
 
     // 获取文件元数据
     fn get(&self, path: &Path) -> Option<&FileMetaData> {
-        self.entries.get(path)
+        let path = Index::preprocess_path(path);
+        self.entries.get(&path)
     }
 
     pub fn get_hash(&self, file: &Path) -> Option<Hash> {
@@ -78,7 +88,8 @@ impl Index {
     }
 
     pub fn contains(&self, path: &Path) -> bool {
-        self.entries.contains_key(path)
+        let path = Index::preprocess_path(path);
+        self.entries.contains_key(&path)
     }
 
     /// 获取所有已删除的文件
@@ -100,7 +111,7 @@ impl Index {
                 && self_data.modified_time == meta.modified().unwrap_or(SystemTime::now())
                 && self_data.size == meta.len();
 
-                return !same;
+                !same
             } else {
                 true
             }
@@ -109,7 +120,8 @@ impl Index {
         }
     }
 
-    pub fn update(&mut self, path: PathBuf, data: FileMetaData) {
+    pub fn update(&mut self, mut path: PathBuf, data: FileMetaData) {
+        path = Index::preprocess_path(&path);
         self.entries.insert(path, data);
     }
 
@@ -188,11 +200,10 @@ mod tests {
         util::setup_test_with_clean_mit();
 
         let mut index = Index::new();
-        let path = PathBuf::from(".mit/HEAD");
-        let metadata = fs::metadata(".mit/HEAD").unwrap();
+        let path = PathBuf::from("../mit_test_storage/.mit/HEAD"); //测试../相对路径的处理
         index.add(path.clone(), FileMetaData::new(&Blob::new(&path), &path));
 
-        let path = PathBuf::from("../mit_test_storage/中文路径测试.txt");
+        let path = PathBuf::from("中文路径测试.txt");
         index.add(
             path.clone(),
             FileMetaData::new(
