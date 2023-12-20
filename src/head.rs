@@ -5,7 +5,7 @@ pub enum Head {
     Branch(String),
 }
 
-fn current_head() -> Head {
+pub fn current_head() -> Head {
     let mut head = util::get_storage_path().unwrap();
     head.push("HEAD");
     let head_content = std::fs::read_to_string(head).expect("HEAD文件损坏");
