@@ -168,7 +168,6 @@ impl Index {
 
     /** 获取跟踪的文件列表 */
     pub fn get_tracked_files(&self) -> Vec<PathBuf> {
-        // XXX 测试版本，有待修改
         let mut files = Vec::new();
         self.entries.keys().for_each(|file| {
             if file.exists() {

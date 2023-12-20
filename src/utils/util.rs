@@ -1,3 +1,4 @@
+use chrono::format::format;
 use sha1::{Digest, Sha1};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -108,7 +109,7 @@ pub fn get_storage_path() -> Result<PathBuf, io::Error> {
         if !current_dir.pop() {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
-                "Not a git repository",
+                format!("{:?} is not a git repository", std::env::current_dir()?),
             ));
         }
     }
