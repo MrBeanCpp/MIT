@@ -115,7 +115,13 @@ pub fn list_files(path: &Path) -> io::Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-pub fn get_relative_path(path: &Path, dir: PathBuf) -> PathBuf {
+/// 获取相对于dir的相对路径
+pub fn get_relative_path(path: &Path, dir: &Path) -> PathBuf {
+    let path = if path.is_relative() {
+        get_absolute_path(path)
+    } else {
+        path.to_path_buf()
+    };
     let relative_path = path.strip_prefix(dir).unwrap();
     relative_path.to_path_buf()
 }
@@ -144,6 +150,35 @@ pub fn get_file_mode(path: &Path) -> String {
         "100755".to_string()
     } else {
         "100644".to_string()
+    }
+}
+
+/// 清除Windows下的绝对路径前缀"\\\\?\\"
+/// <a href="https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation">Windows 系统中的文件路径格式</a>
+pub fn clean_win_abs_path_pre(path: PathBuf) -> PathBuf {
+    #[cfg(windows)]
+    {
+        const DOS_PREFIX: &str = "\\\\?\\";
+        let path_str = path.to_string_lossy();
+        if path_str.starts_with(DOS_PREFIX) {
+            PathBuf::from(&path_str[DOS_PREFIX.len()..])
+        } else {
+            path
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        path
+    }
+}
+
+/// 获取绝对路径（相对于当前current_dir）
+pub fn get_absolute_path(path: &Path) -> PathBuf {
+    if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        let abs_path = path.canonicalize().unwrap();
+        clean_win_abs_path_pre(abs_path)
     }
 }
 

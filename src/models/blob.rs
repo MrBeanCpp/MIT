@@ -17,7 +17,7 @@ pub struct Blob {
 impl Blob {
     /// 从源文件新建blob对象，并直接保存到/objects/中
     pub fn new(file: &Path) -> Blob {
-        let data = fs::read_to_string(file).unwrap();
+        let data = fs::read_to_string(file).expect("无法读取文件");
         let hash = calc_hash(&data);
         let blob = Blob { hash, data };
         blob.save();

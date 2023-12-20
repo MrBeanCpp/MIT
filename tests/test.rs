@@ -1,6 +1,7 @@
 use sha1::{Sha1, Digest};
 use std::fs::File;
 use std::io::{Write, BufReader, BufRead, Error};
+use mit::utils::util;
 
 #[test]
 fn test_hash() {
@@ -8,11 +9,12 @@ fn test_hash() {
     hasher.update(String::from("hello world"));
     let result = format!("{:x}", hasher.finalize());
     println!("{}", result);
-    println!("{}", mit::utils::util::calc_hash(&String::from("hello world")));
+    println!("{}", util::calc_hash(&String::from("hello world")));
 }
 
 #[test]
 fn test_write() -> Result<(), Error> {
+    util::setup_test_with_mit();
     let path = "lines.txt";
     //create会截断文件
     let mut output = File::create(path)?; // ? 用于传播错误
@@ -22,6 +24,7 @@ fn test_write() -> Result<(), Error> {
 
 #[test]
 fn test_read() -> Result<(), Error> {
+    util::setup_test_with_mit();
     let path = "lines.txt";
     let input = File::open(path)?;
     let buffered = BufReader::new(input);

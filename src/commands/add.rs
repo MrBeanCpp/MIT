@@ -47,7 +47,7 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
 }
 
 fn add_a_file(file: &Path, index: &mut Index) {
-    println!("add a file: {}", get_relative_path(file, get_working_dir().unwrap()).display());
+    println!("add a file: {}", get_relative_path(file, &*get_working_dir().unwrap()).display());
     if !file.exists() { //文件被删除
         index.remove(file);
     } else { //文件存在

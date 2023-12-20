@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
+use crate::utils::util::get_relative_path;
 
 // 文件元数据结构
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -116,9 +117,16 @@ impl Index {
     }
 
     /// 二进制序列化
-    pub fn save(&self) {
+    pub fn save(&mut self) {
         //要先转化为相对路径
-        let ser = serde_json::to_string_pretty(&self).unwrap();
+        let relative_index: HashMap<PathBuf, FileMetaData> = self.entries.iter()
+            .map(|(path, value)| {
+                println!("path: {:?}", path);
+                let relative_path = get_relative_path(path, &self.working_dir);
+                (relative_path, value.clone())
+            })
+            .collect();
+        let ser = serde_json::to_string_pretty(&relative_index).unwrap();
         println!("{}", ser);
     }
 
@@ -153,8 +161,9 @@ mod tests {
     #[test]
     fn test_save() {
         util::setup_test_with_clean_mit();
+
         let mut index = Index::new();
-        let metadata = fs::metadata("../.gitignore").unwrap();
+        let metadata = fs::metadata(".mit/HEAD").unwrap();
         let file_meta_data = FileMetaData {
             hash: "123".to_string(),
             size: metadata.len(),
@@ -162,12 +171,13 @@ mod tests {
             modified_time: metadata.modified().unwrap(),
             mode: "100644".to_string(),
         };
-        index.add(PathBuf::from(".gitignore"), file_meta_data);
+        index.add(PathBuf::from(".mit/HEAD"), file_meta_data);
+        let path = PathBuf::from("../mit_test_storage/中文路径测试.txt");
         index.add(
-            PathBuf::from("../src/models/index.rs"),
+            path.clone(),
             FileMetaData::new(
-                &Blob::new(Path::new("../src/models/index.rs")),
-                Path::new("../src/models/index.rs"),
+                &Blob::new(&path),
+                Path::new(&path),
             ),
         );
         index.save();
