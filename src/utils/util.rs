@@ -7,7 +7,26 @@ pub const TEST_DIR: &str = "mit_test_storage"; // 执行测试的储存库
 
 fn setup_test_dir() {
     color_backtrace::install(); // colorize backtrace
-    let path = std::env::var("CARGO_MANIFEST_DIR").unwrap(); //获取项目根目录定位
+    let cargo_path = std::env::var("CARGO_MANIFEST_DIR");
+    let path: PathBuf = {
+        if cargo_path.is_err() {
+            // vscode DEBUG test没有CARGO_MANIFEST_DIR宏，手动尝试查找cargo.toml
+            let mut path = std::env::current_dir().unwrap();
+            loop {
+                path.push("Cargo.toml");
+                if path.exists() {
+                    break;
+                }
+                if !path.pop() {
+                    panic!("找不到CARGO_MANIFEST_DIR");
+                }
+            }
+            path.pop();
+            path
+        } else {
+            PathBuf::from(cargo_path.unwrap())
+        }
+    };
     let mut path = PathBuf::from(path);
     path.push(TEST_DIR);
     if !path.exists() {
