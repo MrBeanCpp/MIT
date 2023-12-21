@@ -34,6 +34,9 @@ impl Store {
 
     /**  根据前缀搜索，有歧义时返回 None*/
     pub fn search(&self, hash: &String) -> Option<Hash> {
+        if hash.is_empty() {
+            return None;
+        }
         let objects = util::list_files(self.store_path.join("objects").as_path()).unwrap();
         // 转string
         let objects = objects

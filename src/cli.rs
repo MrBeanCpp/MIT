@@ -1,5 +1,6 @@
-use clap::{Parser, Subcommand};
+use clap::{ArgGroup, Parser, Subcommand};
 use mit::commands::add::add;
+use mit::commands::branch::branch;
 use mit::commands::commit::commit;
 use mit::commands::init::init;
 use mit::commands::log::log;
@@ -55,12 +56,35 @@ enum Command {
     /// 查看当前状态
     Status,
     /// log 现实提交历史
+    #[clap(group = ArgGroup::new("sub").required(false))]
     Log {
         #[clap(short = 'A', long)]
         all: bool,
 
         #[clap(short, long)]
         number: Option<usize>,
+    },
+    /// branch
+    Branch {
+        /// 新分支名
+        #[clap(group = "sub")]
+        new_branch: Option<String>,
+
+        /// 基于某个commit创建分支
+        #[clap(requires = "new_branch")]
+        commit_hash: Option<String>,
+
+        /// 列出所有分支
+        #[clap(short, long, action, group = "sub", default_value = "true")]
+        list: bool,
+
+        /// 删除制定分支，不能删除当前所在分支
+        #[clap(short = 'D', long, group = "sub")]
+        delete: Option<String>,
+
+        /// 显示当前分支
+        #[clap(long, action, group = "sub")]
+        show_current: bool,
     },
 }
 pub fn handle_command() {
@@ -83,6 +107,9 @@ pub fn handle_command() {
         }
         Command::Log { all, number } => {
             log(all, number);
+        }
+        Command::Branch { list, delete, new_branch, commit_hash, show_current } => {
+            branch(new_branch, commit_hash, list, delete, show_current);
         }
     }
 }

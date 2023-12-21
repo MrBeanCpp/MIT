@@ -41,6 +41,17 @@ pub fn get_branch_head(branch_name: &String) -> String {
         "".to_string() // 分支不存在或者没有commit
     }
 }
+pub fn delete_branch(branch_name: &String) {
+    let mut branch = util::get_storage_path().unwrap();
+    branch.push("refs");
+    branch.push("heads");
+    branch.push(branch_name);
+    if branch.exists() {
+        std::fs::remove_file(branch).expect("无法删除branch");
+    } else {
+        panic!("branch file not exist");
+    }
+}
 
 /**返回当前head指向的commit hash，如果是分支，则返回分支的commit hash*/
 pub fn current_head_commit() -> String {
@@ -69,7 +80,6 @@ pub fn update_head_commit(commit_hash: &String) {
     }
 }
 
-
 /** 列出本地的branch */
 pub fn list_local_branches() -> Vec<String> {
     let mut branches = Vec::new();
@@ -95,7 +105,6 @@ pub fn change_head_to_branch(branch_name: &String) {
     std::fs::write(head, format!("ref: refs/heads/{}", branch_name)).expect("无法写入HEAD");
     update_head_commit(&branch_head);
 }
-
 
 /** 切换head到非branchcommit */
 pub fn change_head_to_commit(commit_hash: &String) {
