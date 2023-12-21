@@ -25,8 +25,7 @@ fn update_branch_head(branch_name: &String, commit_hash: &String) {
     branch.push("refs");
     branch.push("heads");
     branch.push(branch_name);
-    std::fs::write(&branch, commit_hash)
-        .expect(&format!("无法写入branch in {:?} with {}", branch, commit_hash));
+    std::fs::write(&branch, commit_hash).expect(&format!("无法写入branch in {:?} with {}", branch, commit_hash));
 }
 
 fn get_branch_head(branch_name: &String) -> String {

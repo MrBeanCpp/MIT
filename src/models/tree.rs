@@ -145,9 +145,7 @@ impl Tree {
                 blob_hashs.append(
                     sub_blobs
                         .iter()
-                        .map(|(path, blob_hash)| {
-                            (PathBuf::from(entry.name.clone()).join(path), blob_hash.clone())
-                        })
+                        .map(|(path, blob_hash)| (PathBuf::from(entry.name.clone()).join(path), blob_hash.clone()))
                         .collect::<Vec<(PathBuf, Hash)>>()
                         .as_mut(),
                 );

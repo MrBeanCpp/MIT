@@ -82,11 +82,7 @@ mod test {
         util::setup_test_with_mit();
 
         let index = super::Index::new();
-        let mut commit = super::Commit::new(
-            &index,
-            vec!["123".to_string(), "456".to_string()],
-            "test".to_string(),
-        );
+        let mut commit = super::Commit::new(&index, vec!["123".to_string(), "456".to_string()], "test".to_string());
         assert!(commit.hash.len() == 0);
 
         let hash = commit.save();

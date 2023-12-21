@@ -128,8 +128,7 @@ impl Index {
         let path = Index::get_path();
         if path.exists() {
             let json = fs::read_to_string(path).expect("无法读取index");
-            let relative_index: HashMap<PathBuf, FileMetaData> =
-                serde_json::from_str(&json).expect("无法解析index");
+            let relative_index: HashMap<PathBuf, FileMetaData> = serde_json::from_str(&json).expect("无法解析index");
             self.entries = relative_index
                 .into_iter()
                 .map(|(path, value)| {
