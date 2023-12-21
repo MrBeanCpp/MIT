@@ -91,7 +91,7 @@ impl Tree {
         let file_entries: Vec<PathBuf> = index
             .get_tracked_files()
             .iter_mut()
-            .map(|file| util::to_root_relative_path(file))
+            .map(|file| util::to_workdir_relative_path(file))
             .collect();
 
         store_path_to_tree(&file_entries, "".to_string().into())

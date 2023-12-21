@@ -22,7 +22,7 @@ pub fn changes_to_be_committed() -> Changes {
     let tracked_files = index
         .get_tracked_files()
         .iter()
-        .map(|f| util::to_root_relative_path(f))
+        .map(|f| util::to_workdir_relative_path(f))
         .collect::<Vec<PathBuf>>();
     if head_hash == "" {
         // 初始提交
@@ -43,7 +43,7 @@ pub fn changes_to_be_committed() -> Changes {
                 change.modified.push(tree_file.clone());
             }
         } else {
-            change.deleted.push(tree_file.clone()); //todo: abs_path?
+            change.deleted.push(tree_file.clone());
         }
     }
     for index_file in index_files.iter() {
