@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    path::{Component, PathBuf},
+    path::{PathBuf},
 };
 
 use serde::{Deserialize, Serialize};
@@ -19,6 +19,7 @@ pub struct TreeEntry {
     pub name: String,               // file name
 }
 
+/// 相对路径
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tree {
     #[serde(skip)]
@@ -137,6 +138,7 @@ impl Tree {
         files
     }
 
+    ///注：相对路径
     pub fn get_recursive_blobs(&self) -> Vec<(PathBuf, super::blob::Blob)> {
         let mut blobs = Vec::new();
         for entry in self.entries.iter() {
@@ -151,7 +153,7 @@ impl Tree {
                     sub_blobs
                         .iter()
                         .map(|(path, blob)| {
-                            (PathBuf::from(entry.name.clone()).join(path), blob.clone()) //todo: why join?
+                            (PathBuf::from(entry.name.clone()).join(path), blob.clone())
                         })
                         .collect::<Vec<(PathBuf, super::blob::Blob)>>()
                         .as_mut(),

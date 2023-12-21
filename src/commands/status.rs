@@ -2,20 +2,21 @@ use std::path::PathBuf;
 
 use crate::{
     head,
-    models::{blob, index},
+    models::{blob, index, commit},
     utils::util,
 };
+use crate::utils::util::to_workdir_absolute_path;
 
 /** 获取需要commit的更改(staged) */
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Changes {
-    pub new: Vec<String>,
+    pub new: Vec<String>, //todo PathBuf?
     pub modified: Vec<String>,
     pub deleted: Vec<String>,
 }
 
 fn __file_string(path: &PathBuf) -> String {
-    util::to_root_relative_path(&path) //todo: to_string_lossy()
+    util::to_root_relative_path(path) //todo: to_string_lossy()
         .as_os_str()
         .to_str()
         .unwrap()
@@ -23,51 +24,40 @@ fn __file_string(path: &PathBuf) -> String {
 }
 
 pub fn changes_to_be_committed() -> Changes {
-    let mut change = Changes { //todo: Changes::default()
-        new: vec![],
-        modified: vec![],
-        deleted: vec![],
-    };
+    let mut change = Changes::default();
     let index = index::Index::new();
     let head_hash = head::current_head_commit();
-    if head_hash == "".to_string() { //todo: head_hash.is_empty() or head_hash == ""
-        // 初始提交
-        change.new = index
-            .get_tracked_files()
+    let tracked_files = index.get_tracked_files();
+    if head_hash == "" { // 初始提交
+        change.new = tracked_files
             .iter()
-            .map(|f| __file_string(f))
+            .map(__file_string)
             .collect();
         return change;
     }
 
-    let commit = crate::models::commit::Commit::load(&head_hash);
+    let commit = commit::Commit::load(&head_hash);
     let tree = commit.get_tree();
-    let tree_files = tree.get_recursive_blobs();
-    let index_files: Vec<PathBuf> = index
-        .get_tracked_files()
+    let tree_files = tree.get_recursive_blobs(); //相对路径
+    let index_files: Vec<PathBuf> = tracked_files
         .iter()
         .map(|f| util::to_root_relative_path(f))
         .collect();
 
     for tree_item in tree_files.iter() {
-        let index_file = index_files.iter().find(|f| **f == tree_item.0);
-        if index_file.is_none() {
-            change.deleted.push(__file_string(&tree_item.0)); //todo: abs_path?
-        } else {
-            let index_blob = blob::Blob::new( //todo: index有函数可以获取blob_hash 不需要new
-                util::get_working_dir() //todo: 优化：提取为变量
-                    .unwrap()
-                    .join(index_file.unwrap())
-                    .as_path(),
-            );
-            // XXX @mrbeanc 我看到Blob的new被改成调用save了。这里的实现希望比较Blob内容，不然就得读取文件内容。
-            if index_blob.get_hash() != tree_item.1.get_hash() {
+        let index_file = index_files.iter().find(|&f| *f == tree_item.0);
+        if let Some(index_file) = index_file {
+            let index_path = to_workdir_absolute_path(index_file);
+            if !index.verify_hash(&index_path, &tree_item.1.get_hash()) {
                 change.modified.push(__file_string(&tree_item.0));
             }
+        } else {
+            change.deleted.push(__file_string(&tree_item.0)); //todo: abs_path?
         }
+
     }
     for index_file in index_files.iter() {
-        let tree_item = tree_files.iter().find(|f| f.0 == **index_file);
+        let tree_item = tree_files.iter().find(|f| f.0 == *index_file);
         if tree_item.is_none() {
             change.new.push(__file_string(&index_file));
         }
@@ -87,7 +77,7 @@ pub fn status() {
 mod tests {
     use super::*;
     use crate::{commands::commit, utils::util};
-    use std::{fs, path::Path};
+    use std::{path::Path};
 
     #[test]
     fn test_changes_to_be_committed() {
@@ -107,6 +97,8 @@ mod tests {
         assert_eq!(change.modified.len(), 0);
         assert_eq!(change.deleted.len(), 0);
 
+        println!("{:?}", change);
+
         commit::commit("test commit".to_string(), true);
         util::ensure_test_file(Path::new(test_file), Some("new content"));
         index.add(
@@ -118,6 +110,8 @@ mod tests {
         assert_eq!(change.new.len(), 0);
         assert_eq!(change.modified.len(), 1);
         assert_eq!(change.deleted.len(), 0);
+
+        println!("{:?}", change);
 
         commit::commit("test commit".to_string(), true);
         index.remove(
@@ -131,5 +125,7 @@ mod tests {
         assert_eq!(change.new.len(), 0);
         assert_eq!(change.modified.len(), 0);
         assert_eq!(change.deleted.len(), 1);
+
+        println!("{:?}", change);
     }
 }

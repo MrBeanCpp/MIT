@@ -169,8 +169,13 @@ pub fn to_root_relative_path(path: &Path) -> PathBuf { //todo: rename
     get_relative_path(path, &get_working_dir().unwrap())
 }
 
+/// 获取相较于工作区(Working Dir)的绝对路径
 pub fn to_workdir_absolute_path(path: &Path) -> PathBuf {
-    get_working_dir().unwrap().join(path)
+    if path.is_relative() {
+        get_working_dir().unwrap().join(path)
+    } else {
+        path.to_path_buf()
+    }
 }
 
 fn is_executable(path: &str) -> bool {
