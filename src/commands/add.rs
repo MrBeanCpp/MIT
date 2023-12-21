@@ -1,9 +1,11 @@
+use std::env;
+use std::path::{Path, PathBuf};
+
+use colored::Colorize;
+
 use crate::models::blob::Blob;
 use crate::models::index::{FileMetaData, Index};
 use crate::utils::util::{check_repo_exist, get_relative_path, get_working_dir, list_files};
-use colored::Colorize;
-use std::env;
-use std::path::{Path, PathBuf};
 
 // TODO: fatal: ../moj/app.py: '../moj/app.py' is outside repository at 'Git-Rust'
 pub fn add(files: Vec<String>, all: bool, mut update: bool) {
@@ -19,6 +21,7 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
             dot = false;
             update = false;
         } else if update {
+            // update 优先级次之
             dot = false;
         }
 
@@ -29,9 +32,9 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
             println!("{}", "'.'代表了当前目录".bright_green());
             env::current_dir().unwrap()
         } else {
-            panic!("不应该运行到这里");
+            panic!();
         };
-        
+
         println!("Working on [{}]\n", path.to_str().unwrap().bright_blue());
         files = list_files(&path).unwrap();
         if update {

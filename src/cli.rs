@@ -60,10 +60,10 @@ pub fn handle_command() {
         Command::Add { files, all, update } => {
             add(files, all, update);
         }
-        Command::Rm { files, cached, recursive} => {
+        Command::Rm { files, cached, recursive } => {
             remove(files, cached, recursive).expect("删除失败");
         }
-        Command::Commit { message, allow_empty, } => {
+        Command::Commit { message, allow_empty } => {
             commit(message, allow_empty);
         }
     }

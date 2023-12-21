@@ -27,10 +27,7 @@ impl Blob {
     pub fn load(hash: &String) -> Blob {
         let s = Store::new();
         let data = s.load(hash);
-        Blob {
-            hash: hash.clone(),
-            data,
-        }
+        Blob { hash: hash.clone(), data }
     }
 
     /// 写入文件；优化：文件已存在时不做操作

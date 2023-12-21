@@ -2,12 +2,12 @@ use crate::models::blob::Blob;
 use crate::models::object::Hash;
 use crate::utils::util;
 use crate::utils::util::get_relative_path;
+use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
-use colored::Colorize;
 
 // 文件元数据结构
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -83,11 +83,6 @@ impl Index {
     /// 验证文件的hash是否与index中的一致
     pub fn verify_hash(&self, file: &Path, hash: &Hash) -> bool {
         &self.get_hash(file).unwrap_or_default() == hash
-    }
-
-    // 获取所有文件元数据
-    fn get_all(&self) -> &HashMap<PathBuf, FileMetaData> {
-        &self.entries
     }
 
     pub fn contains(&self, path: &Path) -> bool {

@@ -38,10 +38,7 @@ fn store_path_to_tree(path_entries: &Vec<PathBuf>, current_root: PathBuf) -> Tre
         };
         entry
     };
-    let mut tree = Tree {
-        hash: "".to_string(),
-        entries: Vec::new(),
-    };
+    let mut tree = Tree { hash: "".to_string(), entries: Vec::new() };
     let mut processed_path: HashMap<String, bool> = HashMap::new();
     for path in path_entries.iter() {
         // 判断是不是直接在根目录下
@@ -149,10 +146,7 @@ impl Tree {
                     sub_blobs
                         .iter()
                         .map(|(path, blob_hash)| {
-                            (
-                                PathBuf::from(entry.name.clone()).join(path),
-                                blob_hash.clone(),
-                            )
+                            (PathBuf::from(entry.name.clone()).join(path), blob_hash.clone())
                         })
                         .collect::<Vec<(PathBuf, Hash)>>()
                         .as_mut(),
@@ -177,14 +171,8 @@ mod test {
         for test_file in vec!["b.txt", "mit_src/a.txt"] {
             let test_file = PathBuf::from(test_file);
             util::ensure_test_file(&test_file, None);
-            index.add(
-                test_file.clone(),
-                FileMetaData::new(&Blob::new(&test_file), &test_file),
-            );
-            index.add(
-                test_file.clone(),
-                FileMetaData::new(&Blob::new(&test_file), &test_file),
-            );
+            index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
+            index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
 
         let tree = super::Tree::new(&index);
@@ -200,10 +188,7 @@ mod test {
         for test_file in test_files.clone() {
             let test_file = PathBuf::from(test_file);
             util::ensure_test_file(&test_file, None);
-            index.add(
-                test_file.clone(),
-                FileMetaData::new(&Blob::new(&test_file), &test_file),
-            );
+            index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
 
         let tree = super::Tree::new(&index);
@@ -223,10 +208,7 @@ mod test {
         for test_file in test_files.clone() {
             let test_file = PathBuf::from(test_file);
             util::ensure_test_file(&test_file, None);
-            index.add(
-                test_file.clone(),
-                FileMetaData::new(&Blob::new(&test_file), &test_file),
-            );
+            index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
 
         let tree = super::Tree::new(&index);
@@ -250,10 +232,7 @@ mod test {
             util::ensure_test_file(&test_file, None);
             let blob = Blob::new(&test_file);
             test_blobs.push(blob.clone());
-            index.add(
-                test_file.clone(),
-                FileMetaData::new(&Blob::new(&test_file), &test_file),
-            );
+            index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
 
         let tree = super::Tree::new(&index);

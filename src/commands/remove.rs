@@ -1,9 +1,9 @@
-use std::{fs, io};
-use std::path::PathBuf;
-use colored::Colorize;
 use crate::models::index::Index;
 use crate::utils::util;
 use crate::utils::util::check_repo_exist;
+use colored::Colorize;
+use std::path::PathBuf;
+use std::{fs, io};
 
 /// 从暂存区&|工作区删除文件
 pub fn remove(files: Vec<String>, cached: bool, recursive: bool) -> io::Result<()> {
@@ -15,7 +15,8 @@ pub fn remove(files: Vec<String>, cached: bool, recursive: bool) -> io::Result<(
             println!("Warning: {} not exist", file.red());
             continue;
         }
-        if !index.contains(&path) { //不能删除未跟踪的文件
+        if !index.contains(&path) {
+            //不能删除未跟踪的文件
             println!("Warning: {} not tracked", file.red());
             continue;
         }

@@ -1,7 +1,7 @@
-use sha1::{Sha1, Digest};
-use std::fs::File;
-use std::io::{Write, BufReader, BufRead, Error};
 use mit::utils::util;
+use sha1::{Digest, Sha1};
+use std::fs::File;
+use std::io::{BufRead, BufReader, Error, Write};
 
 #[test]
 fn test_hash() {
