@@ -19,7 +19,7 @@ pub fn current_head() -> Head {
         Head::Detached(head_content)
     }
 }
-fn update_branch(branch_name: &String, commit_hash: &String) {
+pub fn update_branch(branch_name: &String, commit_hash: &String) {
     // 更新分支head
     let mut branch = util::get_storage_path().unwrap();
     branch.push("refs");
@@ -28,7 +28,7 @@ fn update_branch(branch_name: &String, commit_hash: &String) {
     std::fs::write(&branch, commit_hash).expect(&format!("无法写入branch in {:?} with {}", branch, commit_hash));
 }
 
-fn get_branch_head(branch_name: &String) -> String {
+pub fn get_branch_head(branch_name: &String) -> String {
     // 返回当前分支的commit hash
     let mut branch = util::get_storage_path().unwrap();
     branch.push("refs");
