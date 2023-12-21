@@ -42,8 +42,6 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
     for file in &files {
         add_a_file(file, &mut index);
     }
-
-    index.save();
 }
 
 fn add_a_file(file: &Path, index: &mut Index) {

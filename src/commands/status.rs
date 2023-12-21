@@ -65,6 +65,10 @@ pub fn changes_to_be_committed() -> Changes {
     change
 }
 
+pub fn changes_to_be_staged() {
+    unimplemented!()
+}
+
 /** 分为两个部分
 1. unstaged: 暂存区与工作区比较
 2. staged to be committed: 暂存区与HEAD(最后一次Commit::Tree)比较，即上次的暂存区

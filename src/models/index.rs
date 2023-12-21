@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
+use colored::Colorize;
 
 // 文件元数据结构
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -65,7 +66,8 @@ impl Index {
 
     // 删除文件
     pub fn remove(&mut self, path: &Path) {
-        self.entries.remove(path);
+        let path = Index::preprocess_path(&path);
+        self.entries.remove(&path);
     }
 
     // 获取文件元数据
@@ -169,6 +171,14 @@ impl Index {
     /** 获取跟踪的文件列表 */
     pub fn get_tracked_files(&self) -> Vec<PathBuf> {
         self.entries.keys().map(|f| f.clone()).collect()
+    }
+}
+
+/// 析构自动保存
+impl Drop for Index {
+    fn drop(&mut self) {
+        self.save();
+        println!("{}", "Index auto saved".bright_green());
     }
 }
 
