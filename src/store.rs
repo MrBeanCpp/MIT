@@ -8,9 +8,7 @@ pub struct Store {
 
 impl Store {
     pub fn new() -> Store {
-        if !util::storage_exist() {
-            panic!("不是合法的mit仓库");
-        }
+        util::check_repo_exist();
         let store_path = util::get_storage_path().unwrap();
         Store { store_path }
     }

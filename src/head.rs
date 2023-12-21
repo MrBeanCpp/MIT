@@ -19,7 +19,7 @@ pub fn current_head() -> Head {
         Head::Detached(head_content)
     }
 }
-fn update_branch_head(branch_name: &String, commit_hash: &String) {
+fn update_branch(branch_name: &String, commit_hash: &String) {
     // 更新分支head
     let mut branch = util::get_storage_path().unwrap();
     branch.push("refs");
@@ -59,7 +59,7 @@ pub fn update_head_commit(commit_hash: &String) {
     let head = current_head();
     match head {
         Head::Branch(branch_name) => {
-            update_branch_head(&branch_name, commit_hash);
+            update_branch(&branch_name, commit_hash);
         }
         Head::Detached(_) => {
             let mut head = util::get_storage_path().unwrap();
@@ -68,6 +68,7 @@ pub fn update_head_commit(commit_hash: &String) {
         }
     }
 }
+
 
 /** 列出本地的branch */
 pub fn list_local_branches() -> Vec<String> {
@@ -95,6 +96,7 @@ pub fn change_head_to_branch(branch_name: &String) {
     update_head_commit(&branch_head);
 }
 
+
 /** 切换head到非branchcommit */
 pub fn change_head_to_commit(commit_hash: &String) {
     let mut head = util::get_storage_path().unwrap();
@@ -104,7 +106,7 @@ pub fn change_head_to_commit(commit_hash: &String) {
 
 #[cfg(test)]
 mod test {
-    use crate::{head::update_branch_head, utils::util};
+    use crate::{head::update_branch, utils::util};
 
     #[test]
     fn test_edit_branch() {
@@ -114,7 +116,7 @@ mod test {
         assert!(branch_head.is_empty());
 
         let commit_hash = "1234567890".to_string();
-        super::update_branch_head(&branch_name, &commit_hash);
+        super::update_branch(&branch_name, &commit_hash);
         let branch_head = super::get_branch_head(&branch_name);
         assert!(!branch_head.is_empty());
         assert!(branch_head == commit_hash);
@@ -125,8 +127,8 @@ mod test {
         util::setup_test_with_mit();
         let branch_one = "test_branch".to_string() + &rand::random::<u32>().to_string();
         let branch_two = "test_branch".to_string() + &rand::random::<u32>().to_string();
-        update_branch_head(&branch_one, &"1234567890".to_string());
-        update_branch_head(&branch_two, &"1234567890".to_string());
+        update_branch(&branch_one, &"1234567890".to_string());
+        update_branch(&branch_two, &"1234567890".to_string());
 
         let branches = super::list_local_branches();
         assert!(branches.contains(&branch_one));
@@ -137,7 +139,7 @@ mod test {
     fn test_change_head_to_branch() {
         util::setup_test_with_mit();
         let branch_name = "test_branch".to_string() + &rand::random::<u32>().to_string();
-        update_branch_head(&branch_name, &"1234567890".to_string());
+        update_branch(&branch_name, &"1234567890".to_string());
         super::change_head_to_branch(&branch_name);
         assert!(
             match super::current_head() {
@@ -167,7 +169,7 @@ mod test {
         util::setup_test_with_mit();
         let branch_name = "test_branch".to_string() + &rand::random::<u32>().to_string();
         let commit_hash = "1234567890".to_string();
-        super::update_branch_head(&branch_name, &commit_hash);
+        super::update_branch(&branch_name, &commit_hash);
         let branch_head = super::get_branch_head(&branch_name);
         assert!(!branch_head.is_empty());
         assert!(branch_head == commit_hash);
