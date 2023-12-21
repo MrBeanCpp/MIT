@@ -15,6 +15,4 @@ format_code_in_doc_comments = true
 
 # 彩色输出：Unstable
 color = "Auto"
-ignore = [
-    "tests",
-]
+ignore = ["tests"]
