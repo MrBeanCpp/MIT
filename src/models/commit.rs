@@ -2,7 +2,7 @@ use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
 
-use crate::store;
+use crate::{store, utils::util};
 
 use super::{index::Index, object::Hash, tree::Tree};
 /*Commit
@@ -25,6 +25,9 @@ pub struct Commit {
 impl Commit {
     pub fn get_hash(&self) -> String {
         self.hash.clone()
+    }
+    pub fn get_date(&self) -> String {
+        util::format_time(&self.date)
     }
     pub fn get_tree_hash(&self) -> String {
         self.tree.clone()

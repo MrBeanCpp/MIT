@@ -17,7 +17,13 @@ pub fn commit(message: String, allow_empty: bool) {
     let current_head = head::current_head();
     let current_commit_hash = head::current_head_commit();
 
-    let mut commit = commit::Commit::new(&index, vec![current_commit_hash.clone()], message.clone());
+    let mut commit = {
+        if current_commit_hash.is_empty() {
+            commit::Commit::new(&index, vec![], message.clone())
+        } else {
+            commit::Commit::new(&index, vec![current_commit_hash.clone()], message.clone())
+        }
+    };
     let commit_hash = commit.save();
     head::update_head_commit(&commit_hash);
 
@@ -35,7 +41,9 @@ pub fn commit(message: String, allow_empty: bool) {
 
 #[cfg(test)]
 mod test {
-    use crate::utils::util;
+    use std::path::Path;
+
+    use crate::{commands, head, models, utils::util};
 
     #[test]
     #[should_panic]
@@ -43,5 +51,22 @@ mod test {
         util::setup_test_with_clean_mit();
 
         super::commit("".to_string(), false);
+    }
+
+    #[test]
+    fn test_commit() {
+        util::setup_test_with_clean_mit();
+        let test_file = "a.txt";
+        let head_one = head::current_head_commit();
+        assert!(head_one.is_empty());
+
+        util::ensure_test_file(&Path::new(test_file), "test content".into());
+        commands::commit::commit("test commit 1".to_string(), true);
+        let head_two = head::current_head_commit();
+        assert!(head_two.len() > 0);
+
+        let commit = models::commit::Commit::load(&head_two);
+        assert!(commit.get_parent_hash().len() == 0);
+        assert!(commit.get_message() == "test commit 1");
     }
 }

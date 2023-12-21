@@ -91,7 +91,7 @@ impl Tree {
             .map(|file| util::to_workdir_relative_path(file))
             .collect();
 
-        store_path_to_tree(&file_entries, "".to_string().into())
+        store_path_to_tree(&file_entries, "".into())
     }
 
     pub fn load(hash: &String) -> Tree {
