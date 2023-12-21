@@ -6,7 +6,8 @@ use crate::{
     utils::util,
 };
 
-/** 获取需要commit的更改 */
+/** 获取需要commit的更改(staged) */
+#[derive(Debug)]
 pub struct Changes {
     pub new: Vec<String>,
     pub modified: Vec<String>,
@@ -14,7 +15,7 @@ pub struct Changes {
 }
 
 fn __file_string(path: &PathBuf) -> String {
-    util::to_root_relative_path(&path)
+    util::to_root_relative_path(&path) //todo: to_string_lossy()
         .as_os_str()
         .to_str()
         .unwrap()
@@ -22,14 +23,14 @@ fn __file_string(path: &PathBuf) -> String {
 }
 
 pub fn changes_to_be_committed() -> Changes {
-    let mut change = Changes {
+    let mut change = Changes { //todo: Changes::default()
         new: vec![],
         modified: vec![],
         deleted: vec![],
     };
     let index = index::Index::new();
     let head_hash = head::current_head_commit();
-    if head_hash == "".to_string() {
+    if head_hash == "".to_string() { //todo: head_hash.is_empty() or head_hash == ""
         // 初始提交
         change.new = index
             .get_tracked_files()
@@ -51,10 +52,10 @@ pub fn changes_to_be_committed() -> Changes {
     for tree_item in tree_files.iter() {
         let index_file = index_files.iter().find(|f| **f == tree_item.0);
         if index_file.is_none() {
-            change.deleted.push(__file_string(&tree_item.0));
+            change.deleted.push(__file_string(&tree_item.0)); //todo: abs_path?
         } else {
-            let index_blob = blob::Blob::new(
-                util::get_working_dir()
+            let index_blob = blob::Blob::new( //todo: index有函数可以获取blob_hash 不需要new
+                util::get_working_dir() //todo: 优化：提取为变量
                     .unwrap()
                     .join(index_file.unwrap())
                     .as_path(),
@@ -74,6 +75,10 @@ pub fn changes_to_be_committed() -> Changes {
     change
 }
 
+/** 分为两个部分
+1. unstaged: 暂存区与工作区比较
+2. staged to be committed: 暂存区与HEAD(最后一次Commit::Tree)比较，即上次的暂存区
+ */
 pub fn status() {
     unimplemented!()
 }
@@ -92,7 +97,7 @@ mod tests {
 
         commit::commit("test commit".to_string(), true);
         let mut index = index::Index::new();
-        index.add(
+        index.add( //todo 可以直接调用add函数
             PathBuf::from(test_file),
             index::FileMetaData::new(&blob::Blob::new(Path::new(test_file)), Path::new(test_file)),
         );

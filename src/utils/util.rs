@@ -165,7 +165,8 @@ pub fn get_relative_path(path: &Path, dir: &Path) -> PathBuf {
     relative_path.to_path_buf()
 }
 
-pub fn to_root_relative_path(path: &Path) -> PathBuf {
+/// 获取相较于工作区(Working Dir)的相对路径
+pub fn to_root_relative_path(path: &Path) -> PathBuf { //todo: rename
     get_relative_path(path, &get_working_dir().unwrap())
 }
 

@@ -8,7 +8,7 @@ pub enum Head {
 pub fn current_head() -> Head {
     let mut head = util::get_storage_path().unwrap();
     head.push("HEAD");
-    let head_content = std::fs::read_to_string(head).expect("HEAD文件损坏");
+    let head_content = std::fs::read_to_string(head).expect("HEAD文件损坏").trim_end().to_string(); //去除末尾\n
     if head_content.starts_with("ref: refs/heads/") {
         let branch_name = head_content.trim_start_matches("ref: refs/heads/");
         Head::Branch(branch_name.to_string())
@@ -22,7 +22,7 @@ fn update_branch_head(branch_name: &String, commit_hash: &String) {
     branch.push("refs");
     branch.push("heads");
     branch.push(branch_name);
-    std::fs::write(branch, commit_hash).expect("无法写入branch");
+    std::fs::write(&branch, commit_hash).expect(&format!("无法写入branch in {:?} with {}", branch, commit_hash));
 }
 
 fn get_branch_head(branch_name: &String) -> String {

@@ -59,10 +59,7 @@ pub fn handle_command() {
         Command::Rm { files, cached } => {
             println!("rm: {:?}, cached= {}", files, cached);
         }
-        Command::Commit {
-            message,
-            allow_empty,
-        } => {
+        Command::Commit { message, allow_empty, } => {
             commit(message, allow_empty);
         }
     }

@@ -170,7 +170,7 @@ impl Index {
     pub fn get_tracked_files(&self) -> Vec<PathBuf> {
         let mut files = Vec::new();
         self.entries.keys().for_each(|file| {
-            if file.exists() {
+            if file.exists() { //todo: cancel this check
                 files.push(file.clone());
             }
         });

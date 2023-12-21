@@ -141,7 +141,7 @@ impl Tree {
         let mut blobs = Vec::new();
         for entry in self.entries.iter() {
             if entry.filemode.0 == "blob" {
-                let blob = super::blob::Blob::load(&entry.object_hash);
+                let blob = super::blob::Blob::load(&entry.object_hash); //todo: hash only
                 blobs.push((PathBuf::from(entry.name.clone()), blob));
             } else {
                 let sub_tree = Tree::load(&entry.object_hash);
@@ -151,7 +151,7 @@ impl Tree {
                     sub_blobs
                         .iter()
                         .map(|(path, blob)| {
-                            (PathBuf::from(entry.name.clone()).join(path), blob.clone())
+                            (PathBuf::from(entry.name.clone()).join(path), blob.clone()) //todo: why join?
                         })
                         .collect::<Vec<(PathBuf, super::blob::Blob)>>()
                         .as_mut(),
