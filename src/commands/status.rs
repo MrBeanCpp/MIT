@@ -10,7 +10,7 @@ use crate::{
 /** 获取需要commit的更改(staged) */
 #[derive(Debug, Default)]
 pub struct Changes {
-    pub new: Vec<PathBuf>, //todo PathBuf?
+    pub new: Vec<PathBuf>,
     pub modified: Vec<PathBuf>,
     pub deleted: Vec<PathBuf>,
 }
@@ -70,7 +70,10 @@ pub fn status() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{commands::commit, utils::util};
+    use crate::{
+        commands::{self, commit},
+        utils::util,
+    };
     use std::path::Path;
 
     #[test]
@@ -80,13 +83,7 @@ mod tests {
         util::ensure_test_file(Path::new(test_file), None);
 
         commit::commit("test commit".to_string(), true);
-        let mut index = index::Index::new();
-        index.add(
-            //todo 可以直接调用add函数
-            PathBuf::from(test_file),
-            index::FileMetaData::new(&blob::Blob::new(Path::new(test_file)), Path::new(test_file)),
-        );
-        index.save();
+        commands::add::add(vec![test_file.to_string()], false, false);
         let change = changes_to_be_committed();
         assert_eq!(change.new.len(), 1);
         assert_eq!(change.modified.len(), 0);
@@ -96,11 +93,7 @@ mod tests {
 
         commit::commit("test commit".to_string(), true);
         util::ensure_test_file(Path::new(test_file), Some("new content"));
-        index.add(
-            PathBuf::from(test_file),
-            index::FileMetaData::new(&blob::Blob::new(Path::new(test_file)), Path::new(test_file)),
-        );
-        index.save();
+        commands::add::add(vec![test_file.to_string()], false, false);
         let change = changes_to_be_committed();
         assert_eq!(change.new.len(), 0);
         assert_eq!(change.modified.len(), 1);
@@ -109,13 +102,7 @@ mod tests {
         println!("{:?}", change);
 
         commit::commit("test commit".to_string(), true);
-        index.remove(
-            util::get_working_dir()
-                .unwrap()
-                .join(Path::new(test_file))
-                .as_path(),
-        );
-        index.save();
+        let _ = commands::remove::remove(vec![test_file.to_string()], false, false);
         let change = changes_to_be_committed();
         assert_eq!(change.new.len(), 0);
         assert_eq!(change.modified.len(), 0);

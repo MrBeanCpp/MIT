@@ -2,7 +2,7 @@ use crate::{models::object::Hash, utils::util};
 
 pub enum Head {
     Detached(String),
-    Branch(Hash), // TODO Hash
+    Branch(Hash),
 }
 
 pub fn current_head() -> Head {
