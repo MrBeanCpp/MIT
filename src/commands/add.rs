@@ -5,7 +5,10 @@ use colored::Colorize;
 
 use crate::models::blob::Blob;
 use crate::models::index::{FileMetaData, Index};
-use crate::utils::util::{check_repo_exist, get_relative_path, get_working_dir, list_files};
+use crate::utils::util::{
+    check_repo_exist, get_working_dir, is_inside_repo, is_inside_workdir, list_files, to_workdir_relative_path,
+    ROOT_DIR,
+};
 
 // TODO: fatal: ../moj/app.py: '../moj/app.py' is outside repository at 'Git-Rust'
 pub fn add(files: Vec<String>, all: bool, mut update: bool) {
@@ -50,8 +53,18 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
 }
 
 fn add_a_file(file: &Path, index: &mut Index) {
-    let relative_path = get_relative_path(file, &get_working_dir().unwrap());
+    if !is_inside_workdir(file) {
+        //文件不在工作区内
+        println!("fatal: '{}' is outside repository at '{}'", file.display(), get_working_dir().unwrap().display());
+        return;
+    }
+    if is_inside_repo(file) {
+        //文件在.mit内
+        println!("fatal: '{}' is inside '{}' repo", file.display(), ROOT_DIR);
+        return;
+    }
 
+    let relative_path = to_workdir_relative_path(file);
     if !file.exists() {
         //文件被删除
         index.remove(file);

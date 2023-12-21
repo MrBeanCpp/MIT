@@ -123,6 +123,26 @@ pub fn get_working_dir() -> Option<PathBuf> {
     }
 }
 
+/// 检查文件是否在dir内(包括子文件夹)， 若不存在则false
+pub fn is_inside_dir(file: &Path, dir: &Path) -> bool {
+    if file.exists() {
+        let file = get_absolute_path(file);
+        file.starts_with(dir)
+    } else {
+        false
+    }
+}
+
+/// 检查文件是否在工作区内， 若不存在则false
+pub fn is_inside_workdir(file: &Path) -> bool {
+    is_inside_dir(file, &get_working_dir().unwrap())
+}
+
+/// 检查文件是否在.mit内， 若不存在则false
+pub fn is_inside_repo(file: &Path) -> bool {
+    is_inside_dir(file, &get_storage_path().unwrap())
+}
+
 pub fn format_time(time: &std::time::SystemTime) -> String {
     let datetime: chrono::DateTime<chrono::Utc> = time.clone().into();
     datetime.format("%Y-%m-%d %H:%M:%S.%3f").to_string()
@@ -257,9 +277,20 @@ mod tests {
     }
 
     #[test]
+    fn test_is_inside_repo() {
+        setup_test_with_mit();
+        let path = Path::new("../Cargo.toml");
+        assert_eq!(is_inside_workdir(path), false);
+
+        let path = Path::new(".mit/HEAD");
+        assert_eq!(is_inside_workdir(path), true);
+    }
+
+    #[test]
     fn test_format_time() {
         let time = std::time::SystemTime::now();
         let formatted_time = format_time(&time);
+        println!("{:?}", time);
         println!("{}", formatted_time);
     }
 
