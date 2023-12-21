@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use serde::{Deserialize, Serialize};
 
 use crate::store;
@@ -12,6 +14,7 @@ use super::{index::Index, object::Hash, tree::Tree};
 pub struct Commit {
     #[serde(skip)]
     hash: Hash,
+    date: SystemTime,
     author: String,    // unimplemented ignore
     committer: String, // unimplemented ignore
     message: String,
@@ -47,6 +50,7 @@ impl Commit {
         let tree_hash = tree.save();
         Commit {
             hash: "".to_string(),
+            date: SystemTime::now(),
             author: "mit".to_string(),
             committer: "mit-author".to_string(),
             message,
