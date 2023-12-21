@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use mit::commands::add::add;
 use mit::commands::commit::commit;
 use mit::commands::init::init;
+use mit::commands::remove::remove;
 
 /// Rust实现的简易版本的Git，用于学习Rust语言
 #[derive(Parser)]
@@ -37,6 +38,9 @@ enum Command {
         /// flag 删除暂存区的文件
         #[clap(long, action)]
         cached: bool,
+        /// flag 递归删除目录
+        #[clap(short, long)]
+        recursive: bool,
     },
     /// 提交暂存区的文件
     Commit {
@@ -51,13 +55,13 @@ pub fn handle_command() {
     let cli = Cli::parse();
     match cli.command {
         Command::Init => {
-            let _ = init();
+            init().expect("初始化失败");
         }
         Command::Add { files, all, update } => {
             add(files, all, update);
         }
-        Command::Rm { files, cached } => {
-            println!("rm: {:?}, cached= {}", files, cached);
+        Command::Rm { files, cached, recursive} => {
+            remove(files, cached, recursive).expect("删除失败");
         }
         Command::Commit { message, allow_empty, } => {
             commit(message, allow_empty);
