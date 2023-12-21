@@ -3,7 +3,7 @@ version = "Two"
 use_small_heuristics = "Max"
 max_width = 120
 struct_lit_width = 60
-chain_width = 60
+chain_width = 80
 single_line_if_else_max_width = 60
 single_line_let_else_max_width = 60
 

@@ -4,6 +4,7 @@ use mit::commands::commit::commit;
 use mit::commands::init::init;
 use mit::commands::log::log;
 use mit::commands::remove::remove;
+use mit::commands::status::status;
 
 /// Rust实现的简易版本的Git，用于学习Rust语言
 #[derive(Parser)]
@@ -51,6 +52,8 @@ enum Command {
         #[clap(long, action)]
         allow_empty: bool,
     },
+    /// 查看当前状态
+    Status,
     /// log 现实提交历史
     Log {
         #[clap(short = 'A', long)]
@@ -74,6 +77,9 @@ pub fn handle_command() {
         }
         Command::Commit { message, allow_empty } => {
             commit(message, allow_empty);
+        }
+        Command::Status => {
+            status();
         }
         Command::Log { all, number } => {
             log(all, number);

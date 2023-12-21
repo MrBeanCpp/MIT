@@ -90,6 +90,11 @@ impl Index {
         self.entries.contains_key(&path)
     }
 
+    /// 检查文件是否被跟踪, same as [Index::contains]
+    pub fn tracked(&self, path: &Path) -> bool {
+        self.contains(path)
+    }
+
     /// 与暂存区比较，获取工作区中被删除的文件
     pub fn get_deleted_files(&self) -> Vec<PathBuf> {
         let mut files = Vec::new();
@@ -172,7 +177,7 @@ impl Index {
 impl Drop for Index {
     fn drop(&mut self) {
         self.save();
-        println!("{}", "Index auto saved".bright_green());
+        // println!("{}", "Index auto saved".bright_green());
     }
 }
 

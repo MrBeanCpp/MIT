@@ -67,8 +67,7 @@ pub fn ensure_test_file(path: &Path, content: option::Option<&str>) {
         file.write(content.as_bytes()).unwrap();
     } else {
         // 写入文件名
-        file.write(path.file_name().unwrap().to_str().unwrap().as_bytes())
-            .unwrap();
+        file.write(path.file_name().unwrap().to_str().unwrap().as_bytes()).unwrap();
     }
 }
 
@@ -78,6 +77,12 @@ pub fn calc_hash(data: &String) -> String {
     hasher.update(data);
     let hash = hasher.finalize();
     hex::encode(hash)
+}
+
+/// 计算文件的hash
+pub fn calc_file_hash(path: &Path) -> String {
+    let data = fs::read_to_string(path).expect(&format!("无法读取文件：{}", path.display()));
+    calc_hash(&data)
 }
 
 pub fn storage_exist() -> bool {
@@ -91,6 +96,7 @@ pub fn storage_exist() -> bool {
 
 pub fn check_repo_exist() {
     if !storage_exist() {
+        println!("fatal: not a mit repository (or any of the parent directories): .mit");
         panic!("不是合法的mit仓库");
     }
 }
@@ -170,6 +176,15 @@ pub fn list_files(path: &Path) -> io::Result<Vec<PathBuf>> {
         }
     }
     Ok(files)
+}
+
+/// 列出工作区所有文件(包括子文件夹)
+pub fn list_workdir_files() -> Vec<PathBuf> {
+    if let Ok(files) = list_files(&get_working_dir().unwrap()) {
+        files
+    } else {
+        Vec::new()
+    }
 }
 
 /// 获取相对于dir的相对路径
@@ -252,6 +267,7 @@ pub fn clean_win_abs_path_pre(path: PathBuf) -> PathBuf {
 
 /// 获取绝对路径（相对于当前current_dir）
 pub fn get_absolute_path(path: &Path) -> PathBuf {
+    //TODO 不能处理不存在的文件
     if path.is_absolute() {
         path.to_path_buf()
     } else {
