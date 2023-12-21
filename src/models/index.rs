@@ -2,7 +2,6 @@ use crate::models::blob::Blob;
 use crate::models::object::Hash;
 use crate::utils::util;
 use crate::utils::util::get_relative_path;
-use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;

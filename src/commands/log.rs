@@ -1,7 +1,5 @@
 use crate::{head, models::commit::Commit};
 use colored::Colorize;
-use core::num;
-use std::option;
 
 const DEFAULT_LOG_NUMBER: usize = 10;
 
@@ -40,26 +38,13 @@ pub fn __log(all: bool, number: Option<usize>) -> usize {
         if first {
             // TODO: (HEAD -> ttt, ad2)
             first = false;
-            print!(
-                "{}{}{}{}",
-                "commit ".yellow(),
-                commit.get_hash().yellow(),
-                "(".yellow(),
-                "HEAD".blue()
-            );
+            print!("{}{}{}{}", "commit ".yellow(), commit.get_hash().yellow(), "(".yellow(), "HEAD".blue());
             if let Some(ref branch_name) = branch_name {
                 print!("{}", format!(" -> {}", branch_name).blue());
             }
             println!("{}", ")".yellow());
         } else {
-            println!(
-                "{}{}{}{}{}",
-                "commit ".yellow(),
-                head_commit.yellow(),
-                "(".yellow(),
-                "HEAD".blue(),
-                ")".yellow()
-            );
+            println!("{}{}{}{}{}", "commit ".yellow(), head_commit.yellow(), "(".yellow(), "HEAD".blue(), ")".yellow());
         }
         println!("Author: {}", commit.get_author());
         println!("Date:   {}", commit.get_date());
