@@ -3,14 +3,9 @@ use crate::models::{commit, index};
 
 use super::status;
 
-fn no_change() -> bool {
-    //todo: move to status.rs
-    let change = status::changes_to_be_committed();
-    change.new.len() == 0 && change.modified.len() == 0 && change.deleted.len() == 0
-}
 pub fn commit(message: String, allow_empty: bool) {
     let index = index::Index::new();
-    if no_change() && !allow_empty {
+    if !allow_empty && status::changes_to_be_committed().is_empty() {
         panic!("工作区没有任何改动，不需要提交");
     }
 
