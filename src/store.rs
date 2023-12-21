@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use crate::models::object::{self, Hash};
+
 use super::utils::util;
 
 pub struct Store {
@@ -30,6 +32,29 @@ impl Store {
         path.exists()
     }
 
+    /**  根据前缀搜索，有歧义时返回 None*/
+    pub fn search(&self, hash: &String) -> Option<Hash> {
+        let objects = util::list_files(self.store_path.join("objects").as_path()).unwrap();
+        // 转string
+        let objects = objects
+            .iter()
+            .map(|x| x.file_name().unwrap().to_str().unwrap().to_string())
+            .collect::<Vec<String>>();
+        let mut result = None;
+        for object in objects {
+            if object.starts_with(hash) {
+                if result.is_some() {
+                    return None;
+                }
+                result = Some(object);
+            }
+        }
+        match result {
+            None => None,
+            Some(result) => Some(result),
+        }
+    }
+
     pub fn save(&self, content: &String) -> String {
         /* 保存文件内容 */
         let hash = util::calc_hash(content);
@@ -45,6 +70,8 @@ impl Store {
 }
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     use super::*;
 
     #[test]
@@ -68,5 +95,22 @@ mod tests {
         let hash = store.save(&content);
         let content2 = store.load(&hash);
         assert_eq!(content, content2, "内容不一致");
+    }
+
+    #[test]
+    fn test_search() {
+        util::setup_test_with_clean_mit();
+        let hashs = vec!["1234567890".to_string(), "1235467891".to_string(), "4567892".to_string()];
+        for hash in hashs.iter() {
+            let mut path = util::get_storage_path().unwrap();
+            path.push("objects");
+            path.push(hash);
+            fs::write(path, "hello world").unwrap();
+        }
+        let store = Store::new();
+        assert!(store.search(&"123".to_string()).is_none()); // 有歧义
+        assert!(store.search(&"1234".to_string()).is_some()); // 精确
+        assert!(store.search(&"4".to_string()).is_some()); // 精确
+        assert!(store.search(&"1234567890123".to_string()).is_none()); // 不匹配
     }
 }
