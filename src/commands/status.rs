@@ -1,65 +1,55 @@
 use std::path::PathBuf;
 
+use crate::utils::util::to_workdir_absolute_path;
 use crate::{
     head,
-    models::{blob, index, commit},
+    models::{blob, commit, index},
     utils::util,
 };
-use crate::utils::util::to_workdir_absolute_path;
 
 /** 获取需要commit的更改(staged) */
 #[derive(Debug, Default)]
 pub struct Changes {
-    pub new: Vec<String>, //todo PathBuf?
-    pub modified: Vec<String>,
-    pub deleted: Vec<String>,
-}
-
-fn __file_string(path: &PathBuf) -> String {
-    util::to_root_relative_path(path) //todo: to_string_lossy()
-        .as_os_str()
-        .to_str()
-        .unwrap()
-        .to_string()
+    pub new: Vec<PathBuf>, //todo PathBuf?
+    pub modified: Vec<PathBuf>,
+    pub deleted: Vec<PathBuf>,
 }
 
 pub fn changes_to_be_committed() -> Changes {
     let mut change = Changes::default();
     let index = index::Index::new();
     let head_hash = head::current_head_commit();
-    let tracked_files = index.get_tracked_files();
-    if head_hash == "" { // 初始提交
-        change.new = tracked_files
-            .iter()
-            .map(__file_string)
-            .collect();
+    let tracked_files = index
+        .get_tracked_files()
+        .iter()
+        .map(|f| util::to_root_relative_path(f))
+        .collect::<Vec<PathBuf>>();
+    if head_hash == "" {
+        // 初始提交
+        change.new = tracked_files;
         return change;
     }
 
     let commit = commit::Commit::load(&head_hash);
     let tree = commit.get_tree();
     let tree_files = tree.get_recursive_blobs(); //相对路径
-    let index_files: Vec<PathBuf> = tracked_files
-        .iter()
-        .map(|f| util::to_root_relative_path(f))
-        .collect();
+    let index_files: Vec<PathBuf> = tracked_files;
 
-    for tree_item in tree_files.iter() {
-        let index_file = index_files.iter().find(|&f| *f == tree_item.0);
+    for (tree_file, blob_hash) in tree_files.iter() {
+        let index_file = index_files.iter().find(|&f| f == tree_file);
         if let Some(index_file) = index_file {
             let index_path = to_workdir_absolute_path(index_file);
-            if !index.verify_hash(&index_path, &tree_item.1.get_hash()) {
-                change.modified.push(__file_string(&tree_item.0));
+            if !index.verify_hash(&index_path, blob_hash) {
+                change.modified.push(tree_file.clone());
             }
         } else {
-            change.deleted.push(__file_string(&tree_item.0)); //todo: abs_path?
+            change.deleted.push(tree_file.clone()); //todo: abs_path?
         }
-
     }
     for index_file in index_files.iter() {
         let tree_item = tree_files.iter().find(|f| f.0 == *index_file);
         if tree_item.is_none() {
-            change.new.push(__file_string(&index_file));
+            change.new.push(index_file.clone());
         }
     }
     change
@@ -81,7 +71,7 @@ pub fn status() {
 mod tests {
     use super::*;
     use crate::{commands::commit, utils::util};
-    use std::{path::Path};
+    use std::path::Path;
 
     #[test]
     fn test_changes_to_be_committed() {
@@ -91,7 +81,8 @@ mod tests {
 
         commit::commit("test commit".to_string(), true);
         let mut index = index::Index::new();
-        index.add( //todo 可以直接调用add函数
+        index.add(
+            //todo 可以直接调用add函数
             PathBuf::from(test_file),
             index::FileMetaData::new(&blob::Blob::new(Path::new(test_file)), Path::new(test_file)),
         );

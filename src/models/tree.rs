@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    path::{PathBuf},
-};
+use std::{collections::HashMap, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
@@ -139,28 +136,30 @@ impl Tree {
     }
 
     ///注：相对路径
-    pub fn get_recursive_blobs(&self) -> Vec<(PathBuf, super::blob::Blob)> {
-        let mut blobs = Vec::new();
+    pub fn get_recursive_blobs(&self) -> Vec<(PathBuf, Hash)> {
+        let mut blob_hashs = Vec::new();
         for entry in self.entries.iter() {
             if entry.filemode.0 == "blob" {
-                let blob = super::blob::Blob::load(&entry.object_hash); //todo: hash only
-                blobs.push((PathBuf::from(entry.name.clone()), blob));
+                blob_hashs.push((PathBuf::from(entry.name.clone()), entry.object_hash.clone()));
             } else {
                 let sub_tree = Tree::load(&entry.object_hash);
                 let sub_blobs = sub_tree.get_recursive_blobs();
 
-                blobs.append(
+                blob_hashs.append(
                     sub_blobs
                         .iter()
-                        .map(|(path, blob)| {
-                            (PathBuf::from(entry.name.clone()).join(path), blob.clone())
+                        .map(|(path, blob_hash)| {
+                            (
+                                PathBuf::from(entry.name.clone()).join(path),
+                                blob_hash.clone(),
+                            )
                         })
-                        .collect::<Vec<(PathBuf, super::blob::Blob)>>()
+                        .collect::<Vec<(PathBuf, Hash)>>()
                         .as_mut(),
                 );
             }
         }
-        blobs
+        blob_hashs
     }
 }
 
@@ -263,9 +262,7 @@ mod test {
         let loaded_tree = super::Tree::load(&tree_hash);
         let blobs = loaded_tree.get_recursive_blobs();
         assert!(blobs.len() == test_files.len());
-        assert!(blobs[0].0.to_str().unwrap() == test_files[0]);
-        assert!(blobs[1].0.to_str().unwrap() == test_files[1]);
-        assert!(blobs[0].1.get_hash() == test_blobs[0].get_hash());
-        assert!(blobs[1].1.get_hash() == test_blobs[1].get_hash());
+        assert!(blobs.contains(&(PathBuf::from(test_files[0]), test_blobs[0].get_hash())));
+        assert!(blobs.contains(&(PathBuf::from(test_files[1]), test_blobs[1].get_hash())));
     }
 }
