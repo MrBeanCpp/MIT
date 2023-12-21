@@ -25,10 +25,13 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
         let path = if all || update {
             println!("{}", "--all || --update 运行于工作区目录".bright_green());
             get_working_dir().unwrap()
-        } else {
+        } else if dot {
             println!("{}", "'.'代表了当前目录".bright_green());
             env::current_dir().unwrap()
+        } else {
+            panic!("不应该运行到这里");
         };
+        
         println!("Working on [{}]\n", path.to_str().unwrap().bright_blue());
         files = list_files(&path).unwrap();
         if update {

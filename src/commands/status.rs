@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use crate::utils::util::to_workdir_absolute_path;
 use crate::{
     head,
-    models::{blob, commit, index},
+    models::{commit, index},
     utils::util,
 };
 
