@@ -168,13 +168,7 @@ impl Index {
 
     /** 获取跟踪的文件列表 */
     pub fn get_tracked_files(&self) -> Vec<PathBuf> {
-        let mut files = Vec::new();
-        self.entries.keys().for_each(|file| {
-            if file.exists() { //todo: cancel this check
-                files.push(file.clone());
-            }
-        });
-        files
+        self.entries.keys().map(|f| f.clone()).collect()
     }
 }
 
