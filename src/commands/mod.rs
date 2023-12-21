@@ -5,3 +5,5 @@ pub mod remove;
 pub mod status;
 pub mod log;
 pub mod branch;
+pub mod switch;
+pub mod restore;

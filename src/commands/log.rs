@@ -38,6 +38,7 @@ pub fn __log(all: bool, number: Option<usize>) -> usize {
         log_count += 1;
         let commit = Commit::load(&head_commit);
         if first {
+            // TODO: (HEAD -> ttt, ad2)
             first = false;
             print!(
                 "{}{}{}{}",

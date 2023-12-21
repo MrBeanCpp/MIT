@@ -11,10 +11,19 @@ Git in Rust. 用 Rust 编写的简易 Git
     -   [x] rm
     -   [x] commit
 
--   支持分支 git branch, git checkout
+- 支持分支 git branch, git checkout
 
-    -   [x] branch
-    -   [ ] Checkout
+  -   [x] branch
+  -   [ ] switch
+  -   [ ] restore
+
+  ```bash
+  # 撤销未暂存的文件更改（不涉及un trached file)
+  git restore path
+  git restore . # 全部
+  ```
+
+  
 
 -   支持简单的合并 git merge
 

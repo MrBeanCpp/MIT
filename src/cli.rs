@@ -6,6 +6,7 @@ use mit::commands::init::init;
 use mit::commands::log::log;
 use mit::commands::remove::remove;
 use mit::commands::status::status;
+use mit::commands::switch::switch;
 
 /// Rust实现的简易版本的Git，用于学习Rust语言
 #[derive(Parser)]
@@ -86,6 +87,28 @@ enum Command {
         #[clap(long, action, group = "sub")]
         show_current: bool,
     },
+
+    /// 切换分支
+    Switch {
+        /// 要切换的分支
+        #[clap(required_unless_present("create"))]
+        branch: Option<String>,
+
+        /// 创建并切换到新分支
+        #[clap(long, short)]
+        create: Option<String>,
+    },
+    /// restore
+    Restore {
+        // TODO 行为不确定
+        /// 要恢复的文件
+        #[clap(required = true)]
+        files: Vec<String>,
+
+        /// source
+        #[clap(long, short)]
+        source: Option<String>,
+    },
 }
 pub fn handle_command() {
     let cli = Cli::parse();
@@ -110,6 +133,13 @@ pub fn handle_command() {
         }
         Command::Branch { list, delete, new_branch, commit_hash, show_current } => {
             branch(new_branch, commit_hash, list, delete, show_current);
+        }
+
+        Command::Switch { branch, create } => {
+            switch(branch, create);
+        }
+        Command::Restore { files, source } => {
+            println!("files: {:?}, source: {:?}", files, source);
         }
     }
 }
