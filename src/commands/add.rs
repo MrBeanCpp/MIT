@@ -58,7 +58,6 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
 }
 
 fn add_a_file(file: &Path, index: &mut Index) {
-    //TODO 文件不存在会报错
     if !is_inside_workdir(file) && file.exists() {
         //文件不在工作区内
         println!("fatal: '{}' is outside repository at '{}'", file.display(), get_working_dir().unwrap().display());

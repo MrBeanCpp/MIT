@@ -251,8 +251,8 @@ pub fn get_file_mode(path: &Path) -> String {
     }
 }
 
-/// 清除Windows下的绝对路径前缀"\\\\?\\"
-/// <a href="https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation">Windows 系统中的文件路径格式</a>
+/// 清除Windows下的绝对路径前缀"\\\\?\\" (由[PathBuf::canonicalize]函数产生)
+/// <br><a href="https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation">Windows 系统中的文件路径格式</a>
 pub fn clean_win_abs_path_pre(path: PathBuf) -> PathBuf {
     #[cfg(windows)]
     {
@@ -270,14 +270,28 @@ pub fn clean_win_abs_path_pre(path: PathBuf) -> PathBuf {
     }
 }
 
-/// 获取绝对路径（相对于当前current_dir）
+/// 获取绝对路径（相对于目录current_dir） 不论是否存在
 pub fn get_absolute_path(path: &Path) -> PathBuf {
-    //TODO 不能处理不存在的文件
     if path.is_absolute() {
         path.to_path_buf()
     } else {
-        let abs_path = path.canonicalize().unwrap(); //这一步会统一路径分隔符
-        clean_win_abs_path_pre(abs_path)
+        /*let abs_path = path.canonicalize().unwrap(); //这一步会统一路径分隔符 //canonicalize()不能处理不存在的文件
+        clean_win_abs_path_pre(abs_path)*/
+        // 所以决定手动解析相对路径中的../ ./
+        let mut abs_path = std::env::current_dir().unwrap(); //cur_dir
+        for component in path.components() {
+            match component {
+                std::path::Component::ParentDir => {
+                    if !abs_path.pop() {
+                        panic!("relative path parse error");
+                    }
+                }
+                std::path::Component::Normal(part) => abs_path.push(part),
+                std::path::Component::CurDir => {}
+                _ => {}
+            }
+        }
+        abs_path
     }
 }
 
@@ -321,6 +335,19 @@ mod tests {
                 _ => assert!(false, "Unexpected error"),
             },
         }
+    }
+
+    #[test]
+    fn test_get_absolute_path() {
+        let path = Path::new("mit_test_storage/../src/main.rs");
+        let abs_path = get_absolute_path(path);
+        println!("{:?}", abs_path);
+
+        let mut cur_dir = std::env::current_dir().unwrap();
+        cur_dir.push("mit_test_storage");
+        cur_dir.pop();
+        cur_dir.push("src/main.rs");
+        assert_eq!(abs_path, cur_dir);
     }
 
     #[test]
