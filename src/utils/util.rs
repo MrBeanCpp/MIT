@@ -144,6 +144,12 @@ pub fn is_inside_dir(file: &Path, dir: &Path) -> bool {
     }
 }
 
+/// 检测dir是否是file的父目录 (不论文件是否存在)
+pub fn is_parent_dir(file: &Path, dir: &Path) -> bool {
+    let file = get_absolute_path(file);
+    file.starts_with(dir)
+}
+
 /// 检查文件是否在工作区内， 若不存在则false
 pub fn is_inside_workdir(file: &Path) -> bool {
     is_inside_dir(file, &get_working_dir().unwrap())

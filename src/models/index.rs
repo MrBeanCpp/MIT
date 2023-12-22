@@ -97,10 +97,10 @@ impl Index {
     }
 
     /// 与暂存区比较，获取工作区中被删除的文件
-    pub fn get_deleted_files(&self) -> Vec<PathBuf> {
+    pub fn get_deleted_files(&self, dir: &Path) -> Vec<PathBuf> {
         let mut files = Vec::new();
         self.entries.keys().for_each(|file| {
-            if !file.exists() {
+            if !file.exists() && util::is_parent_dir(file, dir) {
                 files.push(file.clone());
             }
         });

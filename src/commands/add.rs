@@ -33,7 +33,7 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
             dot = false;
         }
 
-        let path = if all || update {
+        let dir = if all || update {
             println!("{}", "--all || --update 运行于工作区目录".bright_green());
             get_working_dir().unwrap()
         } else if dot {
@@ -43,13 +43,13 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
             panic!();
         };
 
-        println!("Working on [{}]\n", path.to_str().unwrap().bright_blue());
-        files = list_files(&path).unwrap();
+        println!("Working on [{}]\n", dir.to_str().unwrap().bright_blue());
+        files = list_files(&dir).unwrap();
         if update {
             files.retain(|file| index.contains(file));
         }
 
-        files.extend(index.get_deleted_files()); //包含已删除的文件
+        files.extend(index.get_deleted_files(&dir)); //包含已删除的文件
     }
 
     for file in &files {
