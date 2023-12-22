@@ -16,7 +16,7 @@ pub struct TreeEntry {
     pub name: String,               // file name
 }
 
-/// 相对路径
+/// 相对路径(to workdir)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tree {
     #[serde(skip)]
@@ -80,6 +80,7 @@ impl Tree {
             .get_tracked_files()
             .iter_mut()
             .map(|file| util::to_workdir_relative_path(file))
+            //TODO! 改用相对路径(cur_dir)或者绝对路径；相对workdir的路径会在外部造成迷惑，且无法直接使用；在save&load时转换，参照index，转换可抽象为util函数
             .collect();
 
         store_path_to_tree(&file_entries, "".into())
@@ -123,17 +124,18 @@ impl Tree {
         files
     }
 
-    ///注：相对路径
+    ///注：相对路径(to workdir)
     pub fn get_recursive_blobs(&self) -> Vec<(PathBuf, Hash)> {
-        let mut blob_hashs = Vec::new();
+        //TODO 返回HashMap
+        let mut blob_hashes = Vec::new();
         for entry in self.entries.iter() {
             if entry.filemode.0 == "blob" {
-                blob_hashs.push((PathBuf::from(entry.name.clone()), entry.object_hash.clone()));
+                blob_hashes.push((PathBuf::from(entry.name.clone()), entry.object_hash.clone()));
             } else {
                 let sub_tree = Tree::load(&entry.object_hash);
                 let sub_blobs = sub_tree.get_recursive_blobs();
 
-                blob_hashs.append(
+                blob_hashes.append(
                     sub_blobs
                         .iter()
                         .map(|(path, blob_hash)| (PathBuf::from(entry.name.clone()).join(path), blob_hash.clone()))
@@ -142,7 +144,7 @@ impl Tree {
                 );
             }
         }
-        blob_hashs
+        blob_hashes
     }
 }
 

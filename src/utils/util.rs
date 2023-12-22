@@ -300,6 +300,23 @@ pub fn get_absolute_path(path: &Path) -> PathBuf {
         abs_path
     }
 }
+/// 整理输入的路径数组（相对、绝对、文件、目录、甚至包括不存在），返回一个绝对路径的文件数组
+pub fn integrate_paths(paths: &Vec<PathBuf>) -> Vec<PathBuf> {
+    let mut abs_paths = Vec::new();
+    for path in paths {
+        let path = get_absolute_path(&path); // 统一转换为绝对路径
+        if path.is_dir() {
+            // 包括目录下的所有文件(子文件夹)
+            let files = list_files(&path).unwrap();
+            abs_paths.extend(files);
+        } else {
+            abs_paths.push(path);
+        }
+    }
+    abs_paths.sort();
+    abs_paths.dedup(); // 去重
+    abs_paths
+}
 
 #[derive(Debug, PartialEq)]
 pub enum ObjectType {
@@ -309,9 +326,9 @@ pub enum ObjectType {
     Invalid,
 }
 pub fn check_object_type(hash: Hash) -> ObjectType {
-    let path = get_storage_path().unwrap().join("objects").join(hash.to_string());
+    let path = get_storage_path().unwrap().join("objects").join(hash);
     if path.exists() {
-        let data = fs::read_to_string(path).unwrap();
+        let data = fs::read_to_string(path).unwrap(); //TODO store::load?
         let result: Result<Commit, serde_json::Error> = serde_json::from_str(&data);
         if result.is_ok() {
             return ObjectType::Commit;
@@ -323,6 +340,11 @@ pub fn check_object_type(hash: Hash) -> ObjectType {
         return ObjectType::Blob;
     }
     ObjectType::Invalid
+}
+
+/// 判断hash对应的文件是否是commit
+pub fn is_typeof_commit(hash: Hash) -> bool {
+    check_object_type(hash) == ObjectType::Commit
 }
 
 #[cfg(test)]
@@ -340,6 +362,19 @@ mod tests {
                 std::io::ErrorKind::NotFound => println!("Not a git repository"),
                 _ => assert!(false, "Unexpected error"),
             },
+        }
+    }
+
+    #[test]
+    fn test_integrate_paths() {
+        let mut paths = Vec::new();
+        paths.push(PathBuf::from("src/utils"));
+        paths.push(PathBuf::from("../test_del.txt"));
+        paths.push(PathBuf::from("src/utils/util.rs"));
+        // paths.push(PathBuf::from("."));
+        let abs_paths = integrate_paths(&paths);
+        for path in abs_paths {
+            println!("{}", path.display());
         }
     }
 

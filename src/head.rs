@@ -52,6 +52,7 @@ pub fn delete_branch(branch_name: &String) {
 
 /**返回当前head指向的commit hash，如果是分支，则返回分支的commit hash */
 pub fn current_head_commit() -> String {
+    //TODO 明确返回Hash
     let head = current_head();
     match head {
         Head::Branch(branch_name) => {

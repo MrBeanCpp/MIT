@@ -11,7 +11,7 @@ use crate::{
 
 use super::{
     branch,
-    restore::{restore_staged_into_files, restore_workdir_into_files},
+    restore::{restore_index, restore_worktree},
     status::{changes_to_be_committed, changes_to_be_staged},
 };
 
@@ -28,9 +28,9 @@ fn switch_to_commit(commit_hash: Hash) {
     let target_files = tree.get_recursive_blobs(); // 相对路径
 
     // 借用逻辑类似的restore_workdir_into_files
-    restore_workdir_into_files(None, target_files.clone());
+    restore_worktree(None, &target_files);
     // 同时restore index
-    restore_staged_into_files(None, target_files);
+    restore_index(None, &target_files);
 }
 
 fn switch_to(branch: String, detach: bool) -> Result<(), SwitchErr> {

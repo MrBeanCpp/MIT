@@ -46,6 +46,7 @@ pub struct Index {
 impl Index {
     /// 从index文件加载
     pub(crate) fn new() -> Index {
+        //TODO! 设计为单例模式
         let mut index = Index {
             entries: HashMap::new(),
             working_dir: util::get_working_dir().unwrap(),

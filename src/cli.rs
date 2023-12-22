@@ -147,11 +147,16 @@ pub fn handle_command() {
             switch(branch, create, detach);
         }
         Command::Restore { path, mut source, mut worktree, staged } => {
-            // 未指定stage和worktree时，默认操作stage
+            // 未指定stage和worktree时，默认操作worktree
+            // 指定 --staged 将仅还原index
             if !staged {
                 worktree = true;
             }
             // 未指定source时，默认操作HEAD
+            /*TODO
+                If `--source` not specified, the contents are restored from `HEAD` if `--staged` is given,
+                otherwise from the [index].
+            */
             if source.is_none() {
                 source = Some("HEAD".to_string());
             }

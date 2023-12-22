@@ -113,6 +113,7 @@ pub fn status() {
 
     if !staged.is_empty() {
         println!("Changes to be committed:");
+        println!("  use \"mit restore --staged <file>...\" to unstage");
         staged.deleted.iter().for_each(|f| {
             let str = format!("\tdeleted: {}", f.display());
             println!("{}", str.bright_green());

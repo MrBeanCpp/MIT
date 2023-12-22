@@ -4,6 +4,7 @@ use crate::models::object::Hash;
 
 use super::utils::util;
 
+/// 管理.mit仓库的读写
 pub struct Store {
     store_path: PathBuf,
 }
@@ -30,6 +31,12 @@ impl Store {
         path.push("objects");
         path.push(hash);
         path.exists()
+    }
+
+    /// 将hash对应的文件内容(主要是blob)还原到file
+    pub fn restore_to_file(&self, hash: &Hash, file: &PathBuf) {
+        let content = self.load(hash);
+        std::fs::write(file, content).unwrap();
     }
 
     /** 根据前缀搜索，有歧义时返回 None */
