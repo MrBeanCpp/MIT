@@ -33,8 +33,7 @@ impl FileMetaData {
     }
 }
 
-/**
-    Index
+/** Index
 注意：逻辑处理均为绝对路径，但是存储时为相对路径
  */
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -191,8 +190,8 @@ mod tests {
 
     #[test]
     fn test_meta_get() {
-        // 示例：获取文件的元数据
-        let metadata = fs::metadata(".gitignore").unwrap();
+        util::setup_test_with_mit();
+        let metadata = fs::metadata(".mit/HEAD").unwrap();
         println!("{:?}", util::format_time(&metadata.created().unwrap()));
         println!("{:?}", util::format_time(&metadata.modified().unwrap()));
         println!("{:?}", metadata.len());

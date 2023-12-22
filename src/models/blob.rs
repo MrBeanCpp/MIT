@@ -1,9 +1,8 @@
 use crate::{models::object::Hash, store::Store, utils::util::calc_hash};
 use std::{fs, path::Path};
 
-/**
-    Blob
-Blob是git中最基本的对象，他储存一份文件的内容，并使用hash作为标识符。
+/**Blob<br>
+git中最基本的对象，他储存一份文件的内容，并使用hash作为标识符。
 */
 #[derive(Debug, Clone)]
 pub struct Blob {

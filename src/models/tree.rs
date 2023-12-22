@@ -152,10 +152,12 @@ impl Tree {
 mod test {
     use std::path::PathBuf;
 
+    use crate::utils::util::{get_absolute_path, to_workdir_absolute_path};
     use crate::{
         models::{blob::Blob, index::FileMetaData},
         utils::util,
     };
+
     #[test]
     fn test_new() {
         util::setup_test_with_clean_mit();
@@ -196,9 +198,8 @@ mod test {
     fn test_get_recursive_file_entries() {
         util::setup_test_with_clean_mit();
         let mut index = super::Index::new();
-        let test_files = vec!["b.txt", "mit_src/a.txt"];
+        let mut test_files = vec![PathBuf::from("b.txt"), PathBuf::from("mit_src/a.txt")];
         for test_file in test_files.clone() {
-            let test_file = PathBuf::from(test_file);
             util::ensure_test_file(&test_file, None);
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
@@ -207,10 +208,18 @@ mod test {
         let tree_hash = tree.get_hash();
 
         let loaded_tree = super::Tree::load(&tree_hash);
-        let files = loaded_tree.get_recursive_file_entries();
-        assert!(files.len() == test_files.len());
-        assert!(files[0].to_str().unwrap() == test_files[0]);
-        assert!(files[1].to_str().unwrap() == test_files[1]);
+        let mut files = loaded_tree.get_recursive_file_entries();
+        files.sort();
+        test_files.sort();
+        assert_eq!(files.len(), test_files.len());
+        assert_eq!(
+            to_workdir_absolute_path(&files[0]).to_str().unwrap(), //TODO 罪大恶极的路径问题
+            get_absolute_path(&test_files[0]).to_str().unwrap()
+        );
+        assert_eq!(
+            to_workdir_absolute_path(&files[1]).to_str().unwrap(),
+            get_absolute_path(&test_files[1]).to_str().unwrap()
+        );
     }
 
     #[test]

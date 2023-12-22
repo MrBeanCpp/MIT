@@ -66,6 +66,7 @@ pub fn setup_test_without_mit() {
 
 pub fn ensure_test_file(path: &Path, content: option::Option<&str>) {
     // 以测试目录为根目录，创建文件
+    fs::create_dir_all(path.parent().unwrap()).unwrap(); // ensure父目录
     let mut file =
         fs::File::create(get_working_dir().unwrap().join(path)).expect(format!("无法创建文件：{:?}", path).as_str());
     if let Some(content) = content {
