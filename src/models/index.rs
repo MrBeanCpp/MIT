@@ -1,12 +1,14 @@
-use crate::models::blob::Blob;
-use crate::models::object::Hash;
-use crate::utils::util;
-use crate::utils::util::get_relative_path;
+use crate::{
+    models::{blob::Blob, object::Hash},
+    utils::{util, util::get_relative_path},
+};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::time::SystemTime;
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+    time::SystemTime,
+};
 
 // 文件元数据结构
 #[derive(Serialize, Deserialize, Debug, Clone)]

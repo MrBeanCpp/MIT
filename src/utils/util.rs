@@ -1,7 +1,10 @@
 use sha1::{Digest, Sha1};
-use std::io::Write;
-use std::path::{Path, PathBuf};
-use std::{fs, io, option};
+use std::{
+    fs, io,
+    io::Write,
+    option,
+    path::{Path, PathBuf},
+};
 
 pub const ROOT_DIR: &str = ".mit";
 pub const TEST_DIR: &str = "mit_test_storage"; // 执行测试的储存库

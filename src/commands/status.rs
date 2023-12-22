@@ -1,8 +1,9 @@
-use crate::head::Head;
-use crate::models::commit::Commit;
-use crate::models::index::Index;
-use crate::utils::util::check_repo_exist;
-use crate::{head, utils::util};
+use crate::{
+    head,
+    head::Head,
+    models::{commit::Commit, index::Index},
+    utils::{util, util::check_repo_exist},
+};
 use colored::Colorize;
 use std::path::PathBuf;
 

@@ -1,9 +1,9 @@
-use crate::models::index::Index;
-use crate::utils::util;
-use crate::utils::util::check_repo_exist;
+use crate::{
+    models::index::Index,
+    utils::{util, util::check_repo_exist},
+};
 use colored::Colorize;
-use std::path::PathBuf;
-use std::{fs, io};
+use std::{fs, io, path::PathBuf};
 
 /// 从暂存区&|工作区删除文件
 pub fn remove(files: Vec<String>, cached: bool, recursive: bool) -> io::Result<()> {

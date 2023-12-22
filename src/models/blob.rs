@@ -1,8 +1,5 @@
-use crate::models::object::Hash;
-use crate::store::Store;
-use crate::utils::util::calc_hash;
-use std::fs;
-use std::path::Path;
+use crate::{models::object::Hash, store::Store, utils::util::calc_hash};
+use std::{fs, path::Path};
 
 /**
     Blob

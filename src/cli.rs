@@ -1,12 +1,7 @@
 use clap::{ArgGroup, Parser, Subcommand};
-use mit::commands::add::add;
-use mit::commands::branch::branch;
-use mit::commands::commit::commit;
-use mit::commands::init::init;
-use mit::commands::log::log;
-use mit::commands::remove::remove;
-use mit::commands::status::status;
-use mit::commands::switch::switch;
+use mit::commands::{
+    add::add, branch::branch, commit::commit, init::init, log::log, remove::remove, status::status, switch::switch,
+};
 
 /// Rust实现的简易版本的Git，用于学习Rust语言
 #[derive(Parser)]

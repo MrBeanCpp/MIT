@@ -127,8 +127,7 @@ pub fn branch(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::commands;
-    use crate::utils::util;
+    use crate::{commands, utils::util};
     #[test]
     fn test_create_branch() {
         util::setup_test_with_clean_mit();

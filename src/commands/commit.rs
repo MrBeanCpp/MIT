@@ -1,5 +1,7 @@
-use crate::head;
-use crate::models::{commit, index};
+use crate::{
+    head,
+    models::{commit, index},
+};
 
 use super::status;
 

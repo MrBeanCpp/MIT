@@ -1,13 +1,19 @@
-use std::env;
-use std::path::{Path, PathBuf};
+use std::{
+    env,
+    path::{Path, PathBuf},
+};
 
 use colored::Colorize;
 
-use crate::models::blob::Blob;
-use crate::models::index::{FileMetaData, Index};
-use crate::utils::util::{
-    check_repo_exist, get_working_dir, is_inside_repo, is_inside_workdir, list_files, to_workdir_relative_path,
-    ROOT_DIR,
+use crate::{
+    models::{
+        blob::Blob,
+        index::{FileMetaData, Index},
+    },
+    utils::util::{
+        check_repo_exist, get_working_dir, is_inside_repo, is_inside_workdir, list_files, to_workdir_relative_path,
+        ROOT_DIR,
+    },
 };
 
 pub fn add(files: Vec<String>, all: bool, mut update: bool) {

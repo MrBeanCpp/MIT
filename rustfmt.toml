@@ -6,13 +6,22 @@ struct_lit_width = 60
 chain_width = 80
 single_line_if_else_max_width = 60
 single_line_let_else_max_width = 60
-
 merge_derives = true
 reorder_imports = true
+
+unstable_features = true # 使能 unstable 特性
+## unstable features below ##
 # 格式化注释代码块：Unstable
 format_code_in_doc_comments = true
-
-
+# 重新排序mod
+reorder_modules = true
+# 按照 crate 重新排序
+imports_granularity = "Crate"
+# 过长换行使用大括号
+match_arm_blocks = true
+# 数组换行
+indent_style = "Block"
 # 彩色输出：Unstable
 color = "Auto"
+# 忽略，也是 unstable 特性
 ignore = ["tests"]

@@ -150,9 +150,10 @@ impl Tree {
 mod test {
     use std::path::PathBuf;
 
-    use crate::models::blob::Blob;
-    use crate::models::index::FileMetaData;
-    use crate::utils::util;
+    use crate::{
+        models::{blob::Blob, index::FileMetaData},
+        utils::util,
+    };
     #[test]
     fn test_new() {
         util::setup_test_with_clean_mit();
