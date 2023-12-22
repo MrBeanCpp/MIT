@@ -6,6 +6,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::models::{commit::Commit, object::Hash, tree::Tree};
+
 pub const ROOT_DIR: &str = ".mit";
 pub const TEST_DIR: &str = "mit_test_storage"; // 执行测试的储存库
 
@@ -279,8 +281,34 @@ pub fn get_absolute_path(path: &Path) -> PathBuf {
     }
 }
 
+#[derive(Debug, PartialEq)]
+pub enum ObjectType {
+    Blob,
+    Tree,
+    Commit,
+    Invalid,
+}
+pub fn check_object_type(hash: Hash) -> ObjectType {
+    let path = get_storage_path().unwrap().join("objects").join(hash.to_string());
+    if path.exists() {
+        let data = fs::read_to_string(path).unwrap();
+        let result: Result<Commit, serde_json::Error> = serde_json::from_str(&data);
+        if result.is_ok() {
+            return ObjectType::Commit;
+        }
+        let result: Result<Tree, serde_json::Error> = serde_json::from_str(&data);
+        if result.is_ok() {
+            return ObjectType::Tree;
+        }
+        return ObjectType::Blob;
+    }
+    ObjectType::Invalid
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::models::{blob::Blob, index::Index};
+
     use super::*;
 
     #[test]
@@ -324,5 +352,18 @@ mod tests {
             }
             Err(err) => println!("{}", err),
         }
+    }
+
+    #[test]
+    fn test_check_object_type() {
+        setup_test_with_clean_mit();
+        assert_eq!(check_object_type("123".into()), ObjectType::Invalid);
+        ensure_test_file(Path::new("test.txt"), Some("test"));
+        let hash = Blob::new(get_working_dir().unwrap().join("test.txt").as_path()).get_hash();
+        assert_eq!(check_object_type(hash), ObjectType::Blob);
+        let mut commit = Commit::new(&Index::new(), vec![], "test".to_string());
+        assert_eq!(check_object_type(commit.get_tree_hash()), ObjectType::Tree);
+        commit.save();
+        assert_eq!(check_object_type(commit.get_hash()), ObjectType::Commit);
     }
 }

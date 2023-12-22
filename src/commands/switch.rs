@@ -6,6 +6,7 @@ use crate::{
     head::{self},
     models::{commit::Commit, object::Hash},
     store::Store,
+    utils::util,
 };
 
 use super::{
@@ -51,10 +52,11 @@ fn switch_to(branch: String, detach: bool) -> Result<(), SwitchErr> {
         println!("切换到分支： '{}'", branch.green())
     } else if detach {
         let commit = store.search(&branch);
-        if commit.is_none() {
+        if commit.is_none() || util::check_object_type(commit.clone().unwrap()) != util::ObjectType::Commit {
             println!("fatal: 非法的 commit: '{}'", branch);
             return Err(SwitchErr::InvalidObject);
         }
+
         // 切到commit
         let commit = commit.unwrap();
         switch_to_commit(None, commit.clone());

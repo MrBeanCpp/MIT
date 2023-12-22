@@ -4,6 +4,7 @@ use crate::{
     head,
     models::{commit::Commit, object::Hash},
     store,
+    utils::util,
 };
 
 // branch error
@@ -30,12 +31,12 @@ fn search_hash(commit_hash: Hash) -> Option<Hash> {
 fn create_branch(branch_name: String, _base_commit: Hash) -> Result<(), BranchErr> {
     // 找到正确的base_commit_hash
     let base_commit = search_hash(_base_commit.clone());
-    if base_commit.is_none() {
+    if base_commit.is_none() || util::check_object_type(base_commit.clone().unwrap()) != util::ObjectType::Commit {
         println!("fatal: 非法的 commit: '{}'", _base_commit);
         return Err(BranchErr::InvalidObject);
     }
 
-    let base_commit = Commit::load(&base_commit.unwrap()); // TODO 这里会直接panic，可以优化一下错误处理流程
+    let base_commit = Commit::load(&base_commit.unwrap());
 
     let exist_branchs = head::list_local_branches();
     if exist_branchs.contains(&branch_name) {
