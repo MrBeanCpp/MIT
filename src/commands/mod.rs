@@ -1,9 +1,9 @@
 pub mod add;
+pub mod branch;
 pub mod commit;
 pub mod init;
-pub mod remove;
-pub mod status;
 pub mod log;
-pub mod branch;
-pub mod switch;
+pub mod remove;
 pub mod restore;
+pub mod status;
+pub mod switch;

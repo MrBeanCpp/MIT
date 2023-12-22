@@ -52,17 +52,8 @@ fn store_path_to_tree(path_entries: &Vec<PathBuf>, current_root: PathBuf) -> Tre
                 continue;
             }
             // 拿到下一级别目录
-            let process_path = path
-                .components()
-                .nth(0)
-                .unwrap()
-                .as_os_str()
-                .to_str()
-                .unwrap();
-            if processed_path
-                .insert(process_path.to_string(), true)
-                .is_some()
-            {
+            let process_path = path.components().nth(0).unwrap().as_os_str().to_str().unwrap();
+            if processed_path.insert(process_path.to_string(), true).is_some() {
                 continue;
             }
 

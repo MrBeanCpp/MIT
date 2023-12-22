@@ -8,10 +8,7 @@ pub enum Head {
 pub fn current_head() -> Head {
     let mut head = util::get_storage_path().unwrap();
     head.push("HEAD");
-    let head_content = std::fs::read_to_string(head)
-        .expect("HEAD文件损坏")
-        .trim_end()
-        .to_string(); //去除末尾\n
+    let head_content = std::fs::read_to_string(head).expect("HEAD文件损坏").trim_end().to_string(); //去除末尾\n
     if head_content.starts_with("ref: refs/heads/") {
         let branch_name = head_content.trim_start_matches("ref: refs/heads/");
         Head::Branch(branch_name.to_string())
@@ -53,7 +50,7 @@ pub fn delete_branch(branch_name: &String) {
     }
 }
 
-/**返回当前head指向的commit hash，如果是分支，则返回分支的commit hash*/
+/**返回当前head指向的commit hash，如果是分支，则返回分支的commit hash */
 pub fn current_head_commit() -> String {
     let head = current_head();
     match head {
@@ -65,7 +62,7 @@ pub fn current_head_commit() -> String {
     }
 }
 
-/**  将当前的head指向commit_hash，根据当前的head类型，更新不同的文件 */
+/** 将当前的head指向commit_hash，根据当前的head类型，更新不同的文件 */
 pub fn update_head_commit(commit_hash: &String) {
     let head = current_head();
     match head {
