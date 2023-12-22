@@ -155,7 +155,7 @@ pub fn handle_command() {
             if source.is_none() {
                 source = Some("HEAD".to_string());
             }
-            restore(path, source, worktree, staged);
+            restore(path, source.unwrap(), worktree, staged);
         }
     }
 }
