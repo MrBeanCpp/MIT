@@ -110,7 +110,7 @@ enum Command {
         source: Option<String>,
 
         /// worktree
-        #[clap(long, short, action)]
+        #[clap(long, short = 'W', action)]
         worktree: bool,
 
         /// staged

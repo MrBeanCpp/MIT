@@ -19,9 +19,9 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
     };
     let paths = util::integrate_paths(&paths); // file paths
 
-    let target_blobs = target_blobs // 转为相对路径(cur_dir) 与filter统一 //TODO tree改变路径表示方式后，这里需要修改
+    let target_blobs = target_blobs // 转为绝对路径 //TODO tree改变路径表示方式后，这里需要修改
         .iter()
-        .map(|(path, hash)| (util::to_workdir_relative_path(path), hash.clone()))
+        .map(|(path, hash)| (util::to_workdir_absolute_path(path), hash.clone()))
         .collect::<Vec<(PathBuf, Hash)>>();
 
     let index = Index::new();
