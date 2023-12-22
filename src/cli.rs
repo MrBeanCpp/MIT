@@ -1,6 +1,7 @@
 use clap::{ArgGroup, Parser, Subcommand};
 use mit::commands::{
-    add::add, branch::branch, commit::commit, init::init, log::log, remove::remove, status::status, switch::switch,
+    add::add, branch::branch, commit::commit, init::init, log::log, remove::remove, restore::restore, status::status,
+    switch::switch,
 };
 
 /// Rust实现的简易版本的Git，用于学习Rust语言
@@ -90,19 +91,31 @@ enum Command {
         branch: Option<String>,
 
         /// 创建并切换到新分支
-        #[clap(long, short)]
+        #[clap(long, short, group = "sub")]
         create: Option<String>,
+
+        /// 是否允许切换到commit
+        #[clap(long, short, action, default_value = "false", group = "sub")]
+        detach: bool,
     },
     /// restore
     Restore {
         // TODO 行为不确定
         /// 要恢复的文件
         #[clap(required = true)]
-        files: Vec<String>,
+        path: Vec<String>,
 
         /// source
         #[clap(long, short)]
         source: Option<String>,
+
+        /// worktree
+        #[clap(long, short, action)]
+        worktree: bool,
+
+        /// staged
+        #[clap(long, short, action)]
+        staged: bool,
     },
 }
 pub fn handle_command() {
@@ -130,11 +143,19 @@ pub fn handle_command() {
             branch(new_branch, commit_hash, list, delete, show_current);
         }
 
-        Command::Switch { branch, create } => {
-            switch(branch, create);
+        Command::Switch { branch, create, detach } => {
+            switch(branch, create, detach);
         }
-        Command::Restore { files, source } => {
-            println!("files: {:?}, source: {:?}", files, source);
+        Command::Restore { path, mut source, mut worktree, staged } => {
+            // 未指定stage和worktree时，默认操作stage
+            if !staged {
+                worktree = true;
+            }
+            // 未指定source时，默认操作HEAD
+            if source.is_none() {
+                source = Some("HEAD".to_string());
+            }
+            restore(path, source, worktree, staged);
         }
     }
 }
