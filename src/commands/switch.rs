@@ -22,15 +22,15 @@ enum SwitchErr {
 }
 
 /** 将工作区域的文件更改为commit_hash的版本，可以指定filter未特定文件或路径 */
-fn switch_to_commit(filter: Option<PathBuf>, commit_hash: Hash) {
+fn switch_to_commit(commit_hash: Hash) {
     let commit = Commit::load(&commit_hash);
     let tree = commit.get_tree();
     let target_files = tree.get_recursive_blobs(); // 相对路径
 
     // 借用逻辑类似的restore_workdir_into_files
-    restore_workdir_into_files(filter.clone(), target_files.clone());
+    restore_workdir_into_files(None, target_files.clone());
     // 同时restore index
-    restore_staged_into_files(filter, target_files);
+    restore_staged_into_files(None, target_files);
 }
 
 fn switch_to(branch: String, detach: bool) -> Result<(), SwitchErr> {
@@ -47,7 +47,7 @@ fn switch_to(branch: String, detach: bool) -> Result<(), SwitchErr> {
     if head::list_local_branches().contains(&branch) {
         // 切到分支
         let branch_commit = head::get_branch_head(&branch);
-        switch_to_commit(None, branch_commit.clone());
+        switch_to_commit(branch_commit.clone());
         head::change_head_to_branch(&branch); // 更改head
         println!("切换到分支： '{}'", branch.green())
     } else if detach {
@@ -59,7 +59,7 @@ fn switch_to(branch: String, detach: bool) -> Result<(), SwitchErr> {
 
         // 切到commit
         let commit = commit.unwrap();
-        switch_to_commit(None, commit.clone());
+        switch_to_commit(commit.clone());
         head::change_head_to_commit(&commit); // 更改head
         println!("切换到 detach commit： '{}'", commit.yellow())
     } else {
