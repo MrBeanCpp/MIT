@@ -114,7 +114,7 @@ enum Command {
         worktree: bool,
 
         /// staged
-        #[clap(long, short, action)]
+        #[clap(long, short = 'S', action)]
         staged: bool,
     },
 }
