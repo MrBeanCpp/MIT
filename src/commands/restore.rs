@@ -12,11 +12,13 @@ use crate::{
 
 /** 根据filter restore workdir */
 pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf, Hash)>) {
+    let all = filter.is_none(); //是否恢复所有文件
     let paths: Vec<PathBuf> = if let Some(filter) = filter {
         filter.clone()
     } else {
         vec![get_working_dir().unwrap()] //None == all(workdir), '.' == cur_dir
     };
+    let dot = paths.contains(&PathBuf::from(".")); //是否包含当前目录
     let paths = util::integrate_paths(&paths); // file paths
 
     let target_blobs = target_blobs // 转为绝对路径 //TODO tree改变路径表示方式后，这里需要修改
@@ -24,9 +26,13 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
         .map(|(path, hash)| (util::to_workdir_absolute_path(path), hash.clone()))
         .collect::<Vec<(PathBuf, Hash)>>();
 
+    //TODO @mrbeanc all & dot比较特殊，需要包含被删除的文件，逻辑和add类似 我明天写
     let index = Index::new();
     let store = Store::new();
     for (path, hash) in &target_blobs {
+        if !paths.contains(path) {
+            continue; //不在指定路径内
+        }
         if path.exists() {
             let file_hash = util::calc_file_hash(&path); //TODO tree没有存修改时间，所以这里只能用hash判断
             if file_hash == *hash {
@@ -51,14 +57,15 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
 }
 /** 根据filte restore staged */
 pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf, Hash)>) {
-    // TODO
+    // TODO 让@mrbeanc来写吧
     unimplemented!("TODO");
 }
 /**
-对于工作区中的新文件，若已跟踪，则删除；若未跟踪，则保留
+对于工作区中的新文件，若已跟踪，则删除；若未跟踪，则保留<br>
+对于暂存区中被删除的文件，同样会恢复
  */
 pub fn restore(paths: Vec<String>, source: String, worktree: bool, staged: bool) {
-    // TODO
+    // TODO 尝试合并restore_index和restore_worktree（逻辑上是一致的）
     let paths = paths.iter().map(PathBuf::from).collect::<Vec<PathBuf>>();
     let target_commit: Hash = {
         if source == "HEAD" {
