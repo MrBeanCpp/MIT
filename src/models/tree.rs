@@ -1,4 +1,7 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -37,7 +40,7 @@ fn store_path_to_tree(index: &Index, current_root: PathBuf) -> Tree {
         entry
     };
     let mut tree = Tree { hash: "".to_string(), entries: Vec::new() };
-    let mut processed_path: HashMap<String, bool> = HashMap::new();
+    let mut processed_path: HashSet<String> = HashSet::new();
     let path_entries = index
         .get_tracked_files()
         .iter()
@@ -56,9 +59,14 @@ fn store_path_to_tree(index: &Index, current_root: PathBuf) -> Tree {
             }
             // 拿到下一级别目录
             let process_path = path.components().nth(0).unwrap().as_os_str().to_str().unwrap();
-            if processed_path.insert(process_path.to_string(), true).is_some() {
+            // if processed_path.insert(process_path.to_string(), true).is_some() {
+            //     continue;
+            // }
+            // TODO 函数整体逻辑错误，等待修复@houxiaoxuan
+            if processed_path.contains(process_path) {
                 continue;
             }
+            processed_path.insert(process_path.to_string());
 
             let sub_tree = store_path_to_tree(index, process_path.into());
             let mode = util::get_file_mode(&util::get_working_dir().unwrap().join(process_path));
@@ -160,7 +168,7 @@ mod test {
     fn test_new() {
         util::setup_test_with_clean_mit();
         let mut index = super::Index::new();
-        for test_file in vec!["b.txt", "mit_src/a.txt"] {
+        for test_file in vec!["b.txt", "mit_src/a.txt", "test/test.txt"] {
             let test_file = PathBuf::from(test_file);
             util::ensure_test_file(&test_file, None);
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));

@@ -58,6 +58,7 @@ mod test {
         assert!(head_one.is_empty());
 
         util::ensure_test_file(&Path::new(test_file), "test content".into());
+        commands::add::add(vec![], true, false);
         commands::commit::commit("test commit 1".to_string(), true);
         let head_two = head::current_head_commit();
         assert!(head_two.len() > 0);
