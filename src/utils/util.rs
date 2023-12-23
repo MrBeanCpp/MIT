@@ -52,6 +52,9 @@ pub fn setup_test_with_mit() {
 pub fn setup_test_with_clean_mit() {
     setup_test_without_mit();
     let _ = crate::commands::init::init();
+    list_workdir_files().iter().for_each(|path| {
+        fs::remove_file(path).unwrap();
+    });
 }
 
 pub fn setup_test_without_mit() {
@@ -74,6 +77,13 @@ pub fn ensure_test_file(path: &Path, content: option::Option<&str>) {
     } else {
         // 写入文件名
         file.write(path.file_name().unwrap().to_str().unwrap().as_bytes()).unwrap();
+    }
+}
+
+pub fn ensure_no_file(path: &Path) {
+    // 以测试目录为根目录，删除文件
+    if path.exists() {
+        fs::remove_file(get_working_dir().unwrap().join(path)).unwrap();
     }
 }
 
