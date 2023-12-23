@@ -85,15 +85,19 @@ pub fn switch(target_branch: Option<String>, create: Option<String>, detach: boo
 
 #[cfg(test)]
 mod test {
-    use std::path::PathBuf;
+    use std::{fs, path::PathBuf};
 
-    use crate::commands;
+    use crate::commands::{self, status};
 
     use super::*;
     #[test]
     #[ignore] // TODO 等待restore实现后再测试
     fn test_switch() {
         util::setup_test_with_clean_mit();
+        util::list_workdir_files().iter().for_each(|f| {
+            fs::remove_file(f).unwrap();
+        });
+
         commands::commit::commit("init".to_string(), true);
         let test_branch_1 = "test_branch_1".to_string();
         commands::branch::branch(Some(test_branch_1.clone()), None, false, None, false);
@@ -138,6 +142,7 @@ mod test {
         /* test 4: switch to branch */
         let result = switch_to(test_branch_2.clone(), false);
         assert!(result.is_ok());
+        assert!(status::changes_to_be_staged().is_empty() && status::changes_to_be_committed().is_empty());
         assert!(match head::current_head() {
             head::Head::Branch(branch) => branch == test_branch_2,
             _ => false,
@@ -148,6 +153,7 @@ mod test {
         /* test 5: switch to commit */
         let result = switch_to(history_commit.clone(), true);
         assert!(result.is_ok());
+        assert!(status::changes_to_be_staged().is_empty() && status::changes_to_be_committed().is_empty());
         assert!(match head::current_head() {
             head::Head::Detached(commit) => commit == history_commit,
             _ => false,
@@ -168,5 +174,6 @@ mod test {
         });
         assert!(!test_file_1.exists());
         assert!(tees_file_2.exists());
+        assert!(status::changes_to_be_staged().is_empty() && status::changes_to_be_committed().is_empty());
     }
 }
