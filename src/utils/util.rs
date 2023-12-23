@@ -149,6 +149,7 @@ pub fn is_inside_dir(file: &Path, dir: &Path) -> bool {
 /// 检测dir是否是file的父目录 (不论文件是否存在)
 pub fn is_parent_dir(file: &Path, dir: &Path) -> bool {
     let file = get_absolute_path(file);
+    let dir = get_absolute_path(dir);
     file.starts_with(dir)
 }
 
@@ -167,10 +168,22 @@ pub fn format_time(time: &std::time::SystemTime) -> String {
     datetime.format("%Y-%m-%d %H:%M:%S.%3f").to_string()
 }
 
+/// 将路径中的分隔符统一为当前系统的分隔符
+fn unify_path_separator(path: &Path) -> PathBuf {
+    #[cfg(windows)]
+    {
+        path.to_string_lossy().replace("/", "\\").into()
+    }
+    #[cfg(not(windows))]
+    {
+        path.to_string_lossy().replace("\\", "/").into()
+    }
+}
+
 /// 递归遍历给定目录及其子目录，列出所有文件，除了.mit
 pub fn list_files(path: &Path) -> io::Result<Vec<PathBuf>> {
     let mut files = Vec::new();
-
+    let path = unify_path_separator(path);
     if path.is_dir() {
         if path.file_name().unwrap_or_default() == ROOT_DIR {
             // 跳过 .mit 目录
@@ -302,7 +315,7 @@ pub fn get_absolute_path(path: &Path) -> PathBuf {
         abs_path
     }
 }
-/// 整理输入的路径数组（相对、绝对、文件、目录、甚至包括不存在），返回一个绝对路径的文件数组
+/// 整理输入的路径数组（相对、绝对、文件、目录），返回一个绝对路径的文件数组
 pub fn integrate_paths(paths: &Vec<PathBuf>) -> Vec<PathBuf> {
     let mut abs_paths = Vec::new();
     for path in paths {
@@ -412,8 +425,24 @@ mod tests {
     }
 
     #[test]
+    fn test_unify_path_separator() {
+        let path_str = "src/utils\\aaa.rs";
+        let path = unify_path_separator(Path::new(path_str));
+        println!("{}", path.display());
+
+        #[cfg(windows)]
+        assert_eq!(path, Path::new("src\\utils\\aaa.rs"));
+        #[cfg(not(windows))]
+        assert_eq!(path, Path::new("src/utils/aaa.rs"));
+    }
+
+    #[test]
     fn test_list_files() {
-        let files = list_files(Path::new("F:\\Git-Test\\list-test"));
+        setup_test_with_clean_mit();
+        ensure_test_file(Path::new("test/test.txt"), None);
+        ensure_test_file(Path::new("a.txt"), None);
+        ensure_test_file(Path::new("b.txt"), None);
+        let files = list_files(Path::new("./"));
         match files {
             Ok(files) => {
                 for file in files {
@@ -422,6 +451,8 @@ mod tests {
             }
             Err(err) => println!("{}", err),
         }
+
+        assert_eq!(list_files(Path::new(".")).unwrap(), list_files(Path::new("./")).unwrap());
     }
 
     #[test]
