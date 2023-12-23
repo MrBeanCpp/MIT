@@ -191,8 +191,15 @@ pub fn restore(paths: Vec<String>, source: String, worktree: bool, staged: bool)
     };
 
     // 分别处理worktree和staged
-    let tree = Commit::load(&target_commit).get_tree();
-    let target_blobs = tree.get_recursive_blobs(); // 相对路径
+    let target_blobs = {
+        if target_commit.is_empty() {
+            // 没有commit的情况
+            Vec::new()
+        } else {
+            let tree = Commit::load(&target_commit).get_tree();
+            tree.get_recursive_blobs() // 相对路径
+        }
+    };
     if worktree {
         restore_worktree(Some(&paths), &target_blobs);
     }
