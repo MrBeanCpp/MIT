@@ -82,3 +82,91 @@ pub fn switch(target_branch: Option<String>, create: Option<String>, detach: boo
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::path::PathBuf;
+
+    use crate::commands;
+
+    use super::*;
+    // TODO 等待restore实现后再测试
+    #[test]
+    fn test_switch() {
+        util::setup_test_with_clean_mit();
+        commands::commit::commit("init".to_string(), true);
+        let test_branch_1 = "test_branch_1".to_string();
+        commands::branch::branch(Some(test_branch_1.clone()), None, false, None, false);
+
+        /* test 1: NoClean */
+        let test_file_1 = PathBuf::from("test_file_1");
+        util::ensure_test_file(&test_file_1, None);
+        let result = switch_to(test_branch_1.clone(), false);
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), SwitchErr::NoClean));
+
+        commands::add::add(vec![], true, false); // add all
+        commands::commit::commit("add file 1".to_string(), true);
+        let test_branch_2 = "test_branch_2".to_string();
+        commands::branch::branch(Some(test_branch_2.clone()), None, false, None, false); // branch2: test_file_1 exists
+
+        /* test 2: InvalidBranch */
+        let result = switch_to("invalid_branch".to_string(), false);
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), SwitchErr::InvalidBranch));
+
+        /* test 3: InvalidObject*/
+        let result = switch_to("invalid_commit".to_string(), true);
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), SwitchErr::InvalidObject));
+
+        let tees_file_2 = PathBuf::from("test_file_2");
+        util::ensure_test_file(&tees_file_2, None);
+        commands::add::add(vec![], true, false); // add all
+        commands::commit::commit("add file 2".to_string(), false);
+        let history_commit = head::current_head_commit(); // commit: test_file_1 exists, test_file_2 exists
+
+        util::ensure_no_file(&test_file_1);
+        commands::add::add(vec![], true, false); // add all
+        assert!(!test_file_1.exists());
+        commands::commit::commit("delete file 1".to_string(), false);
+        let branch_master = match head::current_head()/*  master: test_file_1 not exists, test_file_2 exists */{
+            head::Head::Branch(branch) => branch,
+            _ => panic!("current head is not branch"),
+        };
+
+        /* test 4: switch to branch */
+        let result = switch_to(test_branch_2.clone(), false);
+        assert!(result.is_ok());
+        assert!(match head::current_head() {
+            head::Head::Branch(branch) => branch == test_branch_2,
+            _ => false,
+        });
+        assert!(test_file_1.exists());
+        assert!(!tees_file_2.exists());
+
+        /* test 5: switch to commit */
+        let result = switch_to(history_commit.clone(), true);
+        assert!(result.is_ok());
+        assert!(match head::current_head() {
+            head::Head::Detached(commit) => commit == history_commit,
+            _ => false,
+        });
+        assert!(test_file_1.exists());
+        assert!(tees_file_2.exists());
+        assert!(match head::current_head() {
+            head::Head::Detached(commit) => commit == history_commit,
+            _ => false,
+        });
+
+        /* test 6: switch to master */
+        let result = switch_to(branch_master.clone(), false);
+        assert!(result.is_ok());
+        assert!(match head::current_head() {
+            head::Head::Branch(branch) => branch == branch_master,
+            _ => false,
+        });
+        assert!(!test_file_1.exists());
+        assert!(tees_file_2.exists());
+    }
+}
