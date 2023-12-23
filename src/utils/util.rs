@@ -292,11 +292,7 @@ pub fn to_workdir_relative_path(path: &Path) -> PathBuf {
 
 /// 获取相较于工作区(Working Dir)的绝对路径
 pub fn to_workdir_absolute_path(path: &Path) -> PathBuf {
-    if path.is_relative() {
-        get_working_dir().unwrap().join(path)
-    } else {
-        path.to_path_buf()
-    }
+    get_absolute_path_to_dir(path, &get_working_dir().unwrap())
 }
 
 fn is_executable(path: &str) -> bool {
@@ -354,13 +350,18 @@ pub fn clean_win_abs_path_pre(path: PathBuf) -> PathBuf {
 
 /// 获取绝对路径（相对于目录current_dir） 不论是否存在
 pub fn get_absolute_path(path: &Path) -> PathBuf {
+    get_absolute_path_to_dir(path, &std::env::current_dir().unwrap())
+}
+
+/// 获取绝对路径（相对于目录dir） 不论是否存在
+pub fn get_absolute_path_to_dir(path: &Path, dir: &Path) -> PathBuf {
     if path.is_absolute() {
         path.to_path_buf()
     } else {
         /*let abs_path = path.canonicalize().unwrap(); //这一步会统一路径分隔符 //canonicalize()不能处理不存在的文件
         clean_win_abs_path_pre(abs_path)*/
         // 所以决定手动解析相对路径中的../ ./
-        let mut abs_path = std::env::current_dir().unwrap(); //cur_dir
+        let mut abs_path = dir.to_path_buf();
         for component in path.components() {
             match component {
                 std::path::Component::ParentDir => {
@@ -454,7 +455,7 @@ mod tests {
 
     #[test]
     fn test_get_absolute_path() {
-        let path = Path::new("mit_test_storage/../src/main.rs");
+        let path = Path::new("./mit_test_storage/.././src/main.rs");
         let abs_path = get_absolute_path(path);
         println!("{:?}", abs_path);
 
@@ -462,6 +463,18 @@ mod tests {
         cur_dir.push("mit_test_storage");
         cur_dir.pop();
         cur_dir.push("src/main.rs");
+        assert_eq!(abs_path, cur_dir);
+    }
+
+    #[test]
+    fn test_to_workdir_absolute_path() {
+        setup_test_with_clean_mit();
+        let path = Path::new("./src/../main.rs");
+        let abs_path = to_workdir_absolute_path(path);
+        println!("{:?}", abs_path);
+
+        let mut cur_dir = get_working_dir().unwrap();
+        cur_dir.push("main.rs");
         assert_eq!(abs_path, cur_dir);
     }
 
