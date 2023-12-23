@@ -25,21 +25,24 @@ pub struct Tree {
 }
 
 /** 将文件列表保存为Tree Object，并返回最上层的Tree */
-fn store_path_to_tree(path_entries: &Vec<PathBuf>, current_root: PathBuf) -> Tree {
+fn store_path_to_tree(index: &Index, current_root: PathBuf) -> Tree {
     let get_blob_entry = |path: &PathBuf| {
-        let file_path = util::get_working_dir().unwrap().join(path);
-        let blob = super::blob::Blob::new(&file_path.clone());
-        let mode = util::get_file_mode(&path);
+        let mete = index.get(path).unwrap().clone();
         let filename = path.file_name().unwrap().to_str().unwrap().to_string();
         let entry = TreeEntry {
-            filemode: (String::from("blob"), mode),
-            object_hash: blob.get_hash(),
+            filemode: (String::from("blob"), mete.mode),
+            object_hash: mete.hash,
             name: filename,
         };
         entry
     };
     let mut tree = Tree { hash: "".to_string(), entries: Vec::new() };
     let mut processed_path: HashMap<String, bool> = HashMap::new();
+    let path_entries = index
+        .get_tracked_files()
+        .iter()
+        .map(|file| util::to_workdir_relative_path(file))
+        .collect::<Vec<PathBuf>>();
     for path in path_entries.iter() {
         // 判断是不是直接在根目录下
         let in_path = path.parent().unwrap() == current_root;
@@ -57,7 +60,7 @@ fn store_path_to_tree(path_entries: &Vec<PathBuf>, current_root: PathBuf) -> Tre
                 continue;
             }
 
-            let sub_tree = store_path_to_tree(path_entries, process_path.into());
+            let sub_tree = store_path_to_tree(index, process_path.into());
             let mode = util::get_file_mode(&util::get_working_dir().unwrap().join(process_path));
             tree.entries.push(TreeEntry {
                 filemode: (String::from("tree"), mode),
@@ -76,14 +79,7 @@ impl Tree {
     }
 
     pub fn new(index: &Index) -> Tree {
-        let file_entries: Vec<PathBuf> = index
-            .get_tracked_files()
-            .iter_mut()
-            .map(|file| util::to_workdir_relative_path(file))
-            //TODO! 改用相对路径(cur_dir)或者绝对路径；相对workdir的路径会在外部造成迷惑，且无法直接使用；在save&load时转换，参照index，转换可抽象为util函数
-            .collect();
-
-        store_path_to_tree(&file_entries, "".into())
+        store_path_to_tree(index, "".into())
     }
 
     pub fn load(hash: &String) -> Tree {
@@ -152,10 +148,12 @@ impl Tree {
 mod test {
     use std::path::PathBuf;
 
-    use crate::utils::util::{get_absolute_path, to_workdir_absolute_path};
     use crate::{
         models::{blob::Blob, index::FileMetaData},
-        utils::util,
+        utils::{
+            util,
+            util::{get_absolute_path, to_workdir_absolute_path},
+        },
     };
 
     #[test]

@@ -72,7 +72,7 @@ impl Index {
     }
 
     // 获取文件元数据
-    fn get(&self, path: &Path) -> Option<&FileMetaData> {
+    pub fn get(&self, path: &Path) -> Option<&FileMetaData> {
         let path = Index::preprocess_path(path);
         self.entries.get(&path)
     }
