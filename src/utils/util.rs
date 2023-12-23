@@ -171,8 +171,12 @@ pub fn format_time(time: &std::time::SystemTime) -> String {
 }
 
 /// 过滤出路径数组中的目录
-pub fn filter_dirs(paths: &Vec<PathBuf>) -> Vec<PathBuf> {
+pub fn filter_dirs(paths: &Vec<PathBuf>) -> HashSet<PathBuf> {
     paths.iter().filter(|path| path.is_dir()).cloned().collect()
+}
+
+pub fn filter_files(paths: &Vec<PathBuf>) -> HashSet<PathBuf> {
+    paths.iter().filter(|path| path.is_file()).cloned().collect()
 }
 
 /// 将路径中的分隔符统一为当前系统的分隔符

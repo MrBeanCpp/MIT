@@ -16,7 +16,10 @@ use crate::{
 };
 
 /// 统计[工作区]中的dirs文件夹中，相对于target_blobs已删除的文件
-fn get_worktree_deleted_files_in_dirs(dirs: &Vec<PathBuf>, target_blobs: &HashMap<PathBuf, Hash>) -> HashSet<PathBuf> {
+fn get_worktree_deleted_files_in_dirs(
+    dirs: &HashSet<PathBuf>,
+    target_blobs: &HashMap<PathBuf, Hash>,
+) -> HashSet<PathBuf> {
     target_blobs //统计所有目录中(包括None & '.')，删除的文件
         .iter()
         .filter(|(path, _)| {
@@ -38,7 +41,7 @@ fn get_worktree_deleted_files_in_dirs(dirs: &Vec<PathBuf>, target_blobs: &HashMa
 /// 统计[暂存区index]中相对于target_blobs已删除的文件，且包含在指定dirs内
 fn get_index_deleted_files_in_dirs(
     index: &Index,
-    dirs: &Vec<PathBuf>,
+    dirs: &HashSet<PathBuf>,
     target_blobs: &HashMap<PathBuf, Hash>,
 ) -> HashSet<PathBuf> {
     target_blobs //统计index中相对target已删除的文件，且包含在指定dir内
@@ -79,13 +82,13 @@ fn preprocess_blobs(blobs: &Vec<(PathBuf, Hash)>) -> HashMap<PathBuf, Hash> {
 
 /** 根据filter restore workdir */
 pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf, Hash)>) {
-    let paths = preprocess_filters(filter); //预处理filter 将None转化为workdir
+    let input_paths = preprocess_filters(filter); //预处理filter 将None转化为workdir
     let target_blobs = preprocess_blobs(target_blobs); //预处理target_blobs 转化为绝对路径HashMap
 
-    let dirs = util::filter_dirs(&paths); //统计所有目录
+    let dirs = util::filter_dirs(&input_paths); //统计所有目录
     let deleted_files = get_worktree_deleted_files_in_dirs(&dirs, &target_blobs); //统计所有目录中已删除的文件
 
-    let mut file_paths = util::integrate_paths(&paths); //整合存在的文件（绝对路径）
+    let mut file_paths = util::integrate_paths(&input_paths); //整合存在的文件（绝对路径）
     file_paths.extend(deleted_files); //已删除的文件
 
     let index = Index::new();
@@ -131,7 +134,21 @@ pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf,
     let dirs = util::filter_dirs(&input_paths); //统计所有目录
     let deleted_files_index = get_index_deleted_files_in_dirs(&index, &dirs, &target_blobs); //统计所有目录中已删除的文件
 
-    let mut file_paths = util::integrate_paths(&input_paths); //整合存在的文件（绝对路径）
+    // 1. 获取输入中的[文件路径]
+    let mut file_paths: HashSet<PathBuf> = util::filter_files(&input_paths)
+        .iter()
+        .map(|path| util::get_absolute_path(path))
+        .collect();
+    // 2.获取index中包含于dirs的文件（使用dirs进行筛选）
+    for index_file in index.get_tracked_files() {
+        for dir in &dirs {
+            if util::is_parent_dir(&index_file, dir) {
+                //需要包含在指定dir内
+                file_paths.insert(index_file.clone());
+            }
+        }
+    }
+    // 3.补充index中已删除的文件（相较于target_blobs）
     file_paths.extend(deleted_files_index); //已删除的文件
 
     for path in &file_paths {
