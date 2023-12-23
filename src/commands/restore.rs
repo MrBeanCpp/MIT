@@ -68,6 +68,8 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
     let input_paths = preprocess_filters(filter); //预处理filter 将None转化为workdir
     let target_blobs = preprocess_blobs(target_blobs); //预处理target_blobs 转化为绝对路径HashMap
 
+    //TODO 输出不存在于target和worktree中文件
+
     let deleted_files = get_worktree_deleted_files_in_filters(&input_paths, &target_blobs); //统计所有目录中已删除的文件
 
     let mut file_paths = util::integrate_paths(&input_paths); //根据用户输入整合存在的文件（绝对路径）
@@ -101,23 +103,7 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
                 if index.tracked(path) {
                     //文件已跟踪
                     fs::remove_file(&path).unwrap();
-                }
-            }
-        }
-    }
-    // 出现在filter中的目录的子目录如果已经是空目录，需要删除
-    for path in &input_paths {
-        if path.is_dir() && util::list_files(path).unwrap().is_empty() {
-            if !util::check_root_dir(path) {
-                fs::remove_dir_all(path).unwrap();
-            }
-        } else {
-            for sub_path in util::list_subpath(path).unwrap() {
-                if sub_path.is_dir()
-                    && util::list_files(&sub_path).unwrap().is_empty()
-                    && !util::check_root_dir(&sub_path)
-                {
-                    fs::remove_dir_all(sub_path).unwrap();
+                    util::clear_empty_dir(&path); // 级联删除 清理空目录
                 }
             }
         }
@@ -166,7 +152,8 @@ pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf,
 }
 /**
 对于工作区中的新文件，若已跟踪，则删除；若未跟踪，则保留<br>
-对于暂存区中被删除的文件，同样会恢复
+对于暂存区中被删除的文件，同样会恢复<br>
+注意：不会删除空文件夹
  */
 pub fn restore(paths: Vec<String>, source: String, worktree: bool, staged: bool) {
     // TODO 尝试合并restore_index和restore_worktree（逻辑上是一致的）
@@ -212,11 +199,7 @@ pub fn restore(paths: Vec<String>, source: String, worktree: bool, staged: bool)
 mod test {
     use std::path::PathBuf;
 
-    use crate::{
-        commands,
-        models::index::Index,
-        utils::util::{self, ensure_no_file},
-    };
+    use crate::{commands, models::index::Index, utils::util};
 
     #[test]
     fn test_restore_stage() {

@@ -253,10 +253,13 @@ pub fn list_subpath(path: &Path) -> io::Result<Vec<PathBuf>> {
     }
     Ok(files)
 }
-/** 检查一个路径是否是工作目录 */
-pub fn check_root_dir(path: &Path) -> bool {
-    // 检查子文件夹是否有ROOT
-    let path = get_absolute_path(path);
+/** 检查一个dir是否包含.mit（考虑.mit嵌套） */
+pub fn include_root_dir(dir: &Path) -> bool {
+    // 检查子文件夹是否有ROOT_DIR
+    if !dir.is_dir() {
+        return false;
+    }
+    let path = get_absolute_path(dir);
     for sub_path in fs::read_dir(path).unwrap() {
         let sub_path = sub_path.unwrap().path();
         if sub_path.file_name().unwrap() == ROOT_DIR {
@@ -265,6 +268,37 @@ pub fn check_root_dir(path: &Path) -> bool {
     }
     return false;
 }
+
+/// 级联删除空目录，直到遇到 [工作区根目录 | 当前目录]
+pub fn clear_empty_dir(dir: &Path) {
+    let mut dir = if dir.is_dir() {
+        dir.to_path_buf()
+    } else {
+        dir.parent().unwrap().to_path_buf()
+    };
+    // 不能删除工作区根目录 & 当前目录
+    while !include_root_dir(&dir) && !is_cur_dir(&dir) {
+        if is_empty_dir(&dir) {
+            fs::remove_dir(&dir).unwrap();
+        } else {
+            break; //一旦发现非空目录，停止级联删除
+        }
+        dir.pop();
+    }
+}
+
+pub fn is_empty_dir(dir: &Path) -> bool {
+    if !dir.is_dir() {
+        return false;
+    }
+    fs::read_dir(dir).unwrap().next().is_none()
+}
+
+pub fn is_cur_dir(dir: &Path) -> bool {
+    let cur_dir = std::env::current_dir().unwrap(); //应该是绝对路径吧
+    get_absolute_path(dir) == cur_dir
+}
+
 /// 列出工作区所有文件(包括子文件夹)
 pub fn list_workdir_files() -> Vec<PathBuf> {
     if let Ok(files) = list_files(&get_working_dir().unwrap()) {
@@ -547,14 +581,14 @@ mod tests {
             fs::remove_file(f).unwrap();
         });
         list_subpath(Path::new("./")).unwrap().iter().for_each(|f| {
-            if check_root_dir(f) {
+            if include_root_dir(f) {
                 fs::remove_dir_all(f).unwrap();
             }
         });
-        assert_eq!(check_root_dir(Path::new("./")), true);
+        assert_eq!(include_root_dir(Path::new("./")), true);
         fs::create_dir("./src").unwrap_or_default();
-        assert_eq!(check_root_dir(Path::new("./src")), false);
+        assert_eq!(include_root_dir(Path::new("./src")), false);
         fs::create_dir("./src/.mit").unwrap_or_default();
-        assert_eq!(check_root_dir(Path::new("./src")), true);
+        assert_eq!(include_root_dir(Path::new("./src")), true);
     }
 }
