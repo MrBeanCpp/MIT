@@ -1,13 +1,10 @@
-use std::fs;
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
-use crate::models::index::Index;
-use crate::utils::util;
-use crate::utils::util::get_working_dir;
 use crate::{
     head,
-    models::{commit::Commit, object::Hash},
+    models::{commit::Commit, index::Index, object::Hash},
     store::Store,
+    utils::{util, util::get_working_dir},
 };
 
 /** 根据filter restore workdir */
@@ -26,7 +23,7 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
         .map(|(path, hash)| (util::to_workdir_absolute_path(path), hash.clone()))
         .collect::<Vec<(PathBuf, Hash)>>();
 
-    //TODO @mrbeanc all & dot比较特殊，需要包含被删除的文件，逻辑和add类似 我明天写
+    //TODO @mrbeanc all & dot比较特殊，需要包含被删除的文件，逻辑和add类似 我明天写 @mrbeanc 传递一个目录也需要包含被删除的文件
     let index = Index::new();
     let store = Store::new();
     for (path, hash) in &target_blobs {
