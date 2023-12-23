@@ -1,6 +1,6 @@
 use sha1::{Digest, Sha1};
-use std::collections::HashSet;
 use std::{
+    collections::HashSet,
     fs, io,
     io::Write,
     option,
@@ -238,6 +238,33 @@ pub fn list_files(path: &Path) -> io::Result<Vec<PathBuf>> {
     Ok(files)
 }
 
+/** 列出子文件夹 */
+pub fn list_subpath(path: &Path) -> io::Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    let path = get_absolute_path(path);
+    if path.is_dir() {
+        for entry in fs::read_dir(path)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() && path.file_name().unwrap_or_default() != ROOT_DIR {
+                files.push(path)
+            }
+        }
+    }
+    Ok(files)
+}
+/** 检查一个路径是否是工作目录 */
+pub fn check_root_dir(path: &Path) -> bool {
+    // 检查子文件夹是否有ROOT
+    let path = get_absolute_path(path);
+    for sub_path in fs::read_dir(path).unwrap() {
+        let sub_path = sub_path.unwrap().path();
+        if sub_path.file_name().unwrap() == ROOT_DIR {
+            return true;
+        }
+    }
+    return false;
+}
 /// 列出工作区所有文件(包括子文件夹)
 pub fn list_workdir_files() -> Vec<PathBuf> {
     if let Ok(files) = list_files(&get_working_dir().unwrap()) {
@@ -498,5 +525,23 @@ mod tests {
         assert_eq!(check_object_type(commit.get_tree_hash()), ObjectType::Tree);
         commit.save();
         assert_eq!(check_object_type(commit.get_hash()), ObjectType::Commit);
+    }
+
+    #[test]
+    fn test_check_root_dir() {
+        setup_test_with_clean_mit();
+        list_workdir_files().iter().for_each(|f| {
+            fs::remove_file(f).unwrap();
+        });
+        list_subpath(Path::new("./")).unwrap().iter().for_each(|f| {
+            if check_root_dir(f) {
+                fs::remove_dir_all(f).unwrap();
+            }
+        });
+        assert_eq!(check_root_dir(Path::new("./")), true);
+        fs::create_dir("./src").unwrap_or_default();
+        assert_eq!(check_root_dir(Path::new("./src")), false);
+        fs::create_dir("./src/.mit").unwrap_or_default();
+        assert_eq!(check_root_dir(Path::new("./src")), true);
     }
 }
