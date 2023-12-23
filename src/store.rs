@@ -86,7 +86,7 @@ mod tests {
 
     #[test]
     fn test_new_success() {
-        util::setup_test_with_mit();
+        util::setup_test_with_clean_mit();
         let _ = Store::new();
     }
 
@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn test_save_and_load() {
-        let _ = util::setup_test_with_mit();
+        let _ = util::setup_test_with_clean_mit();
         let store = Store::new();
         let content = "hello world".to_string();
         let hash = store.save(&content);

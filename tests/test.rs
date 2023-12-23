@@ -14,7 +14,7 @@ fn test_hash() {
 
 #[test]
 fn test_write() -> Result<(), Error> {
-    util::setup_test_with_mit();
+    util::setup_test_with_clean_mit();
     let path = "lines.txt";
     //create会截断文件
     let mut output = File::create(path)?; // ? 用于传播错误
@@ -24,7 +24,7 @@ fn test_write() -> Result<(), Error> {
 
 #[test]
 fn test_read() -> Result<(), Error> {
-    util::setup_test_with_mit();
+    util::setup_test_with_clean_mit();
     let path = "lines.txt";
     util::ensure_test_file(path.as_ref(), None);
     let input = File::open(path)?;

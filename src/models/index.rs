@@ -190,7 +190,7 @@ mod tests {
 
     #[test]
     fn test_meta_get() {
-        util::setup_test_with_mit();
+        util::setup_test_with_clean_mit();
         let metadata = fs::metadata(".mit/HEAD").unwrap();
         println!("{:?}", util::format_time(&metadata.created().unwrap()));
         println!("{:?}", util::format_time(&metadata.modified().unwrap()));
@@ -199,7 +199,7 @@ mod tests {
 
     #[test]
     fn test_load() {
-        util::setup_test_with_mit();
+        util::setup_test_with_clean_mit();
         let index = Index::new();
         println!("{:?}", index);
     }

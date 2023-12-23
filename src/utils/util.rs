@@ -77,6 +77,13 @@ pub fn ensure_test_file(path: &Path, content: option::Option<&str>) {
     }
 }
 
+pub fn ensure_no_file(path: &Path) {
+    // 以测试目录为根目录，删除文件
+    if path.exists() {
+        fs::remove_file(get_working_dir().unwrap().join(path)).unwrap();
+    }
+}
+
 /* tools for mit */
 pub fn calc_hash(data: &String) -> String {
     let mut hasher = Sha1::new();
@@ -394,7 +401,7 @@ mod tests {
 
     #[test]
     fn test_is_inside_repo() {
-        setup_test_with_mit();
+        setup_test_with_clean_mit();
         let path = Path::new("../Cargo.toml");
         assert_eq!(is_inside_workdir(path), false);
 
