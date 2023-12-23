@@ -1,5 +1,7 @@
+use std::collections::{HashMap, HashSet};
 use std::{fs, path::PathBuf};
 
+use crate::utils::util::{get_absolute_path, list_files};
 use crate::{
     head,
     models::{commit::Commit, index::Index, object::Hash},
@@ -9,46 +11,65 @@ use crate::{
 
 /** 根据filter restore workdir */
 pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf, Hash)>) {
-    let all = filter.is_none(); //是否恢复所有文件
     let paths: Vec<PathBuf> = if let Some(filter) = filter {
         filter.clone()
     } else {
         vec![get_working_dir().unwrap()] //None == all(workdir), '.' == cur_dir
     };
-    let dot = paths.contains(&PathBuf::from(".")); //是否包含当前目录
-    let paths = util::integrate_paths(&paths); // file paths
 
     let target_blobs = target_blobs // 转为绝对路径 //TODO tree改变路径表示方式后，这里需要修改
         .iter()
         .map(|(path, hash)| (util::to_workdir_absolute_path(path), hash.clone()))
-        .collect::<Vec<(PathBuf, Hash)>>();
+        .collect::<HashMap<PathBuf, Hash>>();
 
-    //TODO @mrbeanc all & dot比较特殊，需要包含被删除的文件，逻辑和add类似 我明天写 @mrbeanc 传递一个目录也需要包含被删除的文件
+    let dirs: Vec<PathBuf> = paths.iter().filter(|path| path.is_dir()).cloned().collect();
+    let del_files = target_blobs //统计所有目录中(包括None & '.')，删除的文件
+        .iter()
+        .filter(|(path, _)| {
+            if !path.exists() {
+                for dir in &dirs {
+                    if util::is_parent_dir(path, dir) {
+                        //需要包含在指定dir内
+                        return true;
+                    }
+                }
+            }
+            false
+        })
+        .map(|(path, _)| path.clone())
+        .collect::<HashSet<PathBuf>>(); //HashSet自动去重
+    let mut paths = util::integrate_paths(&paths); //存在的文件路径
+    paths.extend(del_files); //不存在的文件路径
+
     let index = Index::new();
     let store = Store::new();
-    for (path, hash) in &target_blobs {
-        if !paths.contains(path) {
-            continue; //不在指定路径内
-        }
-        if path.exists() {
-            let file_hash = util::calc_file_hash(&path); //TODO tree没有存修改时间，所以这里只能用hash判断
-            if file_hash == *hash {
-                continue; //文件未修改 不需要还原
-            }
-        }
-        //文件不存在或已修改
-        store.restore_to_file(hash, &path);
-    }
 
-    //处理工作区的新文件
-    for path in paths {
-        if target_blobs.iter().any(|(target_path, _)| target_path == &path) {
-            //TODO 最好返回HashMap 方便优化
-            continue; //已处理
-        }
-        //未找到，则对于target_commit来说是新文件；若已跟踪，则删除；若未跟踪，则保留
-        if index.tracked(&path) {
-            fs::remove_file(&path).unwrap();
+    for path in &paths {
+        assert!(path.is_absolute() && !path.is_dir()); // 绝对路径且不是目录
+        if !path.exists() {
+            //文件不存在于workdir
+            if target_blobs.contains_key(path) {
+                //文件存在于target_commit
+                store.restore_to_file(&target_blobs[path], &path);
+            } else {
+                //在target_commit和workdir中都不存在(非法路径)
+                println!("fatal: pathspec '{}' did not match any files", path.display());
+            }
+        } else {
+            //文件存在，有两种情况：1.修改 2.新文件
+            if target_blobs.contains_key(path) {
+                //文件已修改(modified)
+                let file_hash = util::calc_file_hash(&path); //TODO tree没有存修改时间，所以这里只能用hash判断
+                if file_hash != target_blobs[path] {
+                    store.restore_to_file(&target_blobs[path], &path);
+                }
+            } else {
+                //新文件，也分两种情况：1.已跟踪，需要删除 2.未跟踪，保留
+                if index.tracked(path) {
+                    //文件已跟踪
+                    fs::remove_file(&path).unwrap();
+                }
+            }
         }
     }
 }
