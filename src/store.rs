@@ -36,6 +36,10 @@ impl Store {
     /// 将hash对应的文件内容(主要是blob)还原到file
     pub fn restore_to_file(&self, hash: &Hash, file: &PathBuf) {
         let content = self.load(hash);
+        // 保证文件层次存在
+        let mut parent = file.clone();
+        parent.pop();
+        std::fs::create_dir_all(parent).unwrap();
         std::fs::write(file, content).unwrap();
     }
 
