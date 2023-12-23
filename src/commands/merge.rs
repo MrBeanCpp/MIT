@@ -59,7 +59,7 @@ fn merge_ff(commit_hash: String) -> Result<(), MergeErr> {
             commands::switch::switch(Some(commit_hash.clone()), None, true);
         }
     }
-    unimplemented!();
+    Ok(())
 }
 
 /** merge，暂时只支持fast forward */
@@ -81,4 +81,48 @@ pub fn merge(branch: String) {
     };
     // 暂时只支持fast forward
     let _ = merge_ff(merge_commit);
+}
+
+#[cfg(test)]
+mod test {
+    use std::fs;
+
+    use crate::commands::{commit, switch::switch};
+
+    use super::*;
+    #[test]
+    fn test_check_ff() {
+        util::setup_test_with_clean_mit();
+        util::list_workdir_files().iter().for_each(|x| fs::remove_file(x).unwrap());
+
+        commit::commit("init".to_string(), true);
+        let commit1 = head::current_head_commit();
+        let origin_branch = match head::current_head() {
+            head::Head::Branch(branch) => branch,
+            _ => panic!("current head is not a branch"),
+        };
+
+        let new_branch = "new_branch".to_string();
+        switch(None, Some(new_branch.clone()), false);
+        commit::commit("new_branch commit 1".to_string(), true);
+        commit::commit("new_branch commit 2".to_string(), true);
+        assert_ne!(head::current_head_commit(), commit1);
+        assert_eq!(head::get_branch_head(&origin_branch.clone()), commit1);
+        let commit2 = head::current_head_commit();
+
+        // test success merge
+        switch(Some(origin_branch.clone()), None, false);
+        assert_eq!(head::current_head_commit(), commit1);
+
+        let result = merge_ff(commit2.clone());
+        assert!(result.is_ok());
+        assert_eq!(head::current_head_commit(), commit2);
+        assert_eq!(head::get_branch_head(&origin_branch.clone()), commit2);
+
+        // test no fast forward
+        commit::commit("master commit 2".to_string(), true);
+        let result = merge_ff(commit1.clone());
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), MergeErr::NoFastForward));
+    }
 }
