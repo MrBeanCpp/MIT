@@ -86,19 +86,19 @@ mod test {
 
     #[test]
     fn test_commit() {
-        util::setup_test_with_mit();
+        util::setup_test_with_clean_mit();
 
         let index = super::Index::new();
         let mut commit = super::Commit::new(&index, vec!["123".to_string(), "456".to_string()], "test".to_string());
-        assert!(commit.hash.len() == 0);
+        assert_eq!(commit.hash.len(), 0);
 
         let hash = commit.save();
-        assert!(commit.hash == hash, "commit hash not equal");
+        assert_eq!(commit.hash, hash, "commit hash not equal");
 
         let commit = super::Commit::load(&hash);
-        assert!(commit.hash == hash);
-        assert!(commit.hash.len() != 0);
-        assert!(commit.parent.len() == 2);
+        assert_eq!(commit.hash, hash);
+        assert_ne!(commit.hash.len(), 0);
+        assert_eq!(commit.parent.len(), 2);
         println!("{:?}", commit)
     }
 }

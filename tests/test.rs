@@ -26,6 +26,7 @@ fn test_write() -> Result<(), Error> {
 fn test_read() -> Result<(), Error> {
     util::setup_test_with_mit();
     let path = "lines.txt";
+    util::ensure_test_file(path.as_ref(), None);
     let input = File::open(path)?;
     let buffered = BufReader::new(input);
 
