@@ -41,11 +41,12 @@ fn store_path_to_tree(index: &Index, current_root: PathBuf) -> Tree {
     };
     let mut tree = Tree { hash: "".to_string(), entries: Vec::new() };
     let mut processed_path: HashSet<String> = HashSet::new();
-    let path_entries = index
+    let path_entries: Vec<PathBuf> = index
         .get_tracked_files()
         .iter()
         .map(|file| util::to_workdir_relative_path(file))
-        .collect::<Vec<PathBuf>>();
+        .filter(|path| path.starts_with(&current_root))
+        .collect();
     for path in path_entries.iter() {
         // 判断是不是直接在根目录下
         let in_path = path.parent().unwrap() == current_root;
@@ -58,17 +59,20 @@ fn store_path_to_tree(index: &Index, current_root: PathBuf) -> Tree {
                 continue;
             }
             // 拿到下一级别目录
-            let process_path = path.components().nth(0).unwrap().as_os_str().to_str().unwrap();
-            // if processed_path.insert(process_path.to_string(), true).is_some() {
-            //     continue;
-            // }
+            let process_path = path
+                .components()
+                .nth(current_root.components().count())
+                .unwrap()
+                .as_os_str()
+                .to_str()
+                .unwrap();
             // TODO 函数整体逻辑错误，等待修复@houxiaoxuan
             if processed_path.contains(process_path) {
                 continue;
             }
             processed_path.insert(process_path.to_string());
 
-            let sub_tree = store_path_to_tree(index, process_path.into());
+            let sub_tree = store_path_to_tree(index, current_root.clone().join(process_path));
             let mode = util::get_file_mode(&util::get_working_dir().unwrap().join(process_path));
             tree.entries.push(TreeEntry {
                 filemode: (String::from("tree"), mode),
@@ -176,7 +180,7 @@ mod test {
         }
 
         let tree = super::Tree::new(&index);
-        assert!(tree.entries.len() == 2);
+        assert!(tree.entries.len() == 3);
         assert!(tree.hash.len() != 0);
     }
 
