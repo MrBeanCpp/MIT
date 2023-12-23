@@ -1,17 +1,20 @@
-use clap::builder::Str;
-
 use crate::{
-    commands, head,
+    commands::{
+        self,
+        status::{changes_to_be_committed, changes_to_be_staged},
+    },
+    head,
     models::{commit::Commit, object::Hash},
     store::Store,
     utils::util,
 };
 
-enum MergeError {
+enum MergeErr {
     NoFastForward,
+    NoClean,
 }
 
-fn check_ff(current: &Hash, target: Hash) -> Result<bool, MergeError> {
+fn check_ff(current: &Hash, target: Hash) -> Result<bool, MergeErr> {
     let target_commit = Commit::load(&target);
     // 检查current是否是target的祖先
     if *current == target_commit.get_hash() {
@@ -23,11 +26,20 @@ fn check_ff(current: &Hash, target: Hash) -> Result<bool, MergeError> {
             return result;
         }
     }
-    return Err(MergeError::NoFastForward);
+    return Err(MergeErr::NoFastForward);
 }
 
 /** commit 以fast forward到形式合并到当前分支 */
-fn merge_ff(commit_hash: String) -> Result<(), MergeError> {
+fn merge_ff(commit_hash: String) -> Result<(), MergeErr> {
+    // 检查更改
+    if !changes_to_be_staged().is_empty() {
+        println!("fatal: 你有未暂存的更改，切换分支会导致更改丢失");
+        return Err(MergeErr::NoClean);
+    } else if !changes_to_be_committed().is_empty() {
+        println!("fatal: 你有未提交的更改，无法切换分支");
+        return Err(MergeErr::NoClean);
+    }
+
     // 检查当前分支是否可以fast forward到commit
     let current_commit = head::current_head_commit();
     let check = check_ff(&current_commit, commit_hash.clone());
