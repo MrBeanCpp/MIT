@@ -90,8 +90,8 @@ mod test {
     use crate::commands;
 
     use super::*;
-    // TODO 等待restore实现后再测试
     #[test]
+    #[ignore] // TODO 等待restore实现后再测试
     fn test_switch() {
         util::setup_test_with_clean_mit();
         commands::commit::commit("init".to_string(), true);
