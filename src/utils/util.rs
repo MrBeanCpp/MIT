@@ -154,6 +154,39 @@ pub fn is_parent_dir(file: &Path, dir: &Path) -> bool {
     file.starts_with(dir)
 }
 
+/// 从字符串角度判断path是否是parent的子路径（不检测存在性) alias: [is_parent_dir]
+pub fn is_sub_path(path: &Path, parent: &Path) -> bool {
+    is_parent_dir(path, parent)
+}
+
+/// 判断文件是否在paths中（包括子目录），不检查存在性
+pub fn include_in_paths<T, U>(path: &Path, paths: U) -> bool
+where
+    T: AsRef<Path>,
+    U: IntoIterator<Item = T>,
+{
+    for p in paths {
+        if is_sub_path(path, p.as_ref()) {
+            return true;
+        }
+    }
+    false
+}
+
+/// 过滤列表中的元素，对.iter().filter().cloned().collect()的简化
+pub fn filter<T, F>(items: &Vec<T>, pred: F) -> Vec<T>
+where
+    T: Clone,
+    F: Fn(&T) -> bool,
+{
+    items.iter().filter(|item| pred(item)).cloned().collect()
+}
+
+/// 过滤列表中的元素，使其在paths中（包括子目录），不检查存在性
+pub fn filter_to_fit_paths(items: &Vec<PathBuf>, paths: &Vec<PathBuf>) -> HashSet<PathBuf> {
+    filter(items, |item| include_in_paths(item, paths)).into_iter().collect()
+}
+
 /// 检查文件是否在工作区内， 若不存在则false
 pub fn is_inside_workdir(file: &Path) -> bool {
     is_inside_dir(file, &get_working_dir().unwrap())

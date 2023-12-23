@@ -112,7 +112,7 @@ impl Index {
     pub fn get_deleted_files(&self, dir: &Path) -> Vec<PathBuf> {
         let mut files = Vec::new();
         self.entries.keys().for_each(|file| {
-            if !file.exists() && util::is_parent_dir(file, dir) {
+            if !file.exists() && util::is_sub_path(file, dir) {
                 files.push(file.clone());
             }
         });

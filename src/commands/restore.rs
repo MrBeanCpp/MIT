@@ -15,8 +15,8 @@ use crate::{
     utils::{util, util::get_working_dir},
 };
 
-/// 统计[工作区]中的dirs文件夹中，相对于target_blobs已删除的文件
-fn get_worktree_deleted_files_in_paths(
+/// 统计[工作区]中相对于target_blobs已删除的文件（根据filters进行过滤）
+fn get_worktree_deleted_files_in_filters(
     filters: &Vec<PathBuf>,
     target_blobs: &HashMap<PathBuf, Hash>,
 ) -> HashSet<PathBuf> {
@@ -24,22 +24,14 @@ fn get_worktree_deleted_files_in_paths(
         .iter()
         .filter(|(path, _)| {
             assert!(path.is_absolute()); //
-            if !path.exists() {
-                for filter in filters {
-                    if util::is_parent_dir(path, filter) {
-                        //需要包含在指定dir内
-                        return true;
-                    }
-                }
-            }
-            false
+            !path.exists() && util::include_in_paths(path, filters)
         })
         .map(|(path, _)| path.clone())
         .collect() //HashSet自动去重
 }
 
-/// 统计[暂存区index]中相对于target_blobs已删除的文件，且包含在指定dirs内
-fn get_index_deleted_files_in_paths(
+/// 统计[暂存区index]中相对于target_blobs已删除的文件（根据filters进行过滤）
+fn get_index_deleted_files_in_filters(
     index: &Index,
     filters: &Vec<PathBuf>,
     target_blobs: &HashMap<PathBuf, Hash>,
@@ -47,17 +39,8 @@ fn get_index_deleted_files_in_paths(
     target_blobs //统计index中相对target已删除的文件，且包含在指定dir内
         .iter()
         .filter(|(path, _)| {
-            assert!(path.is_absolute()); //
-            if !index.contains(path) {
-                //index中不存在
-                for filter in filters {
-                    if util::is_parent_dir(path, filter) {
-                        //需要包含在指定dir内
-                        return true;
-                    }
-                }
-            }
-            false
+            assert!(path.is_absolute());
+            !index.contains(path) && util::include_in_paths(path, filters)
         })
         .map(|(path, _)| path.clone())
         .collect() //HashSet自动去重
@@ -85,16 +68,16 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
     let input_paths = preprocess_filters(filter); //预处理filter 将None转化为workdir
     let target_blobs = preprocess_blobs(target_blobs); //预处理target_blobs 转化为绝对路径HashMap
 
-    let deleted_files = get_worktree_deleted_files_in_paths(&input_paths, &target_blobs); //统计所有目录中已删除的文件
+    let deleted_files = get_worktree_deleted_files_in_filters(&input_paths, &target_blobs); //统计所有目录中已删除的文件
 
-    let mut file_paths = util::integrate_paths(&input_paths); //整合存在的文件（绝对路径）
+    let mut file_paths = util::integrate_paths(&input_paths); //根据用户输入整合存在的文件（绝对路径）
     file_paths.extend(deleted_files); //已删除的文件
 
     let index = Index::new();
     let store = Store::new();
 
     for path in &file_paths {
-        assert!(path.is_absolute()); // 绝对路径且不是目录
+        assert!(path.is_absolute()); // 绝对路径
         if !path.exists() {
             //文件不存在于workdir
             if target_blobs.contains_key(path) {
@@ -129,23 +112,16 @@ pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf,
     let target_blobs = preprocess_blobs(target_blobs); //预处理target_blobs 转化为绝对路径HashMap
 
     let mut index = Index::new();
-    let deleted_files_index = get_index_deleted_files_in_paths(&index, &input_paths, &target_blobs); //统计所有目录中已删除的文件
+    let deleted_files_index = get_index_deleted_files_in_filters(&index, &input_paths, &target_blobs); //统计所有目录中已删除的文件
 
-    let mut file_paths = HashSet::new();
-    // 1.获取index中包含于input_path的文件
-    for index_file in index.get_tracked_files() {
-        for path in &input_paths {
-            if util::is_parent_dir(&index_file, path) {
-                //需要包含在指定dir内
-                file_paths.insert(index_file.clone());
-            }
-        }
-    }
+    //1.获取index中包含于input_path的文件（使用paths进行过滤）
+    let mut file_paths = util::filter_to_fit_paths(&index.get_tracked_files(), &input_paths);
+
     // 2.补充index中已删除的文件（相较于target_blobs）
     file_paths.extend(deleted_files_index); //已删除的文件
 
     for path in &file_paths {
-        assert!(path.is_absolute()); // 绝对路径且不是目录
+        assert!(path.is_absolute()); // 绝对路径
         if !index.contains(path) {
             //文件不存在于index
             if target_blobs.contains_key(path) {
