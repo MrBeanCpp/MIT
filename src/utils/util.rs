@@ -42,12 +42,6 @@ fn setup_test_dir() {
     std::env::set_current_dir(&path).unwrap();
 }
 
-pub fn setup_test_with_mit() {
-    // 将执行目录切换到测试目录
-    setup_test_dir();
-    let _ = crate::commands::init::init();
-}
-
 /// with 初始化的干净的mit
 pub fn setup_test_with_clean_mit() {
     setup_test_without_mit();
