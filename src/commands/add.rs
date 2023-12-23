@@ -24,6 +24,7 @@ pub fn add(files: Vec<String>, all: bool, mut update: bool) {
     let mut files: Vec<PathBuf> = files.into_iter().map(PathBuf::from).collect();
 
     if dot || all || update {
+        //TODO files中可能包含文件夹，需要统计文件夹中被删除的文件
         if all {
             // all 优先级最高
             dot = false;

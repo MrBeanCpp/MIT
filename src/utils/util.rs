@@ -1,4 +1,5 @@
 use sha1::{Digest, Sha1};
+use std::collections::HashSet;
 use std::{
     fs, io,
     io::Write,
@@ -148,6 +149,7 @@ pub fn is_inside_dir(file: &Path, dir: &Path) -> bool {
 
 /// 检测dir是否是file的父目录 (不论文件是否存在)
 pub fn is_parent_dir(file: &Path, dir: &Path) -> bool {
+    assert!(dir.is_dir());
     let file = get_absolute_path(file);
     let dir = get_absolute_path(dir);
     file.starts_with(dir)
@@ -166,6 +168,11 @@ pub fn is_inside_repo(file: &Path) -> bool {
 pub fn format_time(time: &std::time::SystemTime) -> String {
     let datetime: chrono::DateTime<chrono::Utc> = time.clone().into();
     datetime.format("%Y-%m-%d %H:%M:%S.%3f").to_string()
+}
+
+/// 过滤出路径数组中的目录
+pub fn filter_dirs(paths: &Vec<PathBuf>) -> Vec<PathBuf> {
+    paths.iter().filter(|path| path.is_dir()).cloned().collect()
 }
 
 /// 将路径中的分隔符统一为当前系统的分隔符
@@ -315,9 +322,9 @@ pub fn get_absolute_path(path: &Path) -> PathBuf {
         abs_path
     }
 }
-/// 整理输入的路径数组（相对、绝对、文件、目录），返回一个绝对路径的文件数组
-pub fn integrate_paths(paths: &Vec<PathBuf>) -> Vec<PathBuf> {
-    let mut abs_paths = Vec::new();
+/// 整理输入的路径数组（相对、绝对、文件、目录），返回一个绝对路径的文件数组（只包含exist）
+pub fn integrate_paths(paths: &Vec<PathBuf>) -> HashSet<PathBuf> {
+    let mut abs_paths = HashSet::new();
     for path in paths {
         let path = get_absolute_path(&path); // 统一转换为绝对路径
         if path.is_dir() {
@@ -325,11 +332,9 @@ pub fn integrate_paths(paths: &Vec<PathBuf>) -> Vec<PathBuf> {
             let files = list_files(&path).unwrap();
             abs_paths.extend(files);
         } else {
-            abs_paths.push(path);
+            abs_paths.insert(path);
         }
     }
-    abs_paths.sort();
-    abs_paths.dedup(); // 去重
     abs_paths
 }
 

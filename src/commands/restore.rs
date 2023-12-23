@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::{fs, path::PathBuf};
 
-use crate::utils::util::{get_absolute_path, list_files};
+use crate::models::index::FileMetaData;
 use crate::{
     head,
     models::{commit::Commit, index::Index, object::Hash},
@@ -9,25 +9,14 @@ use crate::{
     utils::{util, util::get_working_dir},
 };
 
-/** 根据filter restore workdir */
-pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf, Hash)>) {
-    let paths: Vec<PathBuf> = if let Some(filter) = filter {
-        filter.clone()
-    } else {
-        vec![get_working_dir().unwrap()] //None == all(workdir), '.' == cur_dir
-    };
-
-    let target_blobs = target_blobs // 转为绝对路径 //TODO tree改变路径表示方式后，这里需要修改
-        .iter()
-        .map(|(path, hash)| (util::to_workdir_absolute_path(path), hash.clone()))
-        .collect::<HashMap<PathBuf, Hash>>();
-
-    let dirs: Vec<PathBuf> = paths.iter().filter(|path| path.is_dir()).cloned().collect();
-    let del_files = target_blobs //统计所有目录中(包括None & '.')，删除的文件
+/// 统计[工作区]中的dirs文件夹中，相对于target_blobs已删除的文件
+fn get_worktree_deleted_files_in_dirs(dirs: &Vec<PathBuf>, target_blobs: &HashMap<PathBuf, Hash>) -> HashSet<PathBuf> {
+    target_blobs //统计所有目录中(包括None & '.')，删除的文件
         .iter()
         .filter(|(path, _)| {
+            assert!(path.is_absolute()); //
             if !path.exists() {
-                for dir in &dirs {
+                for dir in dirs {
                     if util::is_parent_dir(path, dir) {
                         //需要包含在指定dir内
                         return true;
@@ -37,23 +26,76 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
             false
         })
         .map(|(path, _)| path.clone())
-        .collect::<HashSet<PathBuf>>(); //HashSet自动去重
-    let mut paths = util::integrate_paths(&paths); //存在的文件路径
-    paths.extend(del_files); //不存在的文件路径
+        .collect() //HashSet自动去重
+}
+
+/// 统计[暂存区index]中相对于target_blobs已删除的文件，且包含在指定dirs内
+fn get_index_deleted_files_in_dirs(
+    index: &Index,
+    dirs: &Vec<PathBuf>,
+    target_blobs: &HashMap<PathBuf, Hash>,
+) -> HashSet<PathBuf> {
+    target_blobs //统计index中相对target已删除的文件，且包含在指定dir内
+        .iter()
+        .filter(|(path, _)| {
+            assert!(path.is_absolute()); //
+            if !index.contains(path) {
+                //index中不存在
+                for dir in dirs {
+                    if util::is_parent_dir(path, dir) {
+                        //需要包含在指定dir内
+                        return true;
+                    }
+                }
+            }
+            false
+        })
+        .map(|(path, _)| path.clone())
+        .collect() //HashSet自动去重
+}
+
+/// 将None转化为workdir
+fn preprocess_filters(filters: Option<&Vec<PathBuf>>) -> Vec<PathBuf> {
+    if let Some(filter) = filters {
+        filter.clone()
+    } else {
+        vec![get_working_dir().unwrap()] //None == all(workdir), '.' == cur_dir
+    }
+}
+
+/// 转化为绝对路径（to workdir）的HashMap
+fn preprocess_blobs(blobs: &Vec<(PathBuf, Hash)>) -> HashMap<PathBuf, Hash> {
+    blobs // 转为绝对路径 //TODO tree改变路径表示方式后，这里需要修改
+        .iter()
+        .map(|(path, hash)| (util::to_workdir_absolute_path(path), hash.clone()))
+        .collect() //to HashMap
+}
+
+/** 根据filter restore workdir */
+pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf, Hash)>) {
+    let paths = preprocess_filters(filter); //预处理filter 将None转化为workdir
+    let target_blobs = preprocess_blobs(target_blobs); //预处理target_blobs 转化为绝对路径HashMap
+
+    let dirs = util::filter_dirs(&paths); //统计所有目录
+    let deleted_files = get_worktree_deleted_files_in_dirs(&dirs, &target_blobs); //统计所有目录中已删除的文件
+
+    let mut file_paths = util::integrate_paths(&paths); //整合存在的文件（绝对路径）
+    file_paths.extend(deleted_files); //已删除的文件
 
     let index = Index::new();
     let store = Store::new();
 
-    for path in &paths {
+    for path in &file_paths {
         assert!(path.is_absolute() && !path.is_dir()); // 绝对路径且不是目录
         if !path.exists() {
             //文件不存在于workdir
             if target_blobs.contains_key(path) {
-                //文件存在于target_commit
+                //文件存在于target_commit (deleted)，需要恢复
                 store.restore_to_file(&target_blobs[path], &path);
             } else {
                 //在target_commit和workdir中都不存在(非法路径)
-                println!("fatal: pathspec '{}' did not match any files", path.display());
+                // println!("fatal: pathspec '{}' did not match any files", path.display());
+                // TODO 如果是用户输入的路径，才应该报错，integrate_paths产生的不应该报错
             }
         } else {
             //文件存在，有两种情况：1.修改 2.新文件
@@ -73,10 +115,44 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
         }
     }
 }
-/** 根据filte restore staged */
+/** 根据filter restore staged */
 pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf, Hash)>) {
-    // TODO 让@mrbeanc来写吧
-    unimplemented!("TODO");
+    let input_paths = preprocess_filters(filter); //预处理filter 将None转化为workdir
+    let target_blobs = preprocess_blobs(target_blobs); //预处理target_blobs 转化为绝对路径HashMap
+
+    let mut index = Index::new();
+
+    let dirs = util::filter_dirs(&input_paths); //统计所有目录
+    let deleted_files_index = get_index_deleted_files_in_dirs(&index, &dirs, &target_blobs); //统计所有目录中已删除的文件
+
+    let mut file_paths = util::integrate_paths(&input_paths); //整合存在的文件（绝对路径）
+    file_paths.extend(deleted_files_index); //已删除的文件
+
+    for path in &file_paths {
+        assert!(path.is_absolute() && !path.is_dir()); // 绝对路径且不是目录
+        if !index.contains(path) {
+            //文件不存在于index
+            if target_blobs.contains_key(path) {
+                //文件存在于target_commit (deleted)，需要恢复
+                index.add(path.clone(), FileMetaData { hash: target_blobs[path].clone(), ..Default::default() });
+            } else {
+                //在target_commit和index中都不存在(非法路径)
+                // println!("fatal: pathspec '{}' did not match any files", path.display());
+                // TODO 如果是用户输入的路径，才应该报错，integrate_paths产生的不应该报错
+            }
+        } else {
+            //文件存在于index，有两种情况：1.修改 2.新文件
+            if target_blobs.contains_key(path) {
+                if !index.verify_hash(path, &target_blobs[path]) {
+                    //文件已修改(modified)
+                    index.update(path.clone(), FileMetaData { hash: target_blobs[path].clone(), ..Default::default() });
+                }
+            } else {
+                //新文件 需要从index中删除
+                index.remove(path);
+            }
+        }
+    }
 }
 /**
 对于工作区中的新文件，若已跟踪，则删除；若未跟踪，则保留<br>

@@ -20,6 +20,18 @@ pub struct FileMetaData {
     pub mode: String,              // 文件模式
 }
 
+impl Default for FileMetaData {
+    fn default() -> Self {
+        FileMetaData {
+            hash: Default::default(),
+            size: Default::default(),
+            created_time: SystemTime::now(),  // 或者使用 UNIX_EPOCH
+            modified_time: SystemTime::now(), // 或者使用 UNIX_EPOCH
+            mode: Default::default(),
+        }
+    }
+}
+
 impl FileMetaData {
     pub fn new(blob: &Blob, file: &Path) -> FileMetaData {
         let meta = file.metadata().unwrap();
