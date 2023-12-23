@@ -3,6 +3,7 @@ pub mod branch;
 pub mod commit;
 pub mod init;
 pub mod log;
+pub mod merge;
 pub mod remove;
 pub mod restore;
 pub mod status;

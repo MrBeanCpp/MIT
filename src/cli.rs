@@ -1,7 +1,7 @@
 use clap::{ArgGroup, Parser, Subcommand};
 use mit::commands::{
-    add::add, branch::branch, commit::commit, init::init, log::log, remove::remove, restore::restore, status::status,
-    switch::switch,
+    add::add, branch::branch, commit::commit, init::init, log::log, merge::merge, remove::remove, restore::restore,
+    status::status, switch::switch,
 };
 
 /// Rust实现的简易版本的Git，用于学习Rust语言
@@ -117,6 +117,12 @@ enum Command {
         #[clap(long, short = 'S', action)]
         staged: bool,
     },
+    /// merge
+    Merge {
+        /// 要合并的分支
+        #[clap(required = true)]
+        branch: String,
+    },
 }
 pub fn handle_command() {
     let cli = Cli::parse();
@@ -161,6 +167,9 @@ pub fn handle_command() {
                 source = Some("HEAD".to_string());
             }
             restore(path, source.unwrap(), worktree, staged);
+        }
+        Command::Merge { branch } => {
+            merge(branch);
         }
     }
 }
