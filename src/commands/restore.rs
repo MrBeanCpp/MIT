@@ -207,3 +207,25 @@ pub fn restore(paths: Vec<String>, source: String, worktree: bool, staged: bool)
         restore_index(Some(&paths), &target_blobs);
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::path::PathBuf;
+
+    use crate::{
+        commands,
+        models::index::Index,
+        utils::util::{self, ensure_no_file},
+    };
+
+    #[test]
+    fn test_restore_stage() {
+        util::setup_test_with_clean_mit();
+        let path = PathBuf::from("a.txt");
+        util::ensure_no_file(&path);
+        commands::add::add(vec![], true, false);
+        super::restore(vec![".".to_string()], "HEAD".to_string(), false, true);
+        let index = Index::new();
+        assert!(index.get_tracked_files().is_empty());
+    }
+}

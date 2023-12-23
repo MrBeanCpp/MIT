@@ -91,7 +91,6 @@ mod test {
 
     use super::*;
     #[test]
-    // #[ignore] // TODO 等待restore实现后再测试
     fn test_switch() {
         util::setup_test_with_clean_mit();
         util::list_workdir_files().iter().for_each(|f| {
