@@ -147,9 +147,8 @@ pub fn is_inside_dir(file: &Path, dir: &Path) -> bool {
     }
 }
 
-/// 检测dir是否是file的父目录 (不论文件是否存在)
+/// 检测dir是否是file的父目录 (不论文件是否存在) dir可以是一个文件
 pub fn is_parent_dir(file: &Path, dir: &Path) -> bool {
-    assert!(dir.is_dir());
     let file = get_absolute_path(file);
     let dir = get_absolute_path(dir);
     file.starts_with(dir)
@@ -168,15 +167,6 @@ pub fn is_inside_repo(file: &Path) -> bool {
 pub fn format_time(time: &std::time::SystemTime) -> String {
     let datetime: chrono::DateTime<chrono::Utc> = time.clone().into();
     datetime.format("%Y-%m-%d %H:%M:%S.%3f").to_string()
-}
-
-/// 过滤出路径数组中的目录
-pub fn filter_dirs(paths: &Vec<PathBuf>) -> HashSet<PathBuf> {
-    paths.iter().filter(|path| path.is_dir()).cloned().collect()
-}
-
-pub fn filter_files(paths: &Vec<PathBuf>) -> HashSet<PathBuf> {
-    paths.iter().filter(|path| path.is_file()).cloned().collect()
 }
 
 /// 将路径中的分隔符统一为当前系统的分隔符
