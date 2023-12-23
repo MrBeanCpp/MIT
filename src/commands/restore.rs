@@ -105,6 +105,20 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
             }
         }
     }
+    // 出现在filter中的目录的子目录如果已经是空目录，需要删除
+    for path in &input_paths {
+        if path.is_dir() && util::list_files(path).unwrap().is_empty() {
+            if path != &util::get_working_dir().unwrap() {
+                fs::remove_dir_all(path).unwrap();
+            }
+        } else {
+            for sub_path in util::list_files(path).unwrap() {
+                if sub_path.is_dir() && util::list_files(&sub_path).unwrap().is_empty() {
+                    fs::remove_dir_all(&sub_path).unwrap();
+                }
+            }
+        }
+    }
 }
 /** 根据filter restore staged */
 pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf, Hash)>) {
