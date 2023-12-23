@@ -10,18 +10,19 @@ Git in Rust. 用 Rust 编写的简易 Git
     -   [x] add
     -   [x] rm
     -   [x] commit
+    -   [x] status
+    -   [x] log
 
 -   支持分支 git branch, git checkout
 
     -   [x] branch
-    -   [ ] switch
-        与checkout out不同，switch需要指明--detach，才能切换到一个commit，否则只能切换分支。
-        同时为里简化实现，有任何未提交的修改，都不能切换分支。
-    -   [ ] restore
-        将选中的文件/路径的文件恢复到--source 制定的版本，默认为 HEAD。不指定区域，默认只操作工作区。指定--staged，操作暂存区。同时指定--staged 和--worktree，操作暂存区和工作区。
+    -   [x] switch
+            与 checkout out 不同，switch 需要指明--detach，才能切换到一个 commit，否则只能切换分支。
+            同时为里简化实现，有任何未提交的修改，都不能切换分支。
+    -   [x] restore
+            将选中的文件/路径的文件恢复到--source 制定的版本，默认为 HEAD。不指定区域，默认只操作工作区。指定--staged，操作暂存区。同时指定--staged 和--worktree，操作暂存区和工作区。
         -   目录和通配符会去 suorce 中匹配。不会删除未跟踪的文件。
         -   即，文件在 index 里，不在 source 里，文件会被删除。但是，新建的、未被跟踪的文件不会被删除。但是如果新建里的文件和 source 里的文件名字一样，会被覆盖。
 
 -   支持简单的合并 git merge
-
--   -   [ ] Merge(FF)
+-   -   [x] Merge(FF)
