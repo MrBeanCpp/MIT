@@ -1,10 +1,16 @@
-use std::collections::{HashMap, HashSet};
-use std::{fs, path::PathBuf};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    path::PathBuf,
+};
 
-use crate::models::index::FileMetaData;
 use crate::{
     head,
-    models::{commit::Commit, index::Index, object::Hash},
+    models::{
+        commit::Commit,
+        index::{FileMetaData, Index},
+        object::Hash,
+    },
     store::Store,
     utils::{util, util::get_working_dir},
 };
