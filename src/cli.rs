@@ -100,7 +100,6 @@ enum Command {
     },
     /// restore
     Restore {
-        // TODO 行为不确定
         /// 要恢复的文件
         #[clap(required = true)]
         path: Vec<String>,
@@ -148,25 +147,21 @@ pub fn handle_command() {
         Command::Branch { list, delete, new_branch, commit_hash, show_current } => {
             branch(new_branch, commit_hash, list, delete, show_current);
         }
-
         Command::Switch { branch, create, detach } => {
             switch(branch, create, detach);
         }
-        Command::Restore { path, mut source, mut worktree, staged } => {
+        Command::Restore { path, source, mut worktree, staged } => {
             // 未指定stage和worktree时，默认操作worktree
             // 指定 --staged 将仅还原index
             if !staged {
                 worktree = true;
             }
-            // 未指定source时，默认操作HEAD
-            /*TODO
+            // 未指定source 且 --staged，默认操作HEAD，否则从index中恢复（就近原则）
+            /*
                 If `--source` not specified, the contents are restored from `HEAD` if `--staged` is given,
                 otherwise from the [index].
             */
-            if source.is_none() {
-                source = Some("HEAD".to_string());
-            }
-            restore(path, source.unwrap(), worktree, staged);
+            restore(path, source, worktree, staged);
         }
         Command::Merge { branch } => {
             merge(branch);

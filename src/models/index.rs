@@ -84,9 +84,9 @@ impl Index {
     }
 
     // 获取文件元数据
-    pub fn get(&self, path: &Path) -> Option<&FileMetaData> {
+    pub fn get(&self, path: &Path) -> Option<FileMetaData> {
         let path = Index::preprocess_path(path);
-        self.entries.get(&path)
+        self.entries.get(&path).cloned()
     }
 
     pub fn get_hash(&self, file: &Path) -> Option<Hash> {
@@ -184,11 +184,16 @@ impl Index {
     pub fn get_tracked_files(&self) -> Vec<PathBuf> {
         self.entries.keys().map(|f| f.clone()).collect()
     }
+
+    pub fn get_tracked_entries(&self) -> HashMap<PathBuf, FileMetaData> {
+        self.entries.clone()
+    }
 }
 
 /// 析构自动保存
 impl Drop for Index {
     fn drop(&mut self) {
+        //TODO! 优化为只有在修改后才保存
         self.save();
         // println!("{}", "Index auto saved".bright_green());
     }

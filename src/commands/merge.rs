@@ -52,7 +52,7 @@ fn merge_ff(commit_hash: String) -> Result<(), MergeErr> {
     match head {
         head::Head::Branch(branch) => {
             head::update_branch(&branch, &commit_hash.clone());
-            commands::restore::restore(vec![], commit_hash.clone(), true, true)
+            commands::restore::restore(vec![], Some(commit_hash.clone()), true, true)
         }
         head::Head::Detached(_) => {
             // 相当于切换到了commit_hash，什么都没有发生

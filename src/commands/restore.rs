@@ -155,38 +155,65 @@ pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf,
 对于暂存区中被删除的文件，同样会恢复<br>
 注意：不会删除空文件夹
  */
-pub fn restore(paths: Vec<String>, source: String, worktree: bool, staged: bool) {
-    // TODO 尝试合并restore_index和restore_worktree（逻辑上是一致的）
+pub fn restore(paths: Vec<String>, source: Option<String>, worktree: bool, staged: bool) {
     let paths = paths.iter().map(PathBuf::from).collect::<Vec<PathBuf>>();
     let target_commit: Hash = {
-        if source == "HEAD" {
-            //Default
-            head::current_head_commit()
-        } else if head::list_local_branches().contains(&source) {
-            // Branch Name, e.g. master
-            head::get_branch_head(&source)
-        } else {
-            // Commit Hash, e.g. a1b2c3d4
-            let store = Store::new();
-            let commit = store.search(&source);
-            if commit.is_none() || !util::is_typeof_commit(commit.clone().unwrap()) {
-                println!("fatal: 非法的 commit hash: '{}'", source);
-                return;
+        match source {
+            None => {
+                /*If `--source` not specified, the contents are restored from `HEAD` if `--staged` is given,
+                otherwise from the [index].*/
+                if staged {
+                    head::current_head_commit() // `HEAD`
+                } else {
+                    Hash::default() //index
+                }
             }
-            commit.unwrap()
+            Some(ref src) => {
+                if src == "HEAD" {
+                    //Default Source
+                    head::current_head_commit() // "" if not exist
+                } else if head::list_local_branches().contains(&src) {
+                    // Branch Name, e.g. master
+                    head::get_branch_head(&src) // "" if not exist
+                } else {
+                    // [Commit Hash, e.g. a1b2c3d4] || [Wrong Branch Name]
+                    let store = Store::new();
+                    let commit = store.search(&src);
+                    if commit.is_none() || !util::is_typeof_commit(commit.clone().unwrap()) {
+                        println!("fatal: 非法的 commit hash: '{}'", src);
+                        return;
+                    }
+                    commit.unwrap()
+                }
+            }
         }
     };
 
-    // 分别处理worktree和staged
     let target_blobs = {
-        if target_commit.is_empty() {
-            // 没有commit的情况
-            Vec::new()
+        /*If `--source` not specified, the contents are restored from `HEAD` if `--staged` is given,
+        otherwise from the [index].*/
+        if source.is_none() && !staged {
+            // 没有指定source，且没有指定--staged，从[index]中恢复到worktree //只有这种情况是从[index]恢复
+            let entries = Index::new().get_tracked_entries();
+            entries.into_iter().map(|(p, meta)| (p, meta.hash)).collect()
         } else {
-            let tree = Commit::load(&target_commit).get_tree();
-            tree.get_recursive_blobs() // 相对路径
+            //从[target_commit]中恢复
+            if target_commit.is_empty() {
+                //target_commit不存在 无法从目标恢复
+                if source.is_some() {
+                    // 如果指定了source，说明source解析失败，报错
+                    println!("fatal: could not resolve {}", source.unwrap());
+                    return;
+                }
+                Vec::new() //否则使用[空]来恢复 代表default status
+            } else {
+                //target_commit存在，最正常的情况，谢天谢地
+                let tree = Commit::load(&target_commit).get_tree();
+                tree.get_recursive_blobs() // 相对路径
+            }
         }
     };
+    // 分别处理worktree和staged
     if worktree {
         restore_worktree(Some(&paths), &target_blobs);
     }
@@ -207,7 +234,7 @@ mod test {
         let path = PathBuf::from("a.txt");
         util::ensure_no_file(&path);
         commands::add::add(vec![], true, false);
-        super::restore(vec![".".to_string()], "HEAD".to_string(), false, true);
+        super::restore(vec![".".to_string()], Some("HEAD".to_string()), false, true);
         let index = Index::new();
         assert!(index.get_tracked_files().is_empty());
     }

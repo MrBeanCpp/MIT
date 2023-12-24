@@ -444,10 +444,12 @@ pub fn get_absolute_path_to_dir(path: &Path, dir: &Path) -> PathBuf {
     if path.is_absolute() {
         path.to_path_buf()
     } else {
+        //相对路径
         /*let abs_path = path.canonicalize().unwrap(); //这一步会统一路径分隔符 //canonicalize()不能处理不存在的文件
         clean_win_abs_path_pre(abs_path)*/
         // 所以决定手动解析相对路径中的../ ./
         let mut abs_path = dir.to_path_buf();
+        // 这里会拆分所有组件，所以会自动统一路径分隔符
         for component in path.components() {
             match component {
                 std::path::Component::ParentDir => {
@@ -541,7 +543,7 @@ mod tests {
 
     #[test]
     fn test_get_absolute_path() {
-        let path = Path::new("./mit_test_storage/.././src/main.rs");
+        let path = Path::new("./mit_test_storage/.././src\\main.rs");
         let abs_path = get_absolute_path(path);
         println!("{:?}", abs_path);
 
@@ -549,7 +551,7 @@ mod tests {
         cur_dir.push("mit_test_storage");
         cur_dir.pop();
         cur_dir.push("src/main.rs");
-        assert_eq!(abs_path, cur_dir);
+        assert_eq!(abs_path, cur_dir); // 只比较组件，不比较分隔符
     }
 
     #[test]
