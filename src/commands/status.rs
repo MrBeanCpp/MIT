@@ -5,7 +5,6 @@ use crate::{
     utils::{util, util::check_repo_exist},
 };
 use colored::Colorize;
-use std::env;
 use std::path::PathBuf;
 
 /** 获取需要commit的更改(staged)
@@ -139,7 +138,6 @@ pub fn changes_to_be_staged() -> Changes {
  */
 pub fn status() {
     check_repo_exist();
-    //TODO: 输出文件与当前所在目录有关 输出时过滤
     match head::current_head() {
         Head::Detached(commit) => {
             println!("HEAD detached at {}", commit[0..7].to_string());

@@ -75,7 +75,7 @@ impl Store {
         let mut path = self.store_path.clone();
         path.push("objects");
         path.push(&hash);
-        println!("Saved to: [{}]", path.display());
+        // println!("Saved to: [{}]", path.display());
         match std::fs::write(path, content) {
             Ok(_) => hash,
             Err(_) => panic!("储存库疑似损坏，无法写入文件"),
