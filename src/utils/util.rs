@@ -537,7 +537,7 @@ mod tests {
         let mut cur_dir = std::env::current_dir().unwrap();
         cur_dir.push("mit_test_storage");
         cur_dir.pop();
-        cur_dir.push("src/main.rs");
+        cur_dir.push("src\\main.rs");
         assert_eq!(abs_path, cur_dir); // 只比较组件，不比较分隔符
     }
 
