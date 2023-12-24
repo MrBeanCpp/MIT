@@ -332,20 +332,48 @@ pub fn list_workdir_files() -> Vec<PathBuf> {
     }
 }
 
-/// 获取相对于dir的相对路径
+/// 获取相对于dir的 规范化 相对路径（不包含../ ./）
 pub fn get_relative_path(path: &Path, dir: &Path) -> PathBuf {
-    let path = if path.is_relative() {
+    // 先统一为绝对路径
+    let abs_path = if path.is_relative() {
         get_absolute_path(path)
     } else {
         path.to_path_buf()
     };
-    let relative_path = path.strip_prefix(dir).unwrap();
-    relative_path.to_path_buf()
+    // 要考虑path在dir的上级目录的情况，要输出../../xxx
+    let common_dir = get_common_dir(&abs_path, dir);
+    let mut rel_path = PathBuf::new();
+    let mut _dir = dir.to_path_buf();
+    while _dir != common_dir {
+        rel_path.push("..");
+        _dir.pop();
+    }
+    rel_path.join(abs_path.strip_prefix(common_dir).unwrap())
+}
+
+/// 获取两个路径的公共目录
+pub fn get_common_dir(p1: &Path, p2: &Path) -> PathBuf {
+    let p1 = get_absolute_path(p1);
+    let p2 = get_absolute_path(p2);
+    let mut common_dir = PathBuf::new();
+    for (c1, c2) in p1.components().zip(p2.components()) {
+        if c1 == c2 {
+            common_dir.push(c1);
+        } else {
+            break;
+        }
+    }
+    common_dir
 }
 
 /// 获取相较于工作区(Working Dir)的相对路径
 pub fn to_workdir_relative_path(path: &Path) -> PathBuf {
     get_relative_path(path, &get_working_dir().unwrap())
+}
+
+/// 获取相较于当前目录的 规范化 相对路径（不包含../ ./）
+pub fn to_cur_relative_path(path: &Path) -> PathBuf {
+    get_relative_path(path, &cur_dir())
 }
 
 /// 获取相较于工作区(Working Dir)的绝对路径
@@ -522,6 +550,16 @@ mod tests {
         cur_dir.pop();
         cur_dir.push("src/main.rs");
         assert_eq!(abs_path, cur_dir);
+    }
+
+    #[test]
+    fn test_get_relative_path() {
+        setup_test_with_clean_mit();
+        let path = Path::new("../../src\\main.rs");
+        let rel_path = get_relative_path(&path, &cur_dir());
+        println!("{:?}", rel_path);
+
+        assert_eq!(rel_path, unify_path_separator(path));
     }
 
     #[test]
