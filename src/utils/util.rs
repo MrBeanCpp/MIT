@@ -348,7 +348,8 @@ pub fn get_relative_path(path: &Path, dir: &Path) -> PathBuf {
         rel_path.push("..");
         _dir.pop();
     }
-    rel_path.join(abs_path.strip_prefix(common_dir).unwrap())
+    let rel_path = rel_path.join(abs_path.strip_prefix(common_dir).unwrap());
+    return unify_path_separator(&rel_path);
 }
 
 /// 获取两个路径的公共目录
@@ -436,7 +437,7 @@ pub fn clean_win_abs_path_pre(path: PathBuf) -> PathBuf {
 
 /// 获取绝对路径（相对于目录current_dir） 不论是否存在
 pub fn get_absolute_path(path: &Path) -> PathBuf {
-    get_absolute_path_to_dir(path, &std::env::current_dir().unwrap())
+    unify_path_separator(get_absolute_path_to_dir(path, &std::env::current_dir().unwrap()).as_path())
 }
 
 /// 获取绝对路径（相对于目录dir） 不论是否存在
