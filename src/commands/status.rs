@@ -5,12 +5,13 @@ use crate::{
     utils::{util, util::check_repo_exist},
 };
 use colored::Colorize;
+use std::env;
 use std::path::PathBuf;
 
 /** 获取需要commit的更改(staged)
-   注：相对路径
+   注：相对路径(to workdir)
 */
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Changes {
     pub new: Vec<PathBuf>,
     pub modified: Vec<PathBuf>,
@@ -21,8 +22,53 @@ impl Changes {
     pub fn is_empty(&self) -> bool {
         self.new.is_empty() && self.modified.is_empty() && self.deleted.is_empty()
     }
+
+    /// 使用paths过滤，返回绝对路径
+    pub fn filter_abs(&self, paths: &Vec<PathBuf>) -> Changes {
+        let mut change = Changes::default();
+        let abs_self = self.to_absolute(); //先要转换为绝对路径
+        change.new = util::filter_to_fit_paths(&abs_self.new, paths);
+        change.modified = util::filter_to_fit_paths(&abs_self.modified, paths);
+        change.deleted = util::filter_to_fit_paths(&abs_self.deleted, paths);
+        change
+    }
+
+    /// 使用paths过滤，返回相对路径(to cur_dir)
+    pub fn filter_relative(&self, paths: &Vec<PathBuf>) -> Changes {
+        self.filter_abs(paths).to_relative()
+    }
+
+    /// 转换为绝对路径（from workdir相对路径）
+    pub fn to_absolute(&self) -> Changes {
+        let mut change = self.clone();
+        // change.new = util::map(&self.new, |p| util::to_workdir_absolute_path(p));
+        // change.modified = util::map(&self.modified, |p| util::to_workdir_absolute_path(p));
+        // change.deleted = util::map(&self.deleted, |p| util::to_workdir_absolute_path(p));
+        //离谱子
+        [&mut change.new, &mut change.modified, &mut change.deleted]
+            .iter_mut()
+            .for_each(|paths| {
+                **paths = util::map(&**paths, |p| util::to_workdir_absolute_path(p));
+            });
+        change
+    }
+
+    /// 转换为相对路径（to cur_dir）注意：要先转换为绝对路径
+    fn to_relative(&self) -> Changes {
+        let mut change = self.clone();
+        let cur_dir = util::cur_dir();
+        [&mut change.new, &mut change.modified, &mut change.deleted]
+            .iter_mut()
+            .for_each(|paths| {
+                **paths = util::map(&**paths, |p| util::get_relative_path(p, &cur_dir));
+            });
+        change
+    }
 }
 
+/** 比较暂存区与HEAD(最后一次Commit::Tree)的差异
+   注：相对路径(to workdir)
+*/
 pub fn changes_to_be_committed() -> Changes {
     let mut change = Changes::default();
     let index = Index::new();
@@ -63,11 +109,11 @@ pub fn changes_to_be_committed() -> Changes {
     change
 }
 
+/// 比较工作区与暂存区的差异，返回相对路径(to workdir)，不筛选
 pub fn changes_to_be_staged() -> Changes {
     let mut change = Changes::default();
     let index = Index::new();
     for file in index.get_tracked_files() {
-        //TODO 考虑当前目录
         if !file.exists() {
             change.deleted.push(util::to_workdir_relative_path(&file));
         } else if index.is_modified(&file) {
@@ -77,14 +123,13 @@ pub fn changes_to_be_staged() -> Changes {
             }
         }
     }
-    let files = util::list_workdir_files(); //TODO 考虑当前目录
+    let files = util::list_workdir_files(); // all the files
     for file in files {
         if !index.tracked(&file) {
             //文件未被跟踪
             change.new.push(util::to_workdir_relative_path(&file));
         }
     }
-
     change
 }
 
@@ -104,8 +149,9 @@ pub fn status() {
         }
     }
 
-    let staged = changes_to_be_committed();
-    let unstaged = changes_to_be_staged();
+    // 对当前目录进行过滤 & 转换为相对路径
+    let staged = changes_to_be_committed().filter_relative(&vec![util::cur_dir()]);
+    let unstaged = changes_to_be_staged().filter_relative(&vec![util::cur_dir()]);
     if staged.is_empty() && unstaged.is_empty() {
         println!("nothing to commit, working tree clean");
         return;
@@ -172,7 +218,7 @@ mod tests {
         assert_eq!(change.modified.len(), 0);
         assert_eq!(change.deleted.len(), 0);
 
-        println!("{:?}", change);
+        println!("{:?}", change.to_absolute());
 
         commit::commit("test commit".to_string(), true);
         util::ensure_test_file(Path::new(test_file), Some("new content"));

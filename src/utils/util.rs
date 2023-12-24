@@ -174,17 +174,38 @@ where
 }
 
 /// 过滤列表中的元素，对.iter().filter().cloned().collect()的简化
-pub fn filter<T, F>(items: &Vec<T>, pred: F) -> Vec<T>
+pub fn filter<'a, I, O, T, F>(items: I, pred: F) -> O
 where
-    T: Clone,
+    T: Clone + 'a,
+    I: IntoIterator<Item = &'a T>,
+    O: FromIterator<T>,
     F: Fn(&T) -> bool,
 {
-    items.iter().filter(|item| pred(item)).cloned().collect()
+    //items可以是一个引用
+    items.into_iter().filter(|item| pred(item)).cloned().collect::<O>()
+}
+
+/// 对列表中的元素应用func，对.iter().map().collect()的简化
+pub fn map<'a, I, O, T, F>(items: I, func: F) -> O
+where
+    T: Clone + 'a,
+    I: IntoIterator<Item = &'a T>,
+    O: FromIterator<T>,
+    F: Fn(&T) -> T,
+{
+    //items可以是一个引用
+    items.into_iter().map(|item| func(item)).collect::<O>()
 }
 
 /// 过滤列表中的元素，使其在paths中（包括子目录），不检查存在性
-pub fn filter_to_fit_paths(items: &Vec<PathBuf>, paths: &Vec<PathBuf>) -> HashSet<PathBuf> {
-    filter(items, |item| include_in_paths(item, paths)).into_iter().collect()
+pub fn filter_to_fit_paths<T, O>(items: &Vec<T>, paths: &Vec<T>) -> O
+where
+    T: AsRef<Path> + Clone,
+    O: FromIterator<T> + IntoIterator<Item = T>,
+{
+    filter::<_, O, _, _>(items, |item| include_in_paths(item.as_ref(), paths))
+        .into_iter()
+        .collect::<O>()
 }
 
 /// 检查文件是否在工作区内， 若不存在则false
@@ -295,8 +316,11 @@ pub fn is_empty_dir(dir: &Path) -> bool {
 }
 
 pub fn is_cur_dir(dir: &Path) -> bool {
-    let cur_dir = std::env::current_dir().unwrap(); //应该是绝对路径吧
-    get_absolute_path(dir) == cur_dir
+    get_absolute_path(dir) == cur_dir()
+}
+
+pub fn cur_dir() -> PathBuf {
+    std::env::current_dir().unwrap() //应该是绝对路径吧
 }
 
 /// 列出工作区所有文件(包括子文件夹)

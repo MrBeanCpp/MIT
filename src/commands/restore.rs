@@ -119,7 +119,7 @@ pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf,
     let deleted_files_index = get_index_deleted_files_in_filters(&index, &input_paths, &target_blobs); //统计所有目录中已删除的文件
 
     //1.获取index中包含于input_path的文件（使用paths进行过滤）
-    let mut file_paths = util::filter_to_fit_paths(&index.get_tracked_files(), &input_paths);
+    let mut file_paths: HashSet<PathBuf> = util::filter_to_fit_paths(&index.get_tracked_files(), &input_paths);
 
     // 2.补充index中已删除的文件（相较于target_blobs）
     file_paths.extend(deleted_files_index); //已删除的文件
