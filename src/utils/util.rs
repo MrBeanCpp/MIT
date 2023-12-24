@@ -108,7 +108,7 @@ pub fn check_repo_exist() {
         panic!("不是合法的mit仓库");
     }
 }
-
+// TODO 拆分为PathExt.rs，并定义为trait，实现PathBuf的扩展方法
 /// 获取.mit目录路径
 pub fn get_storage_path() -> Result<PathBuf, io::Error> {
     /*递归获取储存库 */
@@ -223,22 +223,9 @@ pub fn format_time(time: &std::time::SystemTime) -> String {
     datetime.format("%Y-%m-%d %H:%M:%S.%3f").to_string()
 }
 
-/// 将路径中的分隔符统一为当前系统的分隔符
-fn unify_path_separator(path: &Path) -> PathBuf {
-    #[cfg(windows)]
-    {
-        path.to_string_lossy().replace("/", "\\").into()
-    }
-    #[cfg(not(windows))]
-    {
-        path.to_string_lossy().replace("\\", "/").into()
-    }
-}
-
 /// 递归遍历给定目录及其子目录，列出所有文件，除了.mit
 pub fn list_files(path: &Path) -> io::Result<Vec<PathBuf>> {
     let mut files = Vec::new();
-    let path = unify_path_separator(path);
     if path.is_dir() {
         if path.file_name().unwrap_or_default() == ROOT_DIR {
             // 跳过 .mit 目录
@@ -562,7 +549,7 @@ mod tests {
         let rel_path = get_relative_path(&path, &cur_dir());
         println!("{:?}", rel_path);
 
-        assert_eq!(rel_path, unify_path_separator(path));
+        assert_eq!(rel_path, path);
     }
 
     #[test]
@@ -593,18 +580,6 @@ mod tests {
         let formatted_time = format_time(&time);
         println!("{:?}", time);
         println!("{}", formatted_time);
-    }
-
-    #[test]
-    fn test_unify_path_separator() {
-        let path_str = "src/utils\\aaa.rs";
-        let path = unify_path_separator(Path::new(path_str));
-        println!("{}", path.display());
-
-        #[cfg(windows)]
-        assert_eq!(path, Path::new("src\\utils\\aaa.rs"));
-        #[cfg(not(windows))]
-        assert_eq!(path, Path::new("src/utils/aaa.rs"));
     }
 
     #[test]
