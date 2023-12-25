@@ -21,7 +21,7 @@ Git in Rust. 用 `Rust` 实现的mini `Git`. Called `mit`.
 
 -   支持 `mit init`, `mit add`, `mit rm`, `mit commit`
 
-    -   [x] `init`: 初始化（若仓库已存在，则不执行）
+    -   [x] `init`: 初始化（若仓库已存在，则不执行）- `idempotent`
     -   [x] `add`: 将变更添加至暂存区（包括新建、修改、删除），可指定文件或目录
         -   `-A(all)` : 暂存工作区中的所有文件（从根目录开始）变更（新建√ 修改√ 删除√）
         -   `-u(update)`: 仅对暂存区[`index`]中已跟踪的文件进行操作（新建× 修改√ 删除√）
@@ -55,7 +55,6 @@ Git in Rust. 用 `Rust` 实现的mini `Git`. Called `mit`.
 ### 名词释义
 -   暂存区：`index` or `stage`，保存下一次`commit`需要的的文件快照
 -   工作区：`worktree`，用户直接操作的文件夹
--   工作目录：`working directory`，代码仓库的根目录，即`.mit`所在的目录
--   仓库：`repository`，包含`.mit`目录的目录
+-   工作目录：`working directory` or `repository`，代码仓库的根目录，即`.mit`所在的目录
 -   `HEAD`：指向当前`commit`的指针
 -   已跟踪：`tracked`，指已经在暂存区[`index`]中的文件（即曾经`add`过的文件）

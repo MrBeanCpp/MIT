@@ -68,9 +68,7 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
     let input_paths = preprocess_filters(filter); //预处理filter 将None转化为workdir
     let target_blobs = preprocess_blobs(target_blobs); //预处理target_blobs 转化为绝对路径HashMap
 
-    //TODO 输出不存在于target和worktree中文件
-
-    let deleted_files = get_worktree_deleted_files_in_filters(&input_paths, &target_blobs); //统计所有目录中已删除的文件
+    let deleted_files = get_worktree_deleted_files_in_filters(&input_paths, &target_blobs); //统计已删除的文件
 
     let mut file_paths = util::integrate_paths(&input_paths); //根据用户输入整合存在的文件（绝对路径）
     file_paths.extend(deleted_files); //已删除的文件
@@ -86,9 +84,8 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
                 //文件存在于target_commit (deleted)，需要恢复
                 store.restore_to_file(&target_blobs[path], &path);
             } else {
-                //在target_commit和workdir中都不存在(非法路径)
-                // println!("fatal: pathspec '{}' did not match any files", path.display());
-                // TODO 如果是用户输入的路径，才应该报错，integrate_paths产生的不应该报错
+                //在target_commit和workdir中都不存在(非法路径)， 用户输入
+                println!("fatal: pathspec '{}' did not match any files", path.display());
             }
         } else {
             //文件存在，有两种情况：1.修改 2.新文件
@@ -116,7 +113,7 @@ pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf,
     let target_blobs = preprocess_blobs(target_blobs); //预处理target_blobs 转化为绝对路径HashMap
 
     let mut index = Index::new();
-    let deleted_files_index = get_index_deleted_files_in_filters(&index, &input_paths, &target_blobs); //统计所有目录中已删除的文件
+    let deleted_files_index = get_index_deleted_files_in_filters(&index, &input_paths, &target_blobs); //统计已删除的文件
 
     //1.获取index中包含于input_path的文件（使用paths进行过滤）
     let mut file_paths: HashSet<PathBuf> = util::filter_to_fit_paths(&index.get_tracked_files(), &input_paths);
@@ -133,8 +130,7 @@ pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf,
                 index.add(path.clone(), FileMetaData { hash: target_blobs[path].clone(), ..Default::default() });
             } else {
                 //在target_commit和index中都不存在(非法路径)
-                // println!("fatal: pathspec '{}' did not match any files", path.display());
-                // TODO 如果是用户输入的路径，才应该报错，integrate_paths产生的不应该报错
+                println!("fatal: pathspec '{}' did not match any files", path.display());
             }
         } else {
             //文件存在于index，有两种情况：1.修改 2.新文件
@@ -224,18 +220,46 @@ pub fn restore(paths: Vec<String>, source: Option<String>, worktree: bool, stage
 
 #[cfg(test)]
 mod test {
+    use std::fs;
+    //TODO 写测试！
     use std::path::PathBuf;
 
-    use crate::{commands, models::index::Index, utils::util};
+    use crate::commands::add::add;
+    use crate::commands::restore::restore;
+    use crate::commands::status;
+    use crate::{models::index::Index, utils::util};
 
     #[test]
     fn test_restore_stage() {
-        util::setup_test_with_clean_mit();
+        util::setup_test_with_empty_workdir();
         let path = PathBuf::from("a.txt");
         util::ensure_no_file(&path);
-        commands::add::add(vec![], true, false);
-        super::restore(vec![".".to_string()], Some("HEAD".to_string()), false, true);
+        add(vec![], true, false); //add -A
+        restore(vec![".".to_string()], Some("HEAD".to_string()), false, true);
         let index = Index::new();
         assert!(index.get_tracked_files().is_empty());
+    }
+
+    #[test]
+    fn test_restore_worktree() {
+        util::setup_test_with_empty_workdir();
+        let files = vec!["a.txt", "b.txt", "c.txt", "test/in.txt"];
+        util::ensure_test_files(&files);
+
+        add(vec![], true, false);
+        assert_eq!(status::changes_to_be_committed().new.iter().count(), 4);
+
+        restore(vec!["c.txt".to_string()], None, false, true); //restore c.txt --staged
+        assert_eq!(status::changes_to_be_committed().new.iter().count(), 3);
+        assert_eq!(status::changes_to_be_staged().new.iter().count(), 1);
+
+        fs::remove_file("a.txt").unwrap(); //删除a.txt
+        fs::remove_dir_all("test").unwrap(); //删除test文件夹
+        assert_eq!(status::changes_to_be_staged().deleted.iter().count(), 2);
+
+        restore(vec![".".to_string()], None, true, false); //restore . //from index
+        assert_eq!(status::changes_to_be_committed().new.iter().count(), 3);
+        assert_eq!(status::changes_to_be_staged().new.iter().count(), 1);
+        assert_eq!(status::changes_to_be_staged().deleted.iter().count(), 0);
     }
 }

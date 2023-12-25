@@ -3,7 +3,6 @@ use std::{
     collections::HashSet,
     fs, io,
     io::Write,
-    option,
     path::{Path, PathBuf},
 };
 
@@ -13,29 +12,30 @@ pub const ROOT_DIR: &str = ".mit";
 pub const TEST_DIR: &str = "mit_test_storage"; // 执行测试的储存库
 
 /* tools for test */
+fn find_cargo_dir() -> PathBuf {
+    let cargo_path = std::env::var("CARGO_MANIFEST_DIR");
+    if cargo_path.is_err() {
+        // vscode DEBUG test没有CARGO_MANIFEST_DIR宏，手动尝试查找cargo.toml
+        let mut path = cur_dir();
+        loop {
+            path.push("Cargo.toml");
+            if path.exists() {
+                break;
+            }
+            if !path.pop() {
+                panic!("找不到CARGO_MANIFEST_DIR");
+            }
+        }
+        path.pop();
+        path
+    } else {
+        PathBuf::from(cargo_path.unwrap())
+    }
+}
+
 fn setup_test_dir() {
     color_backtrace::install(); // colorize backtrace
-    let cargo_path = std::env::var("CARGO_MANIFEST_DIR");
-    let path: PathBuf = {
-        if cargo_path.is_err() {
-            // vscode DEBUG test没有CARGO_MANIFEST_DIR宏，手动尝试查找cargo.toml
-            let mut path = std::env::current_dir().unwrap();
-            loop {
-                path.push("Cargo.toml");
-                if path.exists() {
-                    break;
-                }
-                if !path.pop() {
-                    panic!("找不到CARGO_MANIFEST_DIR");
-                }
-            }
-            path.pop();
-            path
-        } else {
-            PathBuf::from(cargo_path.unwrap())
-        }
-    };
-    let mut path = PathBuf::from(path);
+    let mut path = find_cargo_dir();
     path.push(TEST_DIR);
     if !path.exists() {
         fs::create_dir(&path).unwrap();
@@ -59,7 +59,32 @@ pub fn setup_test_without_mit() {
     }
 }
 
-pub fn ensure_test_file(path: &Path, content: option::Option<&str>) {
+pub fn ensure_test_files<T: AsRef<str>>(paths: &Vec<T>) {
+    for path in paths {
+        ensure_test_file(path.as_ref().as_ref(), None);
+    }
+}
+
+pub fn ensure_empty_dir<P: AsRef<Path>>(path: P) -> io::Result<()> {
+    let entries = fs::read_dir(path.as_ref())?;
+    for entry in entries {
+        let path = entry?.path();
+        if path.is_dir() {
+            fs::remove_dir_all(&path)?; // 如果是目录，则递归删除
+        } else {
+            fs::remove_file(&path)?; // 如果是文件，则直接删除
+        }
+    }
+    Ok(())
+}
+
+pub fn setup_test_with_empty_workdir() {
+    let test_dir = find_cargo_dir().join(TEST_DIR);
+    ensure_empty_dir(&test_dir).unwrap();
+    setup_test_with_clean_mit();
+}
+
+pub fn ensure_test_file(path: &Path, content: Option<&str>) {
     // 以测试目录为根目录，创建文件
     fs::create_dir_all(path.parent().unwrap()).unwrap(); // ensure父目录
     let mut file =
