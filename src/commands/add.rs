@@ -3,10 +3,8 @@ use std::path::{Path, PathBuf};
 use colored::Colorize;
 
 use crate::commands::status;
-use crate::models::{
-    blob::Blob,
-    index::{FileMetaData, Index},
-};
+use crate::models::index::FileMetaData;
+use crate::models::*;
 use crate::utils::util;
 
 /// add是对index的操作，不会对工作区产生影响

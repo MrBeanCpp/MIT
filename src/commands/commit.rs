@@ -1,12 +1,9 @@
-use crate::{
-    head,
-    models::{commit, index},
-};
+use crate::{head, models::*};
 
 use super::status;
 
 pub fn commit(message: String, allow_empty: bool) {
-    let index = index::Index::new();
+    let index = Index::new();
     if !allow_empty && status::changes_to_be_committed().is_empty() {
         panic!("工作区没有任何改动，不需要提交");
     }
@@ -16,9 +13,9 @@ pub fn commit(message: String, allow_empty: bool) {
 
     let mut commit = {
         if current_commit_hash.is_empty() {
-            commit::Commit::new(&index, vec![], message.clone())
+            Commit::new(&index, vec![], message.clone())
         } else {
-            commit::Commit::new(&index, vec![current_commit_hash.clone()], message.clone())
+            Commit::new(&index, vec![current_commit_hash.clone()], message.clone())
         }
     };
     let commit_hash = commit.save();
@@ -40,7 +37,7 @@ pub fn commit(message: String, allow_empty: bool) {
 mod test {
     use std::path::Path;
 
-    use crate::{commands, head, models, utils::util};
+    use crate::{commands as cmd, head, models, utils::util};
 
     #[test]
     #[should_panic]
@@ -58,8 +55,8 @@ mod test {
         assert!(head_one.is_empty());
 
         util::ensure_test_file(&Path::new(test_file), "test content".into());
-        commands::add::add(vec![], true, false);
-        commands::commit::commit("test commit 1".to_string(), true);
+        cmd::add(vec![], true, false);
+        cmd::commit("test commit 1".to_string(), true);
         let head_two = head::current_head_commit();
         assert!(head_two.len() > 0);
 

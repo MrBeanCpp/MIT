@@ -1,4 +1,4 @@
-use crate::{head, models::commit::Commit};
+use crate::{head, models::Commit};
 use colored::Colorize;
 
 const DEFAULT_LOG_NUMBER: usize = 10;
@@ -8,7 +8,7 @@ pub fn log(all: bool, number: Option<usize>) {
     let _ = __log(all, number);
 }
 
-pub fn __log(all: bool, number: Option<usize>) -> usize {
+fn __log(all: bool, number: Option<usize>) -> usize {
     let mut log_count = 0usize;
 
     let head = head::current_head();

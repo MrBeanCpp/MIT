@@ -1,8 +1,8 @@
 use crate::{
     head,
     head::Head,
-    models::{commit::Commit, index::Index},
-    utils::{util, util::check_repo_exist},
+    models::{Commit, Index},
+    utils::util,
 };
 use colored::Colorize;
 use std::path::PathBuf;
@@ -137,7 +137,7 @@ pub fn changes_to_be_staged() -> Changes {
 2. staged to be committed: 暂存区与HEAD(最后一次Commit::Tree)比较，即上次的暂存区
  */
 pub fn status() {
-    check_repo_exist();
+    util::check_repo_exist();
     match head::current_head() {
         Head::Detached(commit) => {
             println!("HEAD detached at {}", commit[0..7].to_string());
@@ -197,10 +197,7 @@ pub fn status() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        commands::{self, commit},
-        utils::util,
-    };
+    use crate::{commands as cmd, utils::util};
     use std::path::Path;
 
     #[test]
@@ -209,8 +206,8 @@ mod tests {
         let test_file = "a.txt";
         util::ensure_test_file(Path::new(test_file), None);
 
-        commit::commit("test commit".to_string(), true);
-        commands::add::add(vec![test_file.to_string()], false, false);
+        cmd::commit("test commit".to_string(), true);
+        cmd::add(vec![test_file.to_string()], false, false);
         let change = changes_to_be_committed();
         assert_eq!(change.new.len(), 1);
         assert_eq!(change.modified.len(), 0);
@@ -218,9 +215,9 @@ mod tests {
 
         println!("{:?}", change.to_absolute());
 
-        commit::commit("test commit".to_string(), true);
+        cmd::commit("test commit".to_string(), true);
         util::ensure_test_file(Path::new(test_file), Some("new content"));
-        commands::add::add(vec![test_file.to_string()], false, false);
+        cmd::add(vec![test_file.to_string()], false, false);
         let change = changes_to_be_committed();
         assert_eq!(change.new.len(), 0);
         assert_eq!(change.modified.len(), 1);
@@ -228,8 +225,8 @@ mod tests {
 
         println!("{:?}", change);
 
-        commit::commit("test commit".to_string(), true);
-        let _ = commands::remove::remove(vec![test_file.to_string()], false, false);
+        cmd::commit("test commit".to_string(), true);
+        let _ = cmd::rm(vec![test_file.to_string()], false, false);
         let change = changes_to_be_committed();
         assert_eq!(change.new.len(), 0);
         assert_eq!(change.modified.len(), 0);

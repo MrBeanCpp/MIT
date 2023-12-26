@@ -1,4 +1,4 @@
-use crate::{models::object::Hash, utils::util};
+use crate::{models::Hash, utils::util};
 
 pub enum Head {
     Detached(String),

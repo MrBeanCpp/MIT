@@ -2,7 +2,7 @@ use colored::Colorize;
 
 use crate::{
     head::{self},
-    models::{commit::Commit, object::Hash},
+    models::{Commit, Hash},
     store::Store,
     utils::util,
 };
@@ -10,7 +10,7 @@ use crate::{
 use super::{
     branch,
     restore::{restore_index, restore_worktree},
-    status::{changes_to_be_committed, changes_to_be_staged},
+    status,
 };
 
 enum SwitchErr {
@@ -33,10 +33,10 @@ fn switch_to_commit(commit_hash: Hash) {
 
 fn switch_to(branch: String, detach: bool) -> Result<(), SwitchErr> {
     // 检查更改
-    if !changes_to_be_staged().is_empty() {
+    if !status::changes_to_be_staged().is_empty() {
         println!("fatal: 你有未暂存的更改，切换分支会导致更改丢失");
         return Err(SwitchErr::NoClean);
-    } else if !changes_to_be_committed().is_empty() {
+    } else if !status::changes_to_be_committed().is_empty() {
         println!("fatal: 你有未提交的更改，无法切换分支");
         return Err(SwitchErr::NoClean);
     }
@@ -85,21 +85,16 @@ pub fn switch(target_branch: Option<String>, create: Option<String>, detach: boo
 
 #[cfg(test)]
 mod test {
-    use std::{fs, path::PathBuf};
-
-    use crate::commands::{self, status};
-
     use super::*;
+    use crate::commands::{self as cmd};
+    use std::path::PathBuf;
     #[test]
     fn test_switch() {
-        util::setup_test_with_clean_mit();
-        util::list_workdir_files().iter().for_each(|f| {
-            fs::remove_file(f).unwrap();
-        });
+        util::setup_test_with_empty_workdir();
 
-        commands::commit::commit("init".to_string(), true);
+        cmd::commit("init".to_string(), true);
         let test_branch_1 = "test_branch_1".to_string();
-        commands::branch::branch(Some(test_branch_1.clone()), None, false, None, false);
+        cmd::branch(Some(test_branch_1.clone()), None, false, None, false);
 
         /* test 1: NoClean */
         let test_file_1 = PathBuf::from("test_file_1");
@@ -108,10 +103,10 @@ mod test {
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), SwitchErr::NoClean));
 
-        commands::add::add(vec![], true, false); // add all
-        commands::commit::commit("add file 1".to_string(), true);
+        cmd::add(vec![], true, false); // add all
+        cmd::commit("add file 1".to_string(), true);
         let test_branch_2 = "test_branch_2".to_string();
-        commands::branch::branch(Some(test_branch_2.clone()), None, false, None, false); // branch2: test_file_1 exists
+        cmd::branch(Some(test_branch_2.clone()), None, false, None, false); // branch2: test_file_1 exists
 
         /* test 2: InvalidBranch */
         let result = switch_to("invalid_branch".to_string(), false);
@@ -125,14 +120,14 @@ mod test {
 
         let tees_file_2 = PathBuf::from("test_file_2");
         util::ensure_test_file(&tees_file_2, None);
-        commands::add::add(vec![], true, false); // add all
-        commands::commit::commit("add file 2".to_string(), false);
+        cmd::add(vec![], true, false); // add all
+        cmd::commit("add file 2".to_string(), false);
         let history_commit = head::current_head_commit(); // commit: test_file_1 exists, test_file_2 exists
 
         util::ensure_no_file(&test_file_1);
-        commands::add::add(vec![], true, false); // add all
+        cmd::add(vec![], true, false); // add all
         assert!(!test_file_1.exists());
-        commands::commit::commit("delete file 1".to_string(), false);
+        cmd::commit("delete file 1".to_string(), false);
         let branch_master = match head::current_head()/*  master: test_file_1 not exists, test_file_2 exists */{
             head::Head::Branch(branch) => branch,
             _ => panic!("current head is not branch"),

@@ -1,13 +1,10 @@
-use crate::{
-    models::index::Index,
-    utils::{util, util::check_repo_exist},
-};
+use crate::{models::Index, utils::util};
 use colored::Colorize;
 use std::{fs, io, path::PathBuf};
 
 /// 从暂存区&|工作区删除文件
 pub fn remove(files: Vec<String>, cached: bool, recursive: bool) -> io::Result<()> {
-    check_repo_exist();
+    util::check_repo_exist();
     let mut index = Index::new();
     for file in files.iter() {
         let path = PathBuf::from(file);

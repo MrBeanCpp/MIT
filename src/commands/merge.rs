@@ -1,10 +1,7 @@
 use crate::{
-    commands::{
-        self,
-        status::{changes_to_be_committed, changes_to_be_staged},
-    },
+    commands::{self, status::*},
     head,
-    models::{commit::Commit, object::Hash},
+    models::{Commit, Hash},
     store::Store,
     utils::util,
 };

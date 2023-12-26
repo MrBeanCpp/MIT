@@ -4,16 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use crate::{
-    head,
-    models::{
-        commit::Commit,
-        index::{FileMetaData, Index},
-        object::Hash,
-    },
-    store::Store,
-    utils::{util, util::get_working_dir},
-};
+use crate::{head, models::*, store::Store, utils::util};
 
 /// 统计[工作区]中相对于target_blobs已删除的文件（根据filters进行过滤）
 fn get_worktree_deleted_files_in_filters(
@@ -51,7 +42,7 @@ fn preprocess_filters(filters: Option<&Vec<PathBuf>>) -> Vec<PathBuf> {
     if let Some(filter) = filters {
         filter.clone()
     } else {
-        vec![get_working_dir().unwrap()] //None == all(workdir), '.' == cur_dir
+        vec![util::get_working_dir().unwrap()] //None == all(workdir), '.' == cur_dir
     }
 }
 
@@ -222,20 +213,17 @@ pub fn restore(paths: Vec<String>, source: Option<String>, worktree: bool, stage
 mod test {
     use std::fs;
     //TODO 写测试！
-    use std::path::PathBuf;
-
-    use crate::commands::add::add;
-    use crate::commands::restore::restore;
     use crate::commands::status;
-    use crate::{models::index::Index, utils::util};
+    use crate::{commands as cmd, models::Index, utils::util};
+    use std::path::PathBuf;
 
     #[test]
     fn test_restore_stage() {
         util::setup_test_with_empty_workdir();
         let path = PathBuf::from("a.txt");
         util::ensure_no_file(&path);
-        add(vec![], true, false); //add -A
-        restore(vec![".".to_string()], Some("HEAD".to_string()), false, true);
+        cmd::add(vec![], true, false); //add -A
+        cmd::restore(vec![".".to_string()], Some("HEAD".to_string()), false, true);
         let index = Index::new();
         assert!(index.get_tracked_files().is_empty());
     }
@@ -246,10 +234,10 @@ mod test {
         let files = vec!["a.txt", "b.txt", "c.txt", "test/in.txt"];
         util::ensure_test_files(&files);
 
-        add(vec![], true, false);
+        cmd::add(vec![], true, false);
         assert_eq!(status::changes_to_be_committed().new.iter().count(), 4);
 
-        restore(vec!["c.txt".to_string()], None, false, true); //restore c.txt --staged
+        cmd::restore(vec!["c.txt".to_string()], None, false, true); //restore c.txt --staged
         assert_eq!(status::changes_to_be_committed().new.iter().count(), 3);
         assert_eq!(status::changes_to_be_staged().new.iter().count(), 1);
 
@@ -257,7 +245,7 @@ mod test {
         fs::remove_dir_all("test").unwrap(); //删除test文件夹
         assert_eq!(status::changes_to_be_staged().deleted.iter().count(), 2);
 
-        restore(vec![".".to_string()], None, true, false); //restore . //from index
+        cmd::restore(vec![".".to_string()], None, true, false); //restore . //from index
         assert_eq!(status::changes_to_be_committed().new.iter().count(), 3);
         assert_eq!(status::changes_to_be_staged().new.iter().count(), 1);
         assert_eq!(status::changes_to_be_staged().deleted.iter().count(), 0);

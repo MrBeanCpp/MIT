@@ -1,8 +1,5 @@
 use clap::{ArgGroup, Parser, Subcommand};
-use mit::commands::{
-    add::add, branch::branch, commit::commit, init::init, log::log, merge::merge, remove::remove, restore::restore,
-    status::status, switch::switch,
-};
+use mit::commands as cmd;
 
 /// Rust实现的简易版本的Git，用于学习Rust语言
 #[derive(Parser)]
@@ -127,28 +124,28 @@ pub fn handle_command() {
     let cli = Cli::parse();
     match cli.command {
         Command::Init => {
-            init().expect("初始化失败");
+            cmd::init().expect("初始化失败");
         }
         Command::Add { files, all, update } => {
-            add(files, all, update);
+            cmd::add(files, all, update);
         }
         Command::Rm { files, cached, recursive } => {
-            remove(files, cached, recursive).expect("删除失败");
+            cmd::rm(files, cached, recursive).expect("删除失败");
         }
         Command::Commit { message, allow_empty } => {
-            commit(message, allow_empty);
+            cmd::commit(message, allow_empty);
         }
         Command::Status => {
-            status();
+            cmd::status();
         }
         Command::Log { all, number } => {
-            log(all, number);
+            cmd::log(all, number);
         }
         Command::Branch { list, delete, new_branch, commit_hash, show_current } => {
-            branch(new_branch, commit_hash, list, delete, show_current);
+            cmd::branch(new_branch, commit_hash, list, delete, show_current);
         }
         Command::Switch { branch, create, detach } => {
-            switch(branch, create, detach);
+            cmd::switch(branch, create, detach);
         }
         Command::Restore { path, source, mut worktree, staged } => {
             // 未指定stage和worktree时，默认操作worktree
@@ -161,10 +158,10 @@ pub fn handle_command() {
                 If `--source` not specified, the contents are restored from `HEAD` if `--staged` is given,
                 otherwise from the [index].
             */
-            restore(path, source, worktree, staged);
+            cmd::restore(path, source, worktree, staged);
         }
         Command::Merge { branch } => {
-            merge(branch);
+            cmd::merge(branch);
         }
     }
 }

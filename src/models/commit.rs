@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{store, utils::util};
 
-use super::{index::Index, object::Hash, tree::Tree};
+use super::*;
 /*Commit
 * git中版本控制的单位。
 * 一份Commit中对应一份版Tree，记录了该版本所包含的文件；parent记录本次commit的来源，形成了版本树；

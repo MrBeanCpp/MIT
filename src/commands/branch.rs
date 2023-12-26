@@ -1,11 +1,6 @@
 use colored::Colorize;
 
-use crate::{
-    head,
-    models::{commit::Commit, object::Hash},
-    store,
-    utils::util,
-};
+use crate::{head, models::*, store, utils::util};
 
 // branch error
 enum BranchErr {
@@ -38,8 +33,8 @@ fn create_branch(branch_name: String, _base_commit: Hash) -> Result<(), BranchEr
 
     let base_commit = Commit::load(&base_commit.unwrap());
 
-    let exist_branchs = head::list_local_branches();
-    if exist_branchs.contains(&branch_name) {
+    let exist_branches = head::list_local_branches();
+    if exist_branches.contains(&branch_name) {
         println!("fatal: 分支 '{}' 已存在", branch_name);
         return Err(BranchErr::BranchExist);
     }

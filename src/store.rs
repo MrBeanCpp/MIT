@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::models::object::Hash;
+use crate::models::Hash;
 
 use super::utils::util;
 

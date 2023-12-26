@@ -1,7 +1,4 @@
-use crate::{
-    models::{blob::Blob, object::Hash},
-    utils::{util, util::get_relative_path},
-};
+use crate::{models::*, utils::util};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -171,7 +168,7 @@ impl Index {
             .entries
             .iter()
             .map(|(path, value)| {
-                let relative_path = get_relative_path(path, &self.working_dir);
+                let relative_path = util::get_relative_path(path, &self.working_dir);
                 (relative_path, value.clone())
             })
             .collect();

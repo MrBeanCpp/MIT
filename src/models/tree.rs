@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{store, utils::util};
 
-use super::{index::Index, object::Hash};
+use super::{Hash, Index};
 /*Tree
 * Tree是一个版本中所有文件的集合。从根目录还是，每个目录是一个Tree，每个文件是一个Blob。Tree之间互相嵌套表示文件的层级关系。
 * 每一个Tree对象也是对应到git储存仓库的一个文件，其内容是一个或多个TreeEntry。
@@ -157,18 +157,12 @@ impl Tree {
 mod test {
     use std::path::PathBuf;
 
-    use crate::{
-        models::{blob::Blob, index::FileMetaData},
-        utils::{
-            util,
-            util::{get_absolute_path, to_workdir_absolute_path},
-        },
-    };
+    use crate::{models::*, utils::util};
 
     #[test]
     fn test_new() {
         util::setup_test_with_clean_mit();
-        let mut index = super::Index::new();
+        let mut index = Index::new();
         for test_file in vec!["b.txt", "mit_src/a.txt", "test/test.txt"] {
             let test_file = PathBuf::from(test_file);
             util::ensure_test_file(&test_file, None);
@@ -176,7 +170,7 @@ mod test {
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
 
-        let tree = super::Tree::new(&index);
+        let tree = Tree::new(&index);
         assert!(tree.entries.len() == 3);
         assert!(tree.hash.len() != 0);
     }
@@ -184,7 +178,7 @@ mod test {
     #[test]
     fn test_load() {
         util::setup_test_with_clean_mit();
-        let mut index = super::Index::new();
+        let mut index = Index::new();
         let test_files = vec!["b.txt", "mit_src/a.txt"];
         for test_file in test_files.clone() {
             let test_file = PathBuf::from(test_file);
@@ -192,10 +186,10 @@ mod test {
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
 
-        let tree = super::Tree::new(&index);
+        let tree = Tree::new(&index);
         let tree_hash = tree.get_hash();
 
-        let loaded_tree = super::Tree::load(&tree_hash);
+        let loaded_tree = Tree::load(&tree_hash);
         assert!(loaded_tree.entries.len() == tree.entries.len());
         assert!(tree.entries[0].name == loaded_tree.entries[0].name);
         assert!(tree.entries[1].name == loaded_tree.entries[1].name);
@@ -204,35 +198,35 @@ mod test {
     #[test]
     fn test_get_recursive_file_entries() {
         util::setup_test_with_clean_mit();
-        let mut index = super::Index::new();
+        let mut index = Index::new();
         let mut test_files = vec![PathBuf::from("b.txt"), PathBuf::from("mit_src/a.txt")];
         for test_file in test_files.clone() {
             util::ensure_test_file(&test_file, None);
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
 
-        let tree = super::Tree::new(&index);
+        let tree = Tree::new(&index);
         let tree_hash = tree.get_hash();
 
-        let loaded_tree = super::Tree::load(&tree_hash);
+        let loaded_tree = Tree::load(&tree_hash);
         let mut files = loaded_tree.get_recursive_file_entries();
         files.sort();
         test_files.sort();
         assert_eq!(files.len(), test_files.len());
         assert_eq!(
-            to_workdir_absolute_path(&files[0]).to_str().unwrap(), //TODO 罪大恶极的路径问题
-            get_absolute_path(&test_files[0]).to_str().unwrap()
+            util::to_workdir_absolute_path(&files[0]).to_str().unwrap(), //TODO 罪大恶极的路径问题
+            util::get_absolute_path(&test_files[0]).to_str().unwrap()
         );
         assert_eq!(
-            to_workdir_absolute_path(&files[1]).to_str().unwrap(),
-            get_absolute_path(&test_files[1]).to_str().unwrap()
+            util::to_workdir_absolute_path(&files[1]).to_str().unwrap(),
+            util::get_absolute_path(&test_files[1]).to_str().unwrap()
         );
     }
 
     #[test]
     fn test_get_recursive_blobs() {
         util::setup_test_with_clean_mit();
-        let mut index = super::Index::new();
+        let mut index = Index::new();
         let test_files = vec!["b.txt", "mit_src/a.txt"];
         let mut test_blobs = vec![];
         for test_file in test_files.clone() {
@@ -243,10 +237,10 @@ mod test {
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
 
-        let tree = super::Tree::new(&index);
+        let tree = Tree::new(&index);
         let tree_hash = tree.get_hash();
 
-        let loaded_tree = super::Tree::load(&tree_hash);
+        let loaded_tree = Tree::load(&tree_hash);
         let blobs = loaded_tree.get_recursive_blobs();
         assert!(blobs.len() == test_files.len());
         assert!(blobs.contains(&(PathBuf::from(test_files[0]), test_blobs[0].get_hash())));
