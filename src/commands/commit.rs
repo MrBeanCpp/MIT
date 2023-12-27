@@ -3,7 +3,7 @@ use crate::{head, models::*};
 use super::status;
 
 pub fn commit(message: String, allow_empty: bool) {
-    let index = Index::new();
+    let index = Index::get_instance();
     if !allow_empty && status::changes_to_be_committed().is_empty() {
         panic!("工作区没有任何改动，不需要提交");
     }
@@ -13,9 +13,9 @@ pub fn commit(message: String, allow_empty: bool) {
 
     let mut commit = {
         if current_commit_hash.is_empty() {
-            Commit::new(&index, vec![], message.clone())
+            Commit::new(index, vec![], message.clone())
         } else {
-            Commit::new(&index, vec![current_commit_hash.clone()], message.clone())
+            Commit::new(index, vec![current_commit_hash.clone()], message.clone())
         }
     };
     let commit_hash = commit.save();

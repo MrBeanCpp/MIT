@@ -5,7 +5,7 @@ use std::{fs, io, path::PathBuf};
 /// 从暂存区&|工作区删除文件
 pub fn remove(files: Vec<String>, cached: bool, recursive: bool) -> io::Result<()> {
     util::check_repo_exist();
-    let mut index = Index::new();
+    let index = Index::get_instance();
     for file in files.iter() {
         let path = PathBuf::from(file);
         if !path.exists() {

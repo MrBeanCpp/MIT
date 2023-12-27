@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::models::{commit::Commit, object::Hash, tree::Tree};
+use crate::models::{commit::Commit, object::Hash, tree::Tree, Index};
 
 pub const ROOT_DIR: &str = ".mit";
 pub const TEST_DIR: &str = "mit_test_storage"; // 执行测试的储存库
@@ -33,26 +33,33 @@ fn find_cargo_dir() -> PathBuf {
     }
 }
 
-fn setup_test_dir() {
+/// 准备测试环境，切换到测试目录
+fn setup_test_env() {
     color_backtrace::install(); // colorize backtrace
+
     let mut path = find_cargo_dir();
     path.push(TEST_DIR);
     if !path.exists() {
         fs::create_dir(&path).unwrap();
     }
-    std::env::set_current_dir(&path).unwrap();
+    std::env::set_current_dir(&path).unwrap(); // 将执行目录切换到测试目录
+}
+
+pub fn init_mit() {
+    let _ = crate::commands::init();
+    Index::reset(); // 重置index, 以防止其他测试修改了index单例
 }
 
 /// with 初始化的干净的mit
 pub fn setup_test_with_clean_mit() {
     setup_test_without_mit();
-    let _ = crate::commands::init::init();
+    init_mit();
 }
 
 pub fn setup_test_without_mit() {
     // 将执行目录切换到测试目录，并清除测试目录下的.mit目录
-    setup_test_dir();
-    let mut path = std::env::current_dir().unwrap();
+    setup_test_env();
+    let mut path = cur_dir();
     path.push(ROOT_DIR);
     if path.exists() {
         fs::remove_dir_all(&path).unwrap();
@@ -632,7 +639,7 @@ mod tests {
         ensure_test_file(Path::new("test.txt"), Some("test"));
         let hash = Blob::new(get_working_dir().unwrap().join("test.txt").as_path()).get_hash();
         assert_eq!(check_object_type(hash), ObjectType::Blob);
-        let mut commit = Commit::new(&Index::new(), vec![], "test".to_string());
+        let mut commit = Commit::new(&Index::get_instance(), vec![], "test".to_string());
         assert_eq!(check_object_type(commit.get_tree_hash()), ObjectType::Tree);
         commit.save();
         assert_eq!(check_object_type(commit.get_hash()), ObjectType::Commit);

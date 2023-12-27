@@ -1,4 +1,5 @@
 use crate::{models::*, utils::util};
+use once_cell::unsync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -43,7 +44,8 @@ impl FileMetaData {
 }
 
 /** Index
-注意：逻辑处理均为绝对路径，但是存储时为相对路径
+注意：逻辑处理均为绝对路径，但是存储时为相对路径(to workdir)<br>
+<a href="https://wolfsonliu.github.io/archive/2018/li-jie-git-index-wen-jian.html">理解 Git index 文件</a>
  */
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Index {
@@ -53,8 +55,7 @@ pub struct Index {
 
 impl Index {
     /// 从index文件加载
-    pub(crate) fn new() -> Index {
-        //TODO! 设计为单例模式
+    fn new() -> Index {
         let mut index = Index {
             entries: HashMap::new(),
             working_dir: util::get_working_dir().unwrap(),
@@ -63,26 +64,44 @@ impl Index {
         return index;
     }
 
+    /// 单例模式，线程不安全，但是本程序默认单线程
+    pub fn get_instance() -> &'static mut Index {
+        static mut INSTANCE: Lazy<Index> = Lazy::new(Index::new); //延迟初始化，线程不安全
+        unsafe { &mut INSTANCE }
+    }
+
+    /// 重置index，主要用于测试，防止单例模式的影响
+    pub fn reset() {
+        let index = Index::get_instance();
+        index.clear();
+        *index = Index::new(); //drop happened 导致旧数据写入文件
+    }
+
+    fn clear(&mut self) {
+        self.entries.clear();
+        self.working_dir.clear();
+    }
+
     /// 预处理路径，统一形式为绝对路径
-    fn preprocess_path(path: &Path) -> PathBuf {
+    fn preprocess(path: &Path) -> PathBuf {
         util::get_absolute_path(&path)
     }
 
     // 添加文件
     pub fn add(&mut self, mut path: PathBuf, data: FileMetaData) {
-        path = Index::preprocess_path(&path);
+        path = Index::preprocess(&path);
         self.entries.insert(path, data);
     }
 
     // 删除文件
     pub fn remove(&mut self, path: &Path) {
-        let path = Index::preprocess_path(&path);
+        let path = Index::preprocess(&path);
         self.entries.remove(&path);
     }
 
     // 获取文件元数据
     pub fn get(&self, path: &Path) -> Option<FileMetaData> {
-        let path = Index::preprocess_path(path);
+        let path = Index::preprocess(path);
         self.entries.get(&path).cloned()
     }
 
@@ -96,7 +115,7 @@ impl Index {
     }
 
     pub fn contains(&self, path: &Path) -> bool {
-        let path = Index::preprocess_path(path);
+        let path = Index::preprocess(path);
         self.entries.contains_key(&path)
     }
 
@@ -134,7 +153,7 @@ impl Index {
     }
 
     pub fn update(&mut self, mut path: PathBuf, data: FileMetaData) {
-        path = Index::preprocess_path(&path);
+        path = Index::preprocess(&path);
         self.entries.insert(path, data);
     }
 
@@ -151,6 +170,8 @@ impl Index {
                     (abs_path, value)
                 })
                 .collect();
+        } else {
+            // println!("index文件不存在，创建空index");
         }
     }
 
@@ -161,7 +182,7 @@ impl Index {
         path
     }
 
-    /// 二进制序列化
+    /// 保存到文件
     pub fn save(&mut self) {
         //要先转化为相对路径
         let relative_index: HashMap<PathBuf, FileMetaData> = self
@@ -214,14 +235,14 @@ mod tests {
     #[test]
     fn test_load() {
         util::setup_test_with_clean_mit();
-        let index = Index::new();
+        let index = Index::get_instance();
         println!("{:?}", index);
     }
 
     #[test]
     fn test_save() {
         util::setup_test_with_clean_mit();
-        let mut index = Index::new();
+        let index = Index::get_instance();
         let path = PathBuf::from("../mit_test_storage/.mit/HEAD"); //测试../相对路径的处理
         index.add(path.clone(), FileMetaData::new(&Blob::new(&path), &path));
 

@@ -88,7 +88,7 @@ mod test {
     fn test_commit() {
         util::setup_test_with_clean_mit();
 
-        let index = super::Index::new();
+        let index = super::Index::get_instance();
         let mut commit = super::Commit::new(&index, vec!["123".to_string(), "456".to_string()], "test".to_string());
         assert_eq!(commit.hash.len(), 0);
 

@@ -64,7 +64,7 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
     let mut file_paths = util::integrate_paths(&input_paths); //根据用户输入整合存在的文件（绝对路径）
     file_paths.extend(deleted_files); //已删除的文件
 
-    let index = Index::new();
+    let index = Index::get_instance();
     let store = Store::new();
 
     for path in &file_paths {
@@ -103,7 +103,7 @@ pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf,
     let input_paths = preprocess_filters(filter); //预处理filter 将None转化为workdir
     let target_blobs = preprocess_blobs(target_blobs); //预处理target_blobs 转化为绝对路径HashMap
 
-    let mut index = Index::new();
+    let index = Index::get_instance();
     let deleted_files_index = get_index_deleted_files_in_filters(&index, &input_paths, &target_blobs); //统计已删除的文件
 
     //1.获取index中包含于input_path的文件（使用paths进行过滤）
@@ -181,7 +181,7 @@ pub fn restore(paths: Vec<String>, source: Option<String>, worktree: bool, stage
         otherwise from the [index].*/
         if source.is_none() && !staged {
             // 没有指定source，且没有指定--staged，从[index]中恢复到worktree //只有这种情况是从[index]恢复
-            let entries = Index::new().get_tracked_entries();
+            let entries = Index::get_instance().get_tracked_entries();
             entries.into_iter().map(|(p, meta)| (p, meta.hash)).collect()
         } else {
             //从[target_commit]中恢复
@@ -224,7 +224,7 @@ mod test {
         util::ensure_no_file(&path);
         cmd::add(vec![], true, false); //add -A
         cmd::restore(vec![".".to_string()], Some("HEAD".to_string()), false, true);
-        let index = Index::new();
+        let index = Index::get_instance();
         assert!(index.get_tracked_files().is_empty());
     }
 

@@ -70,7 +70,7 @@ impl Changes {
 */
 pub fn changes_to_be_committed() -> Changes {
     let mut change = Changes::default();
-    let index = Index::new();
+    let index = Index::get_instance();
     let head_hash = head::current_head_commit();
     let tracked_files = index
         .get_tracked_files()
@@ -111,7 +111,7 @@ pub fn changes_to_be_committed() -> Changes {
 /// 比较工作区与暂存区的差异，返回相对路径(to workdir)，不筛选
 pub fn changes_to_be_staged() -> Changes {
     let mut change = Changes::default();
-    let index = Index::new();
+    let index = Index::get_instance();
     for file in index.get_tracked_files() {
         if !file.exists() {
             change.deleted.push(util::to_workdir_relative_path(&file));
