@@ -9,12 +9,10 @@ use std::{
 use crate::models::{commit::Commit, object::Hash, tree::Tree, Index};
 
 pub const ROOT_DIR: &str = ".mit";
-
 #[cfg(test)]
 pub mod test_util {
-    use super::*;
-
     pub const TEST_DIR: &str = "mit_test_storage"; // 执行测试的储存库
+    use super::*;
     /* tools for test */
     fn find_cargo_dir() -> PathBuf {
         let cargo_path = std::env::var("CARGO_MANIFEST_DIR");
@@ -37,26 +35,33 @@ pub mod test_util {
         }
     }
 
-    fn setup_test_dir() {
+    /// 准备测试环境，切换到测试目录
+    fn setup_test_env() {
         color_backtrace::install(); // colorize backtrace
+
         let mut path = find_cargo_dir();
         path.push(TEST_DIR);
         if !path.exists() {
             fs::create_dir(&path).unwrap();
         }
-        std::env::set_current_dir(&path).unwrap();
+        std::env::set_current_dir(&path).unwrap(); // 将执行目录切换到测试目录
+    }
+
+    pub fn init_mit() {
+        let _ = crate::commands::init();
+        Index::reload(); // 重置index, 以防止其他测试修改了index单例
     }
 
     /// with 初始化的干净的mit
     pub fn setup_test_with_clean_mit() {
         setup_test_without_mit();
-        let _ = crate::commands::init::init();
+        init_mit();
     }
 
     pub fn setup_test_without_mit() {
         // 将执行目录切换到测试目录，并清除测试目录下的.mit目录
-        setup_test_dir();
-        let mut path = std::env::current_dir().unwrap();
+        setup_test_env();
+        let mut path = cur_dir();
         path.push(ROOT_DIR);
         if path.exists() {
             fs::remove_dir_all(&path).unwrap();
@@ -101,12 +106,12 @@ pub mod test_util {
         }
     }
 
-    pub fn ensure_no_file(path: &Path) {
-        // 以测试目录为根目录，删除文件
-        if path.exists() {
-            fs::remove_file(get_working_dir().unwrap().join(path)).unwrap();
-        }
+pub fn ensure_no_file(path: &Path) {
+    // 以测试目录为根目录，删除文件
+    if path.exists() {
+        fs::remove_file(get_working_dir().unwrap().join(path)).unwrap();
     }
+}
 }
 /* tools for mit */
 pub fn calc_hash(data: &String) -> String {
@@ -529,9 +534,9 @@ pub fn is_typeof_commit(hash: Hash) -> bool {
 #[cfg(test)]
 mod tests {
     use crate::models::{blob::Blob, index::Index};
-
     use super::*;
     use super::test_util::*;
+
     #[test]
     fn test_get_storage_path() {
         let path = get_storage_path();

@@ -55,7 +55,7 @@ pub struct Index {
 
 impl Index {
     /// 从index文件加载
-    pub fn new() -> Index {
+    fn new() -> Index {
         let mut index = Index::default();
         index.load();
         return index;
@@ -67,7 +67,7 @@ impl Index {
         unsafe { &mut INSTANCE }
     }
 
-    /// 重置index 从文件重新加载，主要用于测试，防止单例模式的影响
+    /// 重置index，主要用于测试，防止单例模式的影响
     pub fn reload() {
         let index = Index::get_instance();
         index.load();
@@ -224,14 +224,14 @@ mod tests {
     #[test]
     fn test_load() {
         test_util::setup_test_with_clean_mit();
-        let index = Index::new();
+        let index = Index::get_instance();
         println!("{:?}", index);
     }
 
     #[test]
     fn test_save() {
         test_util::setup_test_with_clean_mit();
-        let mut index = Index::new();
+        let index = Index::get_instance();
         let path = PathBuf::from("../mit_test_storage/.mit/HEAD"); //测试../相对路径的处理
         index.add(path.clone(), FileMetaData::new(&Blob::new(&path), &path));
 

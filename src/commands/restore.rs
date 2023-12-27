@@ -67,7 +67,7 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
     let mut file_paths = util::integrate_paths(&input_paths); //根据用户输入整合存在的文件（绝对路径）
     file_paths.extend(deleted_files); //已删除的文件
 
-    let index = Index::new();
+    let index = Index::get_instance();
     let store = store::Store::new();
 
     for path in &file_paths {
@@ -139,7 +139,6 @@ pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf,
             }
         }
     }
-    index.save();
 }
 /**
 对于工作区中的新文件，若已跟踪，则删除；若未跟踪，则保留<br>
@@ -227,7 +226,8 @@ mod test {
         test_util::ensure_no_file(&path);
         cmd::add(vec![], true, false); //add -A
         cmd::restore(vec![".".to_string()], Some("HEAD".to_string()), false, true);
-        assert!(Index::get_instance().is_empty());
+        let index = Index::get_instance();
+        assert!(index.get_tracked_files().is_empty());
     }
 
     #[test]
