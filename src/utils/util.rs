@@ -1,4 +1,3 @@
-
 use std::{
     collections::HashSet,
     fs, io,
@@ -126,11 +125,6 @@ where
         .collect::<O>()
 }
 
-/// 检查文件是否在工作区内， 若不存在则false
-pub fn is_inside_workdir(file: &Path) -> bool {
-    is_inside_dir(file, &get_working_dir().unwrap())
-}
-
 /// 检查文件是否在.mit内， 若不存在则false
 pub fn is_inside_repo(file: &Path) -> bool {
     is_inside_dir(file, &get_storage_path().unwrap())
@@ -164,21 +158,6 @@ pub fn list_files(path: &Path) -> io::Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-/** 列出子文件夹 */
-pub fn list_subpath(path: &Path) -> io::Result<Vec<PathBuf>> {
-    let mut files = Vec::new();
-    let path = get_absolute_path(path);
-    if path.is_dir() {
-        for entry in fs::read_dir(path)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_dir() && path.file_name().unwrap_or_default() != ROOT_DIR {
-                files.push(path)
-            }
-        }
-    }
-    Ok(files)
-}
 /** 检查一个dir是否包含.mit（考虑.mit嵌套） */
 pub fn include_root_dir(dir: &Path) -> bool {
     // 检查子文件夹是否有ROOT_DIR
@@ -320,25 +299,6 @@ pub fn get_file_mode(path: &Path) -> String {
     }
 }
 
-/// 清除Windows下的绝对路径前缀"\\\\?\\" (由[PathBuf::canonicalize]函数产生)
-/// <br><a href="https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation">Windows 系统中的文件路径格式</a>
-pub fn clean_win_abs_path_pre(path: PathBuf) -> PathBuf {
-    #[cfg(windows)]
-    {
-        const DOS_PREFIX: &str = "\\\\?\\";
-        let path_str = path.to_string_lossy();
-        if path_str.starts_with(DOS_PREFIX) {
-            PathBuf::from(&path_str[DOS_PREFIX.len()..])
-        } else {
-            path
-        }
-    }
-    #[cfg(not(target_os = "windows"))]
-    {
-        path
-    }
-}
-
 /// 获取绝对路径（相对于目录current_dir） 不论是否存在
 pub fn get_absolute_path(path: &Path) -> PathBuf {
     get_absolute_path_to_dir(path, &std::env::current_dir().unwrap())
@@ -350,8 +310,6 @@ pub fn get_absolute_path_to_dir(path: &Path, dir: &Path) -> PathBuf {
         path.to_path_buf()
     } else {
         //相对路径
-        /*let abs_path = path.canonicalize().unwrap(); //这一步会统一路径分隔符 //canonicalize()不能处理不存在的文件
-        clean_win_abs_path_pre(abs_path)*/
         // 所以决定手动解析相对路径中的../ ./
         let mut abs_path = dir.to_path_buf();
         // 这里会拆分所有组件，所以会自动统一路径分隔符
@@ -415,7 +373,6 @@ pub fn is_typeof_commit(hash: Hash) -> bool {
     check_object_type(hash) == ObjectType::Commit
 }
 
-
 /// 将内容对应的文件内容(主要是blob)还原到file
 pub fn write_workfile(content: String, file: &PathBuf) {
     let mut parent = file.clone();
@@ -433,7 +390,10 @@ pub fn read_workfile(file: &Path) -> String {
 mod tests {
     use crate::{
         models::{blob::Blob, index::Index},
-        utils::{test_util, util::{*, self}},
+        utils::{
+            test_util,
+            util::{self, *},
+        },
     };
 
     #[test]
@@ -497,16 +457,6 @@ mod tests {
     }
 
     #[test]
-    fn test_is_inside_repo() {
-        test_util::setup_test_with_clean_mit();
-        let path = Path::new("../Cargo.toml");
-        assert_eq!(is_inside_workdir(path), false);
-
-        let path = Path::new(".mit/HEAD");
-        assert_eq!(is_inside_workdir(path), true);
-    }
-
-    #[test]
     fn test_format_time() {
         let time = std::time::SystemTime::now();
         let formatted_time = format_time(&time);
@@ -553,7 +503,7 @@ mod tests {
         list_workdir_files().iter().for_each(|f| {
             fs::remove_file(f).unwrap();
         });
-        list_subpath(Path::new("./")).unwrap().iter().for_each(|f| {
+        test_util::list_subpath(Path::new("./")).unwrap().iter().for_each(|f| {
             if include_root_dir(f) {
                 fs::remove_dir_all(f).unwrap();
             }

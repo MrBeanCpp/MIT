@@ -29,6 +29,7 @@ impl Commit {
     pub fn get_date(&self) -> String {
         util::format_time(&self.date)
     }
+    #[cfg(test)]
     pub fn get_tree_hash(&self) -> String {
         self.tree.clone()
     }
@@ -44,9 +45,9 @@ impl Commit {
     pub fn get_author(&self) -> String {
         self.author.clone()
     }
-    pub fn get_committer(&self) -> String {
-        self.committer.clone()
-    }
+    // pub fn get_committer(&self) -> String {
+    //     self.committer.clone()
+    // }
 
     pub fn new(index: &Index, parent: Vec<Hash>, message: String) -> Commit {
         let mut tree = Tree::new(index);

@@ -110,3 +110,19 @@ pub fn ensure_no_file(path: &Path) {
         fs::remove_file(util::get_working_dir().unwrap().join(path)).unwrap();
     }
 }
+
+/** 列出子文件夹 */
+pub fn list_subpath(path: &Path) -> io::Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    let path = util::get_absolute_path(path);
+    if path.is_dir() {
+        for entry in fs::read_dir(path)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() && path.file_name().unwrap_or_default() != util::ROOT_DIR {
+                files.push(path)
+            }
+        }
+    }
+    Ok(files)
+}
