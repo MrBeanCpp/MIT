@@ -9,6 +9,9 @@ pub struct Store {
     store_path: PathBuf,
 }
 
+/**Store负责管理objects
+ * 每一个object文件名与内容的hash值相同
+ */
 impl Store {
     pub fn new() -> Store {
         util::check_repo_exist();
@@ -24,13 +27,6 @@ impl Store {
             Ok(content) => content,
             Err(_) => panic!("储存库疑似损坏，无法读取文件"),
         }
-    }
-
-    pub fn contains(&self, hash: &String) -> bool {
-        let mut path = self.store_path.clone();
-        path.push("objects");
-        path.push(hash);
-        path.exists()
     }
 
     /// 将hash对应的文件内容(主要是blob)还原到file
@@ -69,6 +65,7 @@ impl Store {
         }
     }
 
+
     pub fn save(&self, content: &String) -> String {
         /* 保存文件内容 */
         let hash = util::calc_hash(content);
@@ -76,6 +73,10 @@ impl Store {
         path.push("objects");
         path.push(&hash);
         // println!("Saved to: [{}]", path.display());
+        if path.exists() {
+            // IO优化，文件已存在，不再写入
+            return hash;
+        }
         match std::fs::write(path, content) {
             Ok(_) => hash,
             Err(_) => panic!("储存库疑似损坏，无法写入文件"),
