@@ -113,7 +113,7 @@ pub fn change_head_to_commit(commit_hash: &String) {
 
 #[cfg(test)]
 mod test {
-    use crate::utils::util::test_util;
+    use crate::utils::test_util;
     use crate::utils::head;
 
     #[test]

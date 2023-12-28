@@ -80,12 +80,10 @@ pub fn merge(branch: String) {
 
 #[cfg(test)]
 mod test {
-    use std::fs;
-
     use super::*;
     use crate::{
         commands::{commit, switch::switch},
-        utils::util::test_util,
+        utils::test_util,
     };
 
     #[test]

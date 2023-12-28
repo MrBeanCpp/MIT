@@ -216,7 +216,7 @@ pub fn restore(paths: Vec<String>, source: Option<String>, worktree: bool, stage
 mod test {
     use std::fs;
     //TODO 写测试！
-    use crate::{commands as cmd, commands::status, models::Index, utils::util::test_util};
+    use crate::{commands as cmd, commands::status, models::Index, utils::test_util};
     use std::path::PathBuf;
 
     #[test]

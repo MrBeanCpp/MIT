@@ -159,7 +159,7 @@ mod test {
 
     use crate::{
         models::*,
-        utils::{util, util::test_util},
+        utils::{util, test_util},
     };
 
     #[test]

@@ -40,7 +40,7 @@ mod test {
 
     use crate::{
         commands as cmd, models,
-        utils::{head, util::test_util},
+        utils::{head, test_util},
     };
 
     #[test]

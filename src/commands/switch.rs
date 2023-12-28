@@ -88,7 +88,7 @@ mod test {
     use super::*;
     use crate::{
         commands::{self as cmd},
-        utils::util::test_util,
+        utils::test_util,
     };
     use std::path::PathBuf;
     #[test]

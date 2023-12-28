@@ -87,7 +87,7 @@ mod tests {
     use std::fs;
 
     use super::*;
-    use util::test_util;
+    use crate::utils::test_util;
 
     #[test]
     fn test_new_success() {

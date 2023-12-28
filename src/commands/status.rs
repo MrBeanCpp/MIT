@@ -196,7 +196,7 @@ pub fn status() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{commands as cmd, utils::util::test_util};
+    use crate::{commands as cmd, utils::test_util};
     use std::path::Path;
 
     #[test]

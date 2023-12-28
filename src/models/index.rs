@@ -209,7 +209,7 @@ impl Index {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::util::test_util;
+    use crate::utils::test_util;
     use std::fs;
 
     #[test]

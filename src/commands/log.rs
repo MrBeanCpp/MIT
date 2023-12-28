@@ -70,7 +70,7 @@ fn __log(all: bool, number: Option<usize>) -> usize {
 #[cfg(test)]
 mod test {
     use super::super::super::commands;
-    use crate::utils::util::test_util;
+    use crate::utils::test_util;
     #[test]
     fn test_log() {
         test_util::setup_test_with_clean_mit();
