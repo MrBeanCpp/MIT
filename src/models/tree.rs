@@ -157,15 +157,18 @@ impl Tree {
 mod test {
     use std::path::PathBuf;
 
-    use crate::{models::*, utils::util};
+    use crate::{
+        models::*,
+        utils::{util, util::test_util},
+    };
 
     #[test]
     fn test_new() {
-        util::setup_test_with_clean_mit();
-        let index = Index::get_instance();
+        test_util::setup_test_with_clean_mit();
+        let mut index = Index::new();
         for test_file in vec!["b.txt", "mit_src/a.txt", "test/test.txt"] {
             let test_file = PathBuf::from(test_file);
-            util::ensure_test_file(&test_file, None);
+            test_util::ensure_test_file(&test_file, None);
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
@@ -177,12 +180,12 @@ mod test {
 
     #[test]
     fn test_load() {
-        util::setup_test_with_clean_mit();
-        let index = Index::get_instance();
+        test_util::setup_test_with_clean_mit();
+        let mut index = Index::new();
         let test_files = vec!["b.txt", "mit_src/a.txt"];
         for test_file in test_files.clone() {
             let test_file = PathBuf::from(test_file);
-            util::ensure_test_file(&test_file, None);
+            test_util::ensure_test_file(&test_file, None);
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
 
@@ -197,11 +200,11 @@ mod test {
 
     #[test]
     fn test_get_recursive_file_entries() {
-        util::setup_test_with_clean_mit();
-        let index = Index::get_instance();
+        test_util::setup_test_with_clean_mit();
+        let mut index = Index::new();
         let mut test_files = vec![PathBuf::from("b.txt"), PathBuf::from("mit_src/a.txt")];
         for test_file in test_files.clone() {
-            util::ensure_test_file(&test_file, None);
+            test_util::ensure_test_file(&test_file, None);
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
         }
 
@@ -225,13 +228,13 @@ mod test {
 
     #[test]
     fn test_get_recursive_blobs() {
-        util::setup_test_with_clean_mit();
-        let index = Index::get_instance();
+        test_util::setup_test_with_clean_mit();
+        let mut index = Index::new();
         let test_files = vec!["b.txt", "mit_src/a.txt"];
         let mut test_blobs = vec![];
         for test_file in test_files.clone() {
             let test_file = PathBuf::from(test_file);
-            util::ensure_test_file(&test_file, None);
+            test_util::ensure_test_file(&test_file, None);
             let blob = Blob::new(&test_file);
             test_blobs.push(blob.clone());
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));

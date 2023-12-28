@@ -82,11 +82,11 @@ impl Commit {
 
 #[cfg(test)]
 mod test {
-    use crate::utils::util;
+    use crate::utils::util::test_util;
 
     #[test]
     fn test_commit() {
-        util::setup_test_with_clean_mit();
+        test_util::setup_test_with_clean_mit();
 
         let index = super::Index::get_instance();
         let mut commit = super::Commit::new(&index, vec!["123".to_string(), "456".to_string()], "test".to_string());

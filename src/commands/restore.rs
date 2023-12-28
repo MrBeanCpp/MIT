@@ -217,14 +217,14 @@ pub fn restore(paths: Vec<String>, source: Option<String>, worktree: bool, stage
 mod test {
     use std::fs;
     //TODO 写测试！
-    use crate::{commands as cmd, commands::status, models::Index, utils::util};
+    use crate::{commands as cmd, commands::status, models::Index, utils::util::test_util};
     use std::path::PathBuf;
 
     #[test]
     fn test_restore_stage() {
-        util::setup_test_with_empty_workdir();
+        test_util::setup_test_with_empty_workdir();
         let path = PathBuf::from("a.txt");
-        util::ensure_no_file(&path);
+        test_util::ensure_no_file(&path);
         cmd::add(vec![], true, false); //add -A
         cmd::restore(vec![".".to_string()], Some("HEAD".to_string()), false, true);
         assert!(Index::get_instance().is_empty());
@@ -232,9 +232,9 @@ mod test {
 
     #[test]
     fn test_restore_worktree() {
-        util::setup_test_with_empty_workdir();
+        test_util::setup_test_with_empty_workdir();
         let files = vec!["a.txt", "b.txt", "c.txt", "test/in.txt"];
-        util::ensure_test_files(&files);
+        test_util::ensure_test_files(&files);
 
         cmd::add(vec![], true, false);
         assert_eq!(status::changes_to_be_committed().new.iter().count(), 4);

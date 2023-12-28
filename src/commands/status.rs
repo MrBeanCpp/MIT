@@ -196,14 +196,14 @@ pub fn status() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{commands as cmd, utils::util};
+    use crate::{commands as cmd, utils::util::test_util};
     use std::path::Path;
 
     #[test]
     fn test_changes_to_be_committed() {
-        util::setup_test_with_clean_mit();
+        test_util::setup_test_with_clean_mit();
         let test_file = "a.txt";
-        util::ensure_test_file(Path::new(test_file), None);
+        test_util::ensure_test_file(Path::new(test_file), None);
 
         cmd::commit("test commit".to_string(), true);
         cmd::add(vec![test_file.to_string()], false, false);
@@ -215,7 +215,7 @@ mod tests {
         println!("{:?}", change.to_absolute());
 
         cmd::commit("test commit".to_string(), true);
-        util::ensure_test_file(Path::new(test_file), Some("new content"));
+        test_util::ensure_test_file(Path::new(test_file), Some("new content"));
         cmd::add(vec![test_file.to_string()], false, false);
         let change = changes_to_be_committed();
         assert_eq!(change.new.len(), 0);

@@ -126,10 +126,10 @@ pub fn branch(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{commands, utils::util};
+    use crate::{commands, utils::util::test_util};
     #[test]
     fn test_create_branch() {
-        util::setup_test_with_clean_mit();
+        test_util::setup_test_with_clean_mit();
 
         // no commit: invalid object
         let result = create_branch("test_branch".to_string(), head::current_head_commit());
@@ -170,7 +170,7 @@ mod test {
 
     #[test]
     fn test_delete_branch() {
-        util::setup_test_with_clean_mit();
+        test_util::setup_test_with_clean_mit();
 
         // no commit: invalid object
         let result = delete_branch("test_branch".to_string());

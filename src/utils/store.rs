@@ -87,23 +87,24 @@ mod tests {
     use std::fs;
 
     use super::*;
+    use util::test_util;
 
     #[test]
     fn test_new_success() {
-        util::setup_test_with_clean_mit();
+        test_util::setup_test_with_clean_mit();
         let _ = Store::new();
     }
 
     #[test]
     #[should_panic]
     fn test_new_fail() {
-        util::setup_test_without_mit();
+        test_util::setup_test_without_mit();
         let _ = Store::new();
     }
 
     #[test]
     fn test_save_and_load() {
-        let _ = util::setup_test_with_clean_mit();
+        let _ = test_util::setup_test_with_clean_mit();
         let store = Store::new();
         let content = "hello world".to_string();
         let hash = store.save(&content);
@@ -113,7 +114,7 @@ mod tests {
 
     #[test]
     fn test_search() {
-        util::setup_test_with_clean_mit();
+        test_util::setup_test_with_clean_mit();
         let hashs = vec!["1234567890".to_string(), "1235467891".to_string(), "4567892".to_string()];
         for hash in hashs.iter() {
             let mut path = util::get_storage_path().unwrap();

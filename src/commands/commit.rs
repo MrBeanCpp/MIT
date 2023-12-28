@@ -38,24 +38,27 @@ pub fn commit(message: String, allow_empty: bool) {
 mod test {
     use std::path::Path;
 
-    use crate::{commands as cmd, utils::head, models, utils::util};
+    use crate::{
+        commands as cmd, models,
+        utils::{head, util::test_util},
+    };
 
     #[test]
     #[should_panic]
     fn test_commit_empty() {
-        util::setup_test_with_clean_mit();
+        test_util::setup_test_with_clean_mit();
 
         super::commit("".to_string(), false);
     }
 
     #[test]
     fn test_commit() {
-        util::setup_test_with_clean_mit();
+        test_util::setup_test_with_clean_mit();
         let test_file = "a.txt";
         let head_one = head::current_head_commit();
         assert!(head_one.is_empty());
 
-        util::ensure_test_file(&Path::new(test_file), "test content".into());
+        test_util::ensure_test_file(&Path::new(test_file), "test content".into());
         cmd::add(vec![], true, false);
         cmd::commit("test commit 1".to_string(), true);
         let head_two = head::current_head_commit();

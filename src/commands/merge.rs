@@ -82,12 +82,14 @@ pub fn merge(branch: String) {
 mod test {
     use std::fs;
 
-    use crate::commands::{commit, switch::switch};
-
     use super::*;
+    use crate::{
+        commands::{commit, switch::switch},
+        utils::util::test_util,
+    };
     #[test]
     fn test_check_ff() {
-        util::setup_test_with_clean_mit();
+        test_util::setup_test_with_clean_mit();
         util::list_workdir_files().iter().for_each(|x| fs::remove_file(x).unwrap());
 
         commit::commit("init".to_string(), true);
