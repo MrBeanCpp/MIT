@@ -32,9 +32,11 @@ fn switch_to_commit(commit_hash: Hash) {
 fn switch_to(branch: String, detach: bool) -> Result<(), SwitchErr> {
     // 检查更改
     if !status::changes_to_be_staged().is_empty() {
+        status::status();
         println!("fatal: 你有未暂存的更改，切换分支会导致更改丢失");
         return Err(SwitchErr::NoClean);
     } else if !status::changes_to_be_committed().is_empty() {
+        status::status();
         println!("fatal: 你有未提交的更改，无法切换分支");
         return Err(SwitchErr::NoClean);
     }
