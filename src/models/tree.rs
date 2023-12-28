@@ -2,7 +2,7 @@ use std::{collections::HashSet, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{store, utils::util};
+use crate::utils::{store, util};
 
 use super::{Hash, Index};
 /*Tree

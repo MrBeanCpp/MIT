@@ -1,6 +1,5 @@
 use crate::{
-    head,
-    head::Head,
+    utils::head,
     models::{Commit, Index},
     utils::util,
 };
@@ -139,10 +138,10 @@ pub fn changes_to_be_staged() -> Changes {
 pub fn status() {
     util::check_repo_exist();
     match head::current_head() {
-        Head::Detached(commit) => {
+        head::Head::Detached(commit) => {
             println!("HEAD detached at {}", commit[0..7].to_string());
         }
-        Head::Branch(branch) => {
+        head::Head::Branch(branch) => {
             println!("On branch {}", branch);
         }
     }

@@ -113,7 +113,8 @@ pub fn change_head_to_commit(commit_hash: &String) {
 
 #[cfg(test)]
 mod test {
-    use crate::{head::update_branch, utils::util};
+    use crate::utils::util;
+    use crate::utils::head;
 
     #[test]
     fn test_edit_branch() {
@@ -134,8 +135,8 @@ mod test {
         util::setup_test_with_clean_mit();
         let branch_one = "test_branch".to_string() + &rand::random::<u32>().to_string();
         let branch_two = "test_branch".to_string() + &rand::random::<u32>().to_string();
-        update_branch(&branch_one, &"1234567890".to_string());
-        update_branch(&branch_two, &"1234567890".to_string());
+        head::update_branch(&branch_one, &"1234567890".to_string());
+        head::update_branch(&branch_two, &"1234567890".to_string());
 
         let branches = super::list_local_branches();
         assert!(branches.contains(&branch_one));
@@ -146,7 +147,7 @@ mod test {
     fn test_change_head_to_branch() {
         util::setup_test_with_clean_mit();
         let branch_name = "test_branch".to_string() + &rand::random::<u32>().to_string();
-        update_branch(&branch_name, &"1234567890".to_string());
+        head::update_branch(&branch_name, &"1234567890".to_string());
         super::change_head_to_branch(&branch_name);
         assert!(
             match super::current_head() {

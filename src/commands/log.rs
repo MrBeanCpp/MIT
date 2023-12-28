@@ -1,4 +1,4 @@
-use crate::{head, models::Commit};
+use crate::{models::Commit, utils::head};
 use colored::Colorize;
 
 const DEFAULT_LOG_NUMBER: usize = 10;

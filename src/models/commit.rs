@@ -2,7 +2,7 @@ use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{store, utils::util};
+use crate::utils::{store, util};
 
 use super::*;
 /*Commit

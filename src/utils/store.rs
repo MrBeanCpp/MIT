@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use crate::models::Hash;
 
-use super::utils::util;
+use super::util;
 
 /// 管理.mit仓库的读写
 pub struct Store {

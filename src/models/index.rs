@@ -55,7 +55,7 @@ pub struct Index {
 
 impl Index {
     /// 从index文件加载
-    fn new() -> Index {
+    pub fn new() -> Index {
         let mut index = Index::default();
         index.load();
         return index;

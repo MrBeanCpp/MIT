@@ -4,7 +4,10 @@ use std::{
     path::PathBuf,
 };
 
-use crate::{head, models::*, store::Store, utils::util};
+use crate::{
+    models::*,
+    utils::{head, store, util},
+};
 
 /// 统计[工作区]中相对于target_blobs已删除的文件（根据filters进行过滤）
 fn get_worktree_deleted_files_in_filters(
@@ -64,8 +67,8 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
     let mut file_paths = util::integrate_paths(&input_paths); //根据用户输入整合存在的文件（绝对路径）
     file_paths.extend(deleted_files); //已删除的文件
 
-    let index = Index::get_instance();
-    let store = Store::new();
+    let index = Index::new();
+    let store = store::Store::new();
 
     for path in &file_paths {
         assert!(path.is_absolute()); // 绝对路径
@@ -165,7 +168,7 @@ pub fn restore(paths: Vec<String>, source: Option<String>, worktree: bool, stage
                     head::get_branch_head(&src) // "" if not exist
                 } else {
                     // [Commit Hash, e.g. a1b2c3d4] || [Wrong Branch Name]
-                    let store = Store::new();
+                    let store = store::Store::new();
                     let commit = store.search(&src);
                     if commit.is_none() || !util::is_typeof_commit(commit.clone().unwrap()) {
                         println!("fatal: 非法的 commit hash: '{}'", src);
@@ -214,8 +217,7 @@ pub fn restore(paths: Vec<String>, source: Option<String>, worktree: bool, stage
 mod test {
     use std::fs;
     //TODO 写测试！
-    use crate::commands::status;
-    use crate::{commands as cmd, models::Index, utils::util};
+    use crate::{commands as cmd, commands::status, models::Index, utils::util};
     use std::path::PathBuf;
 
     #[test]

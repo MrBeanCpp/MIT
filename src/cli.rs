@@ -1,6 +1,5 @@
 use clap::{ArgGroup, Parser, Subcommand};
-use mit::commands as cmd;
-
+use super::commands as cmd;
 /// Rust实现的简易版本的Git，用于学习Rust语言
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

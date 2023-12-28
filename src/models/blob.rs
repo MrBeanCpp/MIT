@@ -1,4 +1,7 @@
-use crate::{models::Hash, store::Store, utils::util};
+use crate::{
+    models::Hash,
+    utils::{store, util},
+};
 use std::{fs, path::Path};
 
 /**Blob<br>
@@ -21,14 +24,14 @@ impl Blob {
     }
 
     pub fn load(hash: &String) -> Blob {
-        let s = Store::new();
+        let s = store::Store::new();
         let data = s.load(hash);
         Blob { hash: hash.clone(), data }
     }
 
     /// 写入文件；优化：文件已存在时不做操作
     pub fn save(&self) {
-        let s = Store::new();
+        let s = store::Store::new();
         if !s.contains(&self.hash) {
             let hash = s.save(&self.data);
             assert_eq!(hash, self.hash);

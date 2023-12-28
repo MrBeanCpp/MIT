@@ -1,8 +1,10 @@
-use mit::models::Index;
-
 mod cli;
+mod commands;
+mod models;
+mod utils;
+
 fn main() {
     color_backtrace::install(); // colorize backtrace
     cli::handle_command();
-    Index::get_instance().save(); //兜底save
+    models::Index::get_instance().save(); //兜底save
 }

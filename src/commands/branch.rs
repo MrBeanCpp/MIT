@@ -1,6 +1,9 @@
 use colored::Colorize;
 
-use crate::{head, models::*, store, utils::util};
+use crate::{
+    models::*,
+    utils::{head, store, util},
+};
 
 // branch error
 enum BranchErr {

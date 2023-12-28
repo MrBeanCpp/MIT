@@ -1,4 +1,4 @@
-use crate::{head, models::*};
+use crate::{models::*, utils::head};
 
 use super::status;
 
@@ -38,7 +38,7 @@ pub fn commit(message: String, allow_empty: bool) {
 mod test {
     use std::path::Path;
 
-    use crate::{commands as cmd, head, models, utils::util};
+    use crate::{commands as cmd, utils::head, models, utils::util};
 
     #[test]
     #[should_panic]
