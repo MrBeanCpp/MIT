@@ -38,5 +38,6 @@ pub fn remove(files: Vec<String>, cached: bool, recursive: bool) -> io::Result<(
         }
         println!("removed [{}]", file.bright_green());
     }
+    index.save();
     Ok(())
 }

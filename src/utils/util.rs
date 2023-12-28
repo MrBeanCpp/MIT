@@ -47,7 +47,7 @@ fn setup_test_env() {
 
 pub fn init_mit() {
     let _ = crate::commands::init();
-    Index::reset(); // 重置index, 以防止其他测试修改了index单例
+    Index::reload(); // 重置index, 以防止其他测试修改了index单例
 }
 
 /// with 初始化的干净的mit

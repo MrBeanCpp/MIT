@@ -31,6 +31,7 @@ pub fn commit(message: String, allow_empty: bool) {
     }
 
     println!("commit hash: {:?}", commit_hash);
+    index.save();
 }
 
 #[cfg(test)]

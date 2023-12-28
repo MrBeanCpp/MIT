@@ -31,12 +31,14 @@ pub fn add(raw_paths: Vec<String>, all: bool, mut update: bool) {
         println!("{}", "--update 只对已跟踪文件进行操作 不包含new".bright_green());
     }
 
+    let index = Index::get_instance();
     for file in &files {
-        add_a_file(file);
+        add_a_file(file, index);
     }
+    index.save();
 }
 
-fn add_a_file(file: &Path) {
+fn add_a_file(file: &Path, index: &mut Index) {
     let workdir = util::get_working_dir().unwrap();
     if !util::is_sub_path(file, &workdir) {
         //文件不在工作区内
@@ -49,7 +51,6 @@ fn add_a_file(file: &Path) {
         return;
     }
 
-    let index = Index::get_instance();
     let rel_path = util::to_cur_relative_path(file);
     if !file.exists() {
         //文件被删除

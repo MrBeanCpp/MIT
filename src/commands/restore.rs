@@ -136,6 +136,7 @@ pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf,
             }
         }
     }
+    index.save();
 }
 /**
 对于工作区中的新文件，若已跟踪，则删除；若未跟踪，则保留<br>
@@ -224,8 +225,7 @@ mod test {
         util::ensure_no_file(&path);
         cmd::add(vec![], true, false); //add -A
         cmd::restore(vec![".".to_string()], Some("HEAD".to_string()), false, true);
-        let index = Index::get_instance();
-        assert!(index.get_tracked_files().is_empty());
+        assert!(Index::get_instance().is_empty());
     }
 
     #[test]

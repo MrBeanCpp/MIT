@@ -56,10 +56,7 @@ pub struct Index {
 impl Index {
     /// 从index文件加载
     fn new() -> Index {
-        let mut index = Index {
-            entries: HashMap::new(),
-            working_dir: util::get_working_dir().unwrap(),
-        };
+        let mut index = Index::default();
         index.load();
         return index;
     }
@@ -70,16 +67,10 @@ impl Index {
         unsafe { &mut INSTANCE }
     }
 
-    /// 重置index，主要用于测试，防止单例模式的影响
-    pub fn reset() {
+    /// 重置index 从文件重新加载，主要用于测试，防止单例模式的影响
+    pub fn reload() {
         let index = Index::get_instance();
-        index.clear();
-        *index = Index::new(); //drop happened 导致旧数据写入文件
-    }
-
-    fn clear(&mut self) {
-        self.entries.clear();
-        self.working_dir.clear();
+        index.load();
     }
 
     /// 预处理路径，统一形式为绝对路径
@@ -159,6 +150,9 @@ impl Index {
 
     /// 从index文件加载数据
     fn load(&mut self) {
+        self.entries.clear();
+        self.working_dir = util::get_working_dir().unwrap();
+
         let path = Index::get_path();
         if path.exists() {
             let json = fs::read_to_string(path).expect("无法读取index");
@@ -206,14 +200,9 @@ impl Index {
     pub fn get_tracked_entries(&self) -> HashMap<PathBuf, FileMetaData> {
         self.entries.clone()
     }
-}
 
-/// 析构自动保存
-impl Drop for Index {
-    fn drop(&mut self) {
-        //TODO! 优化为只有在修改后才保存
-        self.save();
-        // println!("{}", "Index auto saved".bright_green());
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
     }
 }
 
@@ -252,5 +241,16 @@ mod tests {
         index.add(path.clone(), FileMetaData::new(&Blob::new(&path), &path));
         index.save();
         println!("{:?}", index.entries);
+    }
+
+    #[test]
+    fn test_save_load() {
+        util::setup_test_with_empty_workdir();
+        let index = Index::get_instance();
+        let path = PathBuf::from(".mit/HEAD");
+        index.add(path.clone(), FileMetaData::new(&Blob::new(&path), &path));
+        assert!(Index::new().is_empty()); //未保存前，新读取的index应该是空的
+        index.save();
+        assert!(!Index::new().is_empty()); //保存后，新读取的index不是空的
     }
 }
