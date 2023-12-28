@@ -46,8 +46,7 @@ mod test {
     #[test]
     #[should_panic]
     fn test_commit_empty() {
-        test_util::setup_test_with_clean_mit();
-
+        test_util::setup_test_with_empty_workdir();
         super::commit("".to_string(), false);
     }
 

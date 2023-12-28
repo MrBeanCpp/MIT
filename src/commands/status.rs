@@ -201,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_changes_to_be_committed() {
-        test_util::setup_test_with_clean_mit();
+        test_util::setup_test_with_empty_workdir();
         let test_file = "a.txt";
         test_util::ensure_test_file(Path::new(test_file), None);
 

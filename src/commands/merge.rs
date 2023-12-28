@@ -87,11 +87,10 @@ mod test {
         commands::{commit, switch::switch},
         utils::util::test_util,
     };
+
     #[test]
     fn test_check_ff() {
-        test_util::setup_test_with_clean_mit();
-        util::list_workdir_files().iter().for_each(|x| fs::remove_file(x).unwrap());
-
+        test_util::setup_test_with_empty_workdir();
         commit::commit("init".to_string(), true);
         let commit1 = head::current_head_commit();
         let origin_branch = match head::current_head() {
@@ -106,6 +105,7 @@ mod test {
         assert_ne!(head::current_head_commit(), commit1);
         assert_eq!(head::get_branch_head(&origin_branch.clone()), commit1);
         let commit2 = head::current_head_commit();
+        println!("[info] success create new branch: {}", new_branch);
 
         // test success merge
         switch(Some(origin_branch.clone()), None, false);
@@ -115,11 +115,13 @@ mod test {
         assert!(result.is_ok());
         assert_eq!(head::current_head_commit(), commit2);
         assert_eq!(head::get_branch_head(&origin_branch.clone()), commit2);
+        println!("[info] success merge ff");
 
         // test no fast forward
         commit::commit("master commit 2".to_string(), true);
         let result = merge_ff(commit1.clone());
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), MergeErr::NoFastForward));
+        print!("success detect no fast forward");
     }
 }
