@@ -60,14 +60,14 @@ fn add_a_file(file: &Path, index: &mut Index) {
         //文件存在
         if !index.contains(file) {
             //文件未被跟踪
-            let blob = Blob::new(file);
+            let blob = Blob::new(util::read_workfile(file));
             index.add(file.to_path_buf(), FileMetaData::new(&blob, file));
             println!("add(stage): {}", rel_path.display());
         } else {
             //文件已被跟踪，可能被修改
             if index.is_modified(file) {
                 //文件被修改，但不一定内容更改
-                let blob = Blob::new(file); //到这一步才创建blob是为了优化
+                let blob = Blob::new(util::read_workfile(file)); //到这一步才创建blob是为了优化
                 if !index.verify_hash(file, &blob.get_hash()) {
                     //比较hash 确认内容更改
                     index.update(file.to_path_buf(), FileMetaData::new(&blob, file));

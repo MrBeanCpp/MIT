@@ -233,12 +233,12 @@ mod tests {
         test_util::setup_test_with_clean_mit();
         let index = Index::get_instance();
         let path = PathBuf::from("../mit_test_storage/.mit/HEAD"); //测试../相对路径的处理
-        index.add(path.clone(), FileMetaData::new(&Blob::new(&path), &path));
+        index.add(path.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&path)), &path));
 
         let 中文路径 = "中文路径.txt";
         test_util::ensure_test_file(Path::new(中文路径), None);
         let path = PathBuf::from(中文路径);
-        index.add(path.clone(), FileMetaData::new(&Blob::new(&path), &path));
+        index.add(path.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&path)), &path));
         index.save();
         println!("{:?}", index.entries);
     }
@@ -248,7 +248,7 @@ mod tests {
         test_util::setup_test_with_empty_workdir();
         let index = Index::get_instance();
         let path = PathBuf::from(".mit/HEAD");
-        index.add(path.clone(), FileMetaData::new(&Blob::new(&path), &path));
+        index.add(path.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&path)), &path));
         assert!(Index::new().is_empty()); //未保存前，新读取的index应该是空的
         index.save();
         assert!(!Index::new().is_empty()); //保存后，新读取的index不是空的

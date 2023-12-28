@@ -139,7 +139,8 @@ mod test {
         /* test 4: switch to branch */
         let result = switch_to(test_branch_2.clone(), false);
         assert!(result.is_ok());
-        assert!(status::changes_to_be_staged().is_empty() && status::changes_to_be_committed().is_empty());
+        assert!(status::changes_to_be_staged().is_empty());
+        assert!(status::changes_to_be_committed().is_empty());
         assert!(match head::current_head() {
             head::Head::Branch(branch) => branch == test_branch_2,
             _ => false,

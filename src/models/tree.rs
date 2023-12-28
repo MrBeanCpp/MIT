@@ -137,7 +137,7 @@ mod test {
 
     use crate::{
         models::*,
-        utils::test_util,
+        utils::{test_util, util},
     };
 
     #[test]
@@ -147,8 +147,7 @@ mod test {
         for test_file in vec!["b.txt", "mit_src/a.txt", "test/test.txt"] {
             let test_file = PathBuf::from(test_file);
             test_util::ensure_test_file(&test_file, None);
-            index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
-            index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
+            index.add(test_file.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&test_file)), &test_file));
         }
 
         let tree = Tree::new(&index);
@@ -164,7 +163,7 @@ mod test {
         for test_file in test_files.clone() {
             let test_file = PathBuf::from(test_file);
             test_util::ensure_test_file(&test_file, None);
-            index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
+            index.add(test_file.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&test_file)), &test_file));
         }
 
         let tree = Tree::new(&index);
@@ -185,9 +184,9 @@ mod test {
         for test_file in test_files.clone() {
             let test_file = PathBuf::from(test_file);
             test_util::ensure_test_file(&test_file, None);
-            let blob = Blob::new(&test_file);
+            let blob = Blob::new(util::read_workfile(&test_file));
             test_blobs.push(blob.clone());
-            index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
+            index.add(test_file.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&test_file)), &test_file));
         }
 
         let tree = Tree::new(&index);

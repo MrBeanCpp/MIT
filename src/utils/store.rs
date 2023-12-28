@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use sha1::{Digest, Sha1};
+
 use crate::models::Hash;
 
 use super::util;
@@ -13,6 +15,13 @@ pub struct Store {
  * 每一个object文件名与内容的hash值相同
  */
 impl Store {
+    fn calc_hash(data: &String) -> String {
+        let mut hasher = Sha1::new();
+        hasher.update(data);
+        let hash = hasher.finalize();
+        hex::encode(hash)
+    }
+
     pub fn new() -> Store {
         util::check_repo_exist();
         let store_path = util::get_storage_path().unwrap();
@@ -27,16 +36,6 @@ impl Store {
             Ok(content) => content,
             Err(_) => panic!("储存库疑似损坏，无法读取文件"),
         }
-    }
-
-    /// 将hash对应的文件内容(主要是blob)还原到file
-    pub fn restore_to_file(&self, hash: &Hash, file: &PathBuf) {
-        let content = self.load(hash);
-        // 保证文件层次存在
-        let mut parent = file.clone();
-        parent.pop();
-        std::fs::create_dir_all(parent).unwrap();
-        std::fs::write(file, content).unwrap();
     }
 
     /** 根据前缀搜索，有歧义时返回 None */
@@ -65,10 +64,9 @@ impl Store {
         }
     }
 
-
-    pub fn save(&self, content: &String) -> String {
+    pub fn save(&self, content: &String) -> Hash {
         /* 保存文件内容 */
-        let hash = util::calc_hash(content);
+        let hash = Self::calc_hash(content);
         let mut path = self.store_path.clone();
         path.push("objects");
         path.push(&hash);
@@ -81,6 +79,13 @@ impl Store {
             Ok(_) => hash,
             Err(_) => panic!("储存库疑似损坏，无法写入文件"),
         }
+    }
+
+    pub fn dry_save(&self, content: &String) -> Hash {
+        /* 不实际保存文件，返回Hash */
+        let hash = Self::calc_hash(content);
+        // TODO more such as  check
+        hash
     }
 }
 #[cfg(test)]

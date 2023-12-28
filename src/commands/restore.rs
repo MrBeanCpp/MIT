@@ -9,6 +9,11 @@ use crate::{
     utils::{head, store, util},
 };
 
+fn restore_to_file(hash: &Hash, path: &PathBuf) {
+    let blob = Blob::load(hash);
+    util::write_workfile(blob.get_content(), path);
+}
+
 /// 统计[工作区]中相对于target_blobs已删除的文件（根据filters进行过滤）
 fn get_worktree_deleted_files_in_filters(
     filters: &Vec<PathBuf>,
@@ -68,7 +73,6 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
     file_paths.extend(deleted_files); //已删除的文件
 
     let index = Index::get_instance();
-    let store = store::Store::new();
 
     for path in &file_paths {
         assert!(path.is_absolute()); // 绝对路径
@@ -76,7 +80,7 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
             //文件不存在于workdir
             if target_blobs.contains_key(path) {
                 //文件存在于target_commit (deleted)，需要恢复
-                store.restore_to_file(&target_blobs[path], &path);
+                restore_to_file(&target_blobs[path], &path);
             } else {
                 //在target_commit和workdir中都不存在(非法路径)， 用户输入
                 println!("fatal: pathspec '{}' did not match any files", path.display());
@@ -85,9 +89,9 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
             //文件存在，有两种情况：1.修改 2.新文件
             if target_blobs.contains_key(path) {
                 //文件已修改(modified)
-                let file_hash = util::calc_file_hash(&path); //TODO tree没有存修改时间，所以这里只能用hash判断
-                if file_hash != target_blobs[path] {
-                    store.restore_to_file(&target_blobs[path], &path);
+                let dry_blob = Blob::dry_new(util::read_workfile(&path)); //TODO tree没有存修改时间，所以这里只能用hash判断
+                if dry_blob.get_hash() != target_blobs[path] {
+                    restore_to_file(&target_blobs[path], &path);
                 }
             } else {
                 //新文件，也分两种情况：1.已跟踪，需要删除 2.未跟踪，保留

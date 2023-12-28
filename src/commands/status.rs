@@ -1,7 +1,6 @@
 use crate::{
-    utils::head,
-    models::{Commit, Index},
-    utils::util,
+    models::{Blob, Commit, Index},
+    utils::{head, util},
 };
 use colored::Colorize;
 use std::path::PathBuf;
@@ -116,7 +115,8 @@ pub fn changes_to_be_staged() -> Changes {
             change.deleted.push(util::to_workdir_relative_path(&file));
         } else if index.is_modified(&file) {
             // 若文件元数据被修改，才需要比较暂存区与文件的hash来判别内容修改
-            if !index.verify_hash(&file, &util::calc_file_hash(&file)) {
+            let dry_blob = Blob::dry_new(util::read_workfile(&file));
+            if !index.verify_hash(&file, &dry_blob.get_hash()) {
                 change.modified.push(util::to_workdir_relative_path(&file));
             }
         }

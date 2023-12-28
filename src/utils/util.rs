@@ -1,4 +1,4 @@
-use sha1::{Digest, Sha1};
+
 use std::{
     collections::HashSet,
     fs, io,
@@ -10,18 +10,6 @@ use crate::models::{commit::Commit, object::Hash, tree::Tree};
 pub const ROOT_DIR: &str = ".mit";
 
 /* tools for mit */
-pub fn calc_hash(data: &String) -> String {
-    let mut hasher = Sha1::new();
-    hasher.update(data);
-    let hash = hasher.finalize();
-    hex::encode(hash)
-}
-
-/// 计算文件的hash
-pub fn calc_file_hash(path: &Path) -> String {
-    let data = fs::read_to_string(path).expect(&format!("无法读取文件：{}", path.display()));
-    calc_hash(&data)
-}
 
 pub fn storage_exist() -> bool {
     /*检查是否存在储存库 */
@@ -427,11 +415,25 @@ pub fn is_typeof_commit(hash: Hash) -> bool {
     check_object_type(hash) == ObjectType::Commit
 }
 
+
+/// 将内容对应的文件内容(主要是blob)还原到file
+pub fn write_workfile(content: String, file: &PathBuf) {
+    let mut parent = file.clone();
+    parent.pop();
+    std::fs::create_dir_all(parent).unwrap();
+    std::fs::write(file, content).unwrap();
+}
+
+/// 从工作区读取文件内容
+pub fn read_workfile(file: &Path) -> String {
+    std::fs::read_to_string(file).unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
         models::{blob::Blob, index::Index},
-        utils::{test_util, util::*},
+        utils::{test_util, util::{*, self}},
     };
 
     #[test]
@@ -536,7 +538,8 @@ mod tests {
         test_util::setup_test_with_clean_mit();
         assert_eq!(check_object_type("123".into()), ObjectType::Invalid);
         test_util::ensure_test_file(Path::new("test.txt"), Some("test"));
-        let hash = Blob::new(get_working_dir().unwrap().join("test.txt").as_path()).get_hash();
+        let content = util::read_workfile(get_working_dir().unwrap().join("test.txt").as_path());
+        let hash = Blob::new(content).get_hash();
         assert_eq!(check_object_type(hash), ObjectType::Blob);
         let mut commit = Commit::new(&Index::get_instance(), vec![], "test".to_string());
         assert_eq!(check_object_type(commit.get_tree_hash()), ObjectType::Tree);
