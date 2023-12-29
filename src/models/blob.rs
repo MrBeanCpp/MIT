@@ -70,11 +70,11 @@ impl Blob {
 
 #[cfg(test)]
 mod test {
-    use crate::utils::test_util;
+    use crate::utils::test;
 
     #[test]
     fn test_save_and_load() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let test_data = "hello world";
         let blob = super::Blob::new(test_data.into());
 

@@ -34,7 +34,7 @@ fn find_cargo_dir() -> PathBuf {
 }
 
 /// 准备测试环境，切换到测试目录
-fn setup_test_env() {
+fn setup_env() {
     color_backtrace::install(); // colorize backtrace
 
     let mut path = find_cargo_dir();
@@ -51,14 +51,14 @@ pub fn init_mit() {
 }
 
 /// with 初始化的干净的mit
-pub fn setup_test_with_clean_mit() {
-    setup_test_without_mit();
+pub fn setup_with_clean_mit() {
+    setup_without_mit();
     init_mit();
 }
 
-pub fn setup_test_without_mit() {
+pub fn setup_without_mit() {
     // 将执行目录切换到测试目录，并清除测试目录下的.mit目录
-    setup_test_env();
+    setup_env();
     let mut path = util::cur_dir();
     path.push(util::ROOT_DIR);
     if path.exists() {
@@ -66,9 +66,9 @@ pub fn setup_test_without_mit() {
     }
 }
 
-pub fn ensure_test_files<T: AsRef<str>>(paths: &Vec<T>) {
+pub fn ensure_files<T: AsRef<str>>(paths: &Vec<T>) {
     for path in paths {
-        ensure_test_file(path.as_ref().as_ref(), None);
+        ensure_file(path.as_ref().as_ref(), None);
     }
 }
 
@@ -85,13 +85,13 @@ pub fn ensure_empty_dir<P: AsRef<Path>>(path: P) -> io::Result<()> {
     Ok(())
 }
 
-pub fn setup_test_with_empty_workdir() {
+pub fn setup_with_empty_workdir() {
     let test_dir = find_cargo_dir().join(TEST_DIR);
     ensure_empty_dir(&test_dir).unwrap();
-    setup_test_with_clean_mit();
+    setup_with_clean_mit();
 }
 
-pub fn ensure_test_file(path: &Path, content: Option<&str>) {
+pub fn ensure_file(path: &Path, content: Option<&str>) {
     // 以测试目录为根目录，创建文件
     fs::create_dir_all(path.parent().unwrap()).unwrap(); // ensure父目录
     let mut file = fs::File::create(util::get_working_dir().unwrap().join(path))
@@ -112,7 +112,7 @@ pub fn ensure_no_file(path: &Path) {
 }
 
 /** 列出子文件夹 */
-pub fn list_subpath(path: &Path) -> io::Result<Vec<PathBuf>> {
+pub fn list_subdir(path: &Path) -> io::Result<Vec<PathBuf>> {
     let mut files = Vec::new();
     let path = util::get_absolute_path(path);
     if path.is_dir() {

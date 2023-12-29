@@ -392,7 +392,7 @@ mod tests {
     use crate::{
         models::{blob::Blob, index::Index},
         utils::{
-            test_util,
+            test,
             util::{self, *},
         },
     };
@@ -437,7 +437,7 @@ mod tests {
 
     #[test]
     fn test_get_relative_path() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let path = Path::new("../../src\\main.rs");
         let rel_path = get_relative_path(&path, &cur_dir());
         println!("{:?}", rel_path);
@@ -447,7 +447,7 @@ mod tests {
 
     #[test]
     fn test_to_workdir_absolute_path() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let path = Path::new("./src/../main.rs");
         let abs_path = to_workdir_absolute_path(path);
         println!("{:?}", abs_path);
@@ -467,10 +467,10 @@ mod tests {
 
     #[test]
     fn test_list_files() {
-        test_util::setup_test_with_clean_mit();
-        test_util::ensure_test_file(Path::new("test/test.txt"), None);
-        test_util::ensure_test_file(Path::new("a.txt"), None);
-        test_util::ensure_test_file(Path::new("b.txt"), None);
+        test::setup_with_clean_mit();
+        test::ensure_file(Path::new("test/test.txt"), None);
+        test::ensure_file(Path::new("a.txt"), None);
+        test::ensure_file(Path::new("b.txt"), None);
         let files = list_files(Path::new("./"));
         match files {
             Ok(files) => {
@@ -486,9 +486,9 @@ mod tests {
 
     #[test]
     fn test_check_object_type() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         assert_eq!(check_object_type("123".into()), ObjectType::Invalid);
-        test_util::ensure_test_file(Path::new("test.txt"), Some("test"));
+        test::ensure_file(Path::new("test.txt"), Some("test"));
         let content = util::read_workfile(get_working_dir().unwrap().join("test.txt").as_path());
         let hash = Blob::new(content).get_hash();
         assert_eq!(check_object_type(hash), ObjectType::Blob);
@@ -500,11 +500,11 @@ mod tests {
 
     #[test]
     fn test_check_root_dir() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         list_workdir_files().iter().for_each(|f| {
             fs::remove_file(f).unwrap();
         });
-        test_util::list_subpath(Path::new("./")).unwrap().iter().for_each(|f| {
+        test::list_subdir(Path::new("./")).unwrap().iter().for_each(|f| {
             if include_root_dir(f) {
                 fs::remove_dir_all(f).unwrap();
             }

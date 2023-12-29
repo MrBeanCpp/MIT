@@ -1,6 +1,7 @@
+use crate::models::head;
 use crate::{
     models::{Blob, Commit, Index},
-    utils::{head, util},
+    utils::util,
 };
 use colored::Colorize;
 use std::path::PathBuf;
@@ -202,14 +203,14 @@ pub fn status() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{commands as cmd, utils::test_util};
+    use crate::{commands as cmd, utils::test};
     use std::path::Path;
 
     #[test]
     fn test_changes_to_be_committed() {
-        test_util::setup_test_with_empty_workdir();
+        test::setup_with_empty_workdir();
         let test_file = "a.txt";
-        test_util::ensure_test_file(Path::new(test_file), None);
+        test::ensure_file(Path::new(test_file), None);
 
         cmd::commit("test commit".to_string(), true);
         cmd::add(vec![test_file.to_string()], false, false);
@@ -221,7 +222,7 @@ mod tests {
         println!("{:?}", change.to_absolute());
 
         cmd::commit("test commit".to_string(), true);
-        test_util::ensure_test_file(Path::new(test_file), Some("new content"));
+        test::ensure_file(Path::new(test_file), Some("new content"));
         cmd::add(vec![test_file.to_string()], false, false);
         let change = changes_to_be_committed();
         assert_eq!(change.new.len(), 0);

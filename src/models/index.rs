@@ -211,12 +211,12 @@ impl Index {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::test_util;
+    use crate::utils::test;
     use std::fs;
 
     #[test]
     fn test_meta_get() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let metadata = fs::metadata(".mit/HEAD").unwrap();
         println!("{:?}", util::format_time(&metadata.created().unwrap()));
         println!("{:?}", util::format_time(&metadata.modified().unwrap()));
@@ -225,20 +225,20 @@ mod tests {
 
     #[test]
     fn test_load() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let index = Index::get_instance();
         println!("{:?}", index);
     }
 
     #[test]
     fn test_save() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let index = Index::get_instance();
         let path = PathBuf::from("../mit_test_storage/.mit/HEAD"); //测试../相对路径的处理
         index.add(path.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&path)), &path));
 
         let 中文路径 = "中文路径.txt";
-        test_util::ensure_test_file(Path::new(中文路径), None);
+        test::ensure_file(Path::new(中文路径), None);
         let path = PathBuf::from(中文路径);
         index.add(path.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&path)), &path));
         index.save();
@@ -247,7 +247,7 @@ mod tests {
 
     #[test]
     fn test_save_load() {
-        test_util::setup_test_with_empty_workdir();
+        test::setup_with_empty_workdir();
         let index = Index::get_instance();
         let path = PathBuf::from(".mit/HEAD");
         index.add(path.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&path)), &path));

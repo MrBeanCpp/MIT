@@ -1,8 +1,8 @@
 use colored::Colorize;
 
 use crate::{
-    models::{Commit, Hash},
-    utils::{head, store, util},
+    models::{head, Commit, Hash},
+    utils::{store, util},
 };
 
 use super::{
@@ -89,12 +89,12 @@ mod test {
     use super::*;
     use crate::{
         commands::{self as cmd},
-        utils::test_util,
+        utils::test,
     };
     use std::path::PathBuf;
     #[test]
     fn test_switch() {
-        test_util::setup_test_with_empty_workdir();
+        test::setup_with_empty_workdir();
 
         cmd::commit("init".to_string(), true);
         let test_branch_1 = "test_branch_1".to_string();
@@ -102,7 +102,7 @@ mod test {
 
         /* test 1: NoClean */
         let test_file_1 = PathBuf::from("test_file_1");
-        test_util::ensure_test_file(&test_file_1, None);
+        test::ensure_file(&test_file_1, None);
         cmd::add(vec![], true, false); // add all
         let result = switch_to(test_branch_1.clone(), false);
         assert!(result.is_err());
@@ -123,12 +123,12 @@ mod test {
         assert!(matches!(result.unwrap_err(), SwitchErr::InvalidObject));
 
         let tees_file_2 = PathBuf::from("test_file_2");
-        test_util::ensure_test_file(&tees_file_2, None);
+        test::ensure_file(&tees_file_2, None);
         cmd::add(vec![], true, false); // add all
         cmd::commit("add file 2".to_string(), false);
         let history_commit = head::current_head_commit(); // commit: test_file_1 exists, test_file_2 exists
 
-        test_util::ensure_no_file(&test_file_1);
+        test::ensure_no_file(&test_file_1);
         cmd::add(vec![], true, false); // add all
         assert!(!test_file_1.exists());
         cmd::commit("delete file 1".to_string(), false);
