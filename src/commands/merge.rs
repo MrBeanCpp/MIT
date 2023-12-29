@@ -1,7 +1,7 @@
 use crate::{
     commands::{self, status::*},
-    models::{Commit, Hash},
-    utils::{head, store, util},
+    models::{head, Commit, Hash},
+    utils::{store, util},
 };
 
 enum MergeErr {
@@ -83,12 +83,12 @@ mod test {
     use super::*;
     use crate::{
         commands::{commit, switch::switch},
-        utils::test_util,
+        utils::test,
     };
 
     #[test]
     fn test_check_ff() {
-        test_util::setup_test_with_empty_workdir();
+        test::setup_with_empty_workdir();
         commit::commit("init".to_string(), true);
         let commit1 = head::current_head_commit();
         let origin_branch = match head::current_head() {

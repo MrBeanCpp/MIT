@@ -1,5 +1,5 @@
-use clap::{ArgGroup, Parser, Subcommand};
 use super::commands as cmd;
+use clap::{ArgGroup, Parser, Subcommand};
 /// Rust实现的简易版本的Git，用于学习Rust语言
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -14,7 +14,6 @@ enum Command {
     /// 初始化仓库
     Init,
     /// 添加文件到暂存区
-    /// @see <a href="https://juejin.cn/post/7053831273277554696">git add .，git add -A，git add -u，git add * 的区别与联系</a>
     Add {
         /// 要添加的文件
         files: Vec<String>,

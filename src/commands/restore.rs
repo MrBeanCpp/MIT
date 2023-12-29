@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     models::*,
-    utils::{head, store, util},
+    utils::{store, util},
 };
 
 /// 统计[工作区]中相对于target_blobs已删除的文件（根据filters进行过滤）
@@ -216,14 +216,14 @@ pub fn restore(paths: Vec<String>, source: Option<String>, worktree: bool, stage
 mod test {
     use std::fs;
     //TODO 写测试！
-    use crate::{commands as cmd, commands::status, models::Index, utils::test_util};
+    use crate::{commands as cmd, commands::status, models::Index, utils::test};
     use std::path::PathBuf;
 
     #[test]
     fn test_restore_stage() {
-        test_util::setup_test_with_empty_workdir();
+        test::setup_with_empty_workdir();
         let path = PathBuf::from("a.txt");
-        test_util::ensure_no_file(&path);
+        test::ensure_no_file(&path);
         cmd::add(vec![], true, false); //add -A
         cmd::restore(vec![".".to_string()], Some("HEAD".to_string()), false, true);
         let index = Index::get_instance();
@@ -232,9 +232,9 @@ mod test {
 
     #[test]
     fn test_restore_worktree() {
-        test_util::setup_test_with_empty_workdir();
+        test::setup_with_empty_workdir();
         let files = vec!["a.txt", "b.txt", "c.txt", "test/in.txt"];
-        test_util::ensure_test_files(&files);
+        test::ensure_files(&files);
 
         cmd::add(vec![], true, false);
         assert_eq!(status::changes_to_be_committed().new.iter().count(), 4);

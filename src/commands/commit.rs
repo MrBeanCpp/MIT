@@ -1,4 +1,4 @@
-use crate::{models::*, utils::head};
+use crate::models::*;
 
 use super::status;
 
@@ -38,33 +38,30 @@ pub fn commit(message: String, allow_empty: bool) {
 mod test {
     use std::path::Path;
 
-    use crate::{
-        commands as cmd, models,
-        utils::{head, test_util},
-    };
+    use crate::{commands as cmd, models::*, utils::test};
 
     #[test]
     #[should_panic]
     fn test_commit_empty() {
-        test_util::setup_test_with_empty_workdir();
+        test::setup_with_empty_workdir();
         super::commit("".to_string(), false);
     }
 
     #[test]
     fn test_commit() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let test_file = "a.txt";
         let head_one = head::current_head_commit();
         assert!(head_one.is_empty());
 
-        test_util::ensure_test_file(&Path::new(test_file), "test content".into());
+        test::ensure_file(&Path::new(test_file), "test content".into());
         cmd::add(vec![], true, false);
         cmd::commit("test commit 1".to_string(), true);
         let head_two = head::current_head_commit();
         assert!(head_two.len() > 0);
 
-        let commit = models::commit::Commit::load(&head_two);
-        assert!(commit.get_parent_hash().len() == 0);
-        assert!(commit.get_message() == "test commit 1");
+        let commit = Commit::load(&head_two);
+        assert_eq!(commit.get_parent_hash().len(), 0);
+        assert_eq!(commit.get_message(), "test commit 1");
     }
 }

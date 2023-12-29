@@ -2,7 +2,7 @@ use colored::Colorize;
 
 use crate::{
     models::*,
-    utils::{head, store, util},
+    utils::{store, util},
 };
 
 // branch error
@@ -126,10 +126,10 @@ pub fn branch(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{commands, utils::test_util};
+    use crate::{commands, utils::test};
     #[test]
     fn test_create_branch() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
 
         // no commit: invalid object
         let result = create_branch("test_branch".to_string(), head::current_head_commit());
@@ -170,7 +170,7 @@ mod test {
 
     #[test]
     fn test_delete_branch() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
 
         // no commit: invalid object
         let result = delete_branch("test_branch".to_string());

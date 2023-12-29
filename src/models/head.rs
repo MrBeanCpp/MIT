@@ -113,12 +113,12 @@ pub fn change_head_to_commit(commit_hash: &String) {
 
 #[cfg(test)]
 mod test {
-    use crate::utils::test_util;
-    use crate::utils::head;
+    use crate::models::head;
+    use crate::utils::test;
 
     #[test]
     fn test_edit_branch() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let branch_name = "test_branch".to_string() + &rand::random::<u32>().to_string();
         let branch_head = super::get_branch_head(&branch_name);
         assert!(branch_head.is_empty());
@@ -127,12 +127,12 @@ mod test {
         super::update_branch(&branch_name, &commit_hash);
         let branch_head = super::get_branch_head(&branch_name);
         assert!(!branch_head.is_empty());
-        assert!(branch_head == commit_hash);
+        assert_eq!(branch_head, commit_hash);
     }
 
     #[test]
     fn test_list_local_branches() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let branch_one = "test_branch".to_string() + &rand::random::<u32>().to_string();
         let branch_two = "test_branch".to_string() + &rand::random::<u32>().to_string();
         head::update_branch(&branch_one, &"1234567890".to_string());
@@ -145,7 +145,7 @@ mod test {
 
     #[test]
     fn test_change_head_to_branch() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let branch_name = "test_branch".to_string() + &rand::random::<u32>().to_string();
         head::update_branch(&branch_name, &"1234567890".to_string());
         super::change_head_to_branch(&branch_name);
@@ -160,7 +160,7 @@ mod test {
 
     #[test]
     fn test_change_head_to_commit() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let commit_hash = "1234567890".to_string();
         super::change_head_to_commit(&commit_hash);
         assert!(
@@ -174,12 +174,12 @@ mod test {
 
     #[test]
     fn test_update_branch_head() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         let branch_name = "test_branch".to_string() + &rand::random::<u32>().to_string();
         let commit_hash = "1234567890".to_string();
         super::update_branch(&branch_name, &commit_hash);
         let branch_head = super::get_branch_head(&branch_name);
         assert!(!branch_head.is_empty());
-        assert!(branch_head == commit_hash);
+        assert_eq!(branch_head, commit_hash);
     }
 }

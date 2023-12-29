@@ -1,4 +1,4 @@
-use crate::{models::Commit, utils::head};
+use crate::models::{head, Commit};
 use colored::Colorize;
 
 const DEFAULT_LOG_NUMBER: usize = 10;
@@ -70,10 +70,10 @@ fn __log(all: bool, number: Option<usize>) -> usize {
 #[cfg(test)]
 mod test {
     use super::super::super::commands;
-    use crate::utils::test_util;
+    use crate::utils::test;
     #[test]
     fn test_log() {
-        test_util::setup_test_with_clean_mit();
+        test::setup_with_clean_mit();
         assert_eq!(super::__log(false, None), 0);
         commands::commit::commit("test commit 2".into(), true);
         assert_eq!(super::__log(false, Some(1)), 1);

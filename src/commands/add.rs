@@ -8,6 +8,7 @@ use crate::models::*;
 use crate::utils::util;
 
 /// add是对index的操作，不会对工作区产生影响
+/// @see <a href="https://juejin.cn/post/7053831273277554696">git add .，git add -A，git add -u，git add * 的区别与联系</a>
 pub fn add(raw_paths: Vec<String>, all: bool, mut update: bool) {
     util::check_repo_exist();
 
