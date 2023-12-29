@@ -2,7 +2,7 @@ use colored::Colorize;
 
 use crate::{
     models::{head, Commit, Hash},
-    utils::{store, util},
+    utils::{util, Store},
 };
 
 use super::{
@@ -41,7 +41,7 @@ fn switch_to(branch: String, detach: bool) -> Result<(), SwitchErr> {
         return Err(SwitchErr::NoClean);
     }
 
-    let store = store::Store::new();
+    let store = Store::new();
     if head::list_local_branches().contains(&branch) {
         // 切到分支
         let branch_commit = head::get_branch_head(&branch);

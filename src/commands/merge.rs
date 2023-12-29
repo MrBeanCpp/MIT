@@ -1,7 +1,7 @@
 use crate::{
     commands::{self, status::*},
     models::{head, Commit, Hash},
-    utils::{store, util},
+    utils::{util, Store},
 };
 
 enum MergeErr {
@@ -65,7 +65,7 @@ pub fn merge(branch: String) {
             head::get_branch_head(&branch)
         } else {
             // Commit Hash, e.g. a1b2c3d4
-            let store = store::Store::new();
+            let store = Store::new();
             let commit = store.search(&branch);
             if commit.is_none() || !util::is_typeof_commit(commit.clone().unwrap()) {
                 println!("fatal: 非法的 commit hash: '{}'", branch);

@@ -2,7 +2,7 @@ use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
 
-use crate::utils::{store, util};
+use crate::utils::{util, Store};
 
 use super::*;
 /*Commit
@@ -29,7 +29,8 @@ impl Commit {
     pub fn get_date(&self) -> String {
         util::format_time(&self.date)
     }
-    pub fn get_tree_hash(&self) -> String {
+    #[allow(dead_code)]
+    pub fn get_tree_hash(&self) -> Hash {
         self.tree.clone()
     }
     pub fn get_tree(&self) -> Tree {
@@ -44,6 +45,7 @@ impl Commit {
     pub fn get_author(&self) -> String {
         self.author.clone()
     }
+    #[allow(dead_code)]
     pub fn get_committer(&self) -> String {
         self.committer.clone()
     }
@@ -63,7 +65,7 @@ impl Commit {
     }
 
     pub fn load(hash: &String) -> Commit {
-        let s = store::Store::new();
+        let s = Store::new();
         let commit_data = s.load(hash);
         let mut commit: Commit = serde_json::from_str(&commit_data).unwrap();
         commit.hash = hash.clone();
@@ -72,7 +74,7 @@ impl Commit {
 
     pub fn save(&mut self) -> String {
         // unimplemented!()
-        let s = store::Store::new();
+        let s = Store::new();
         let commit_data = serde_json::to_string_pretty(&self).unwrap();
         let hash = s.save(&commit_data);
         self.hash = hash.clone();

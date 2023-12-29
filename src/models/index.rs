@@ -68,6 +68,7 @@ impl Index {
     }
 
     /// 重置index，主要用于测试，防止单例模式的影响
+    #[cfg(test)]
     pub fn reload() {
         let index = Index::get_instance();
         index.load();
@@ -113,17 +114,6 @@ impl Index {
     /// 检查文件是否被跟踪, same as [Index::contains]
     pub fn tracked(&self, path: &Path) -> bool {
         self.contains(path)
-    }
-
-    /// 与暂存区比较，获取工作区中被删除的文件
-    pub fn get_deleted_files(&self, dir: &Path) -> Vec<PathBuf> {
-        let mut files = Vec::new();
-        self.entries.keys().for_each(|file| {
-            if !file.exists() && util::is_sub_path(file, dir) {
-                files.push(file.clone());
-            }
-        });
-        files
     }
 
     /// 与暂存区比较，确定文件自上次add以来是否被编辑（内容不一定修改，还需要算hash）
@@ -201,6 +191,7 @@ impl Index {
         self.entries.clone()
     }
 
+    #[cfg(test)]
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }

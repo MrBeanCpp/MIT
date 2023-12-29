@@ -108,3 +108,7 @@ pub fn ensure_no_file(path: &Path) {
         fs::remove_file(util::get_working_dir().unwrap().join(path)).unwrap();
     }
 }
+
+pub fn is_file_exist<P: AsRef<Path>>(path: P) -> bool {
+    path.as_ref().exists()
+}

@@ -2,7 +2,7 @@ use colored::Colorize;
 
 use crate::{
     models::*,
-    utils::{store, util},
+    utils::{util, Store},
 };
 
 // branch error
@@ -21,7 +21,7 @@ fn search_hash(commit_hash: Hash) -> Option<Hash> {
         return Some(commit_hash);
     }
     // commit hash
-    let store = store::Store::new();
+    let store = Store::new();
     let commit = store.search(&commit_hash);
     commit
 }

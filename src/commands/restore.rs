@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     models::*,
-    utils::{store, util},
+    utils::{util, Store},
 };
 
 /// 统计[工作区]中相对于target_blobs已删除的文件（根据filters进行过滤）
@@ -68,7 +68,6 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
     file_paths.extend(deleted_files); //已删除的文件
 
     let index = Index::get_instance();
-    let store = store::Store::new();
 
     for path in &file_paths {
         assert!(path.is_absolute()); // 绝对路径
@@ -76,7 +75,7 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
             //文件不存在于workdir
             if target_blobs.contains_key(path) {
                 //文件存在于target_commit (deleted)，需要恢复
-                store.restore_to_file(&target_blobs[path], &path);
+                Blob::load(&target_blobs[path]).restore(&path);
             } else {
                 //在target_commit和workdir中都不存在(非法路径)， 用户输入
                 println!("fatal: pathspec '{}' did not match any files", path.display());
@@ -87,7 +86,7 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
                 //文件已修改(modified)
                 let file_hash = util::calc_file_hash(&path); //TODO tree没有存修改时间，所以这里只能用hash判断
                 if file_hash != target_blobs[path] {
-                    store.restore_to_file(&target_blobs[path], &path);
+                    Blob::load(&target_blobs[path]).restore(&path);
                 }
             } else {
                 //新文件，也分两种情况：1.已跟踪，需要删除 2.未跟踪，保留
@@ -167,7 +166,7 @@ pub fn restore(paths: Vec<String>, source: Option<String>, worktree: bool, stage
                     head::get_branch_head(&src) // "" if not exist
                 } else {
                     // [Commit Hash, e.g. a1b2c3d4] || [Wrong Branch Name]
-                    let store = store::Store::new();
+                    let store = Store::new();
                     let commit = store.search(&src);
                     if commit.is_none() || !util::is_typeof_commit(commit.clone().unwrap()) {
                         println!("fatal: 非法的 commit hash: '{}'", src);
@@ -251,5 +250,7 @@ mod test {
         assert_eq!(status::changes_to_be_committed().new.iter().count(), 3);
         assert_eq!(status::changes_to_be_staged().new.iter().count(), 1);
         assert_eq!(status::changes_to_be_staged().deleted.iter().count(), 0);
+        assert!(test::is_file_exist("a.txt"));
+        assert!(test::is_file_exist("test/in.txt"));
     }
 }

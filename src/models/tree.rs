@@ -2,7 +2,7 @@ use std::{collections::HashSet, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::utils::{store, util};
+use crate::utils::{util, Store};
 
 use super::{Hash, Index};
 /*Tree
@@ -92,7 +92,7 @@ impl Tree {
     }
 
     pub fn load(hash: &String) -> Tree {
-        let s = store::Store::new();
+        let s = Store::new();
         let tree_data = s.load(hash);
         let mut tree: Tree = serde_json::from_str(&tree_data).unwrap();
         tree.hash = hash.clone();
@@ -100,33 +100,11 @@ impl Tree {
     }
 
     pub fn save(&mut self) -> String {
-        let s = store::Store::new();
+        let s = Store::new();
         let tree_data = serde_json::to_string_pretty(&self).unwrap();
         let hash = s.save(&tree_data);
         self.hash = hash.clone();
         hash
-    }
-
-    /**递归获取Tree对应的所有文件 */
-    pub fn get_recursive_file_entries(&self) -> Vec<PathBuf> {
-        let mut files = Vec::new();
-        for entry in self.entries.iter() {
-            if entry.filemode.0 == "blob" {
-                files.push(PathBuf::from(entry.name.clone()));
-            } else {
-                let sub_tree = Tree::load(&entry.object_hash);
-                let sub_files = sub_tree.get_recursive_file_entries();
-
-                files.append(
-                    sub_files
-                        .iter()
-                        .map(|file| PathBuf::from(entry.name.clone()).join(file))
-                        .collect::<Vec<PathBuf>>()
-                        .as_mut(),
-                );
-            }
-        }
-        files
     }
 
     ///注：相对路径(to workdir)
@@ -157,10 +135,7 @@ impl Tree {
 mod test {
     use std::path::PathBuf;
 
-    use crate::{
-        models::*,
-        utils::{test, util},
-    };
+    use crate::{models::*, utils::test};
 
     #[test]
     fn test_new() {
@@ -174,8 +149,8 @@ mod test {
         }
 
         let tree = Tree::new(&index);
-        assert!(tree.entries.len() == 3);
-        assert!(tree.hash.len() != 0);
+        assert_eq!(tree.entries.len(), 3);
+        assert_ne!(tree.hash.len(), 0);
     }
 
     #[test]
@@ -193,37 +168,9 @@ mod test {
         let tree_hash = tree.get_hash();
 
         let loaded_tree = Tree::load(&tree_hash);
-        assert!(loaded_tree.entries.len() == tree.entries.len());
-        assert!(tree.entries[0].name == loaded_tree.entries[0].name);
-        assert!(tree.entries[1].name == loaded_tree.entries[1].name);
-    }
-
-    #[test]
-    fn test_get_recursive_file_entries() {
-        test::setup_with_clean_mit();
-        let index = Index::get_instance();
-        let mut test_files = vec![PathBuf::from("b.txt"), PathBuf::from("mit_src/a.txt")];
-        for test_file in test_files.clone() {
-            test::ensure_file(&test_file, None);
-            index.add(test_file.clone(), FileMetaData::new(&Blob::new(&test_file), &test_file));
-        }
-
-        let tree = Tree::new(&index);
-        let tree_hash = tree.get_hash();
-
-        let loaded_tree = Tree::load(&tree_hash);
-        let mut files = loaded_tree.get_recursive_file_entries();
-        files.sort();
-        test_files.sort();
-        assert_eq!(files.len(), test_files.len());
-        assert_eq!(
-            util::to_workdir_absolute_path(&files[0]).to_str().unwrap(), //TODO 罪大恶极的路径问题
-            util::get_absolute_path(&test_files[0]).to_str().unwrap()
-        );
-        assert_eq!(
-            util::to_workdir_absolute_path(&files[1]).to_str().unwrap(),
-            util::get_absolute_path(&test_files[1]).to_str().unwrap()
-        );
+        assert_eq!(loaded_tree.entries.len(), tree.entries.len());
+        assert_eq!(tree.entries[0].name, loaded_tree.entries[0].name);
+        assert_eq!(tree.entries[1].name, loaded_tree.entries[1].name);
     }
 
     #[test]

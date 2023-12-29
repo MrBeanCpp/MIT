@@ -67,6 +67,12 @@ pub fn get_working_dir() -> Option<PathBuf> {
     }
 }
 
+/// 将contents写入path，若文件不存在则创建，且确保父目录存在
+pub fn write<P: AsRef<Path>, C: AsRef<[u8]>>(path: P, contents: C) -> io::Result<()> {
+    fs::create_dir_all(path.as_ref().parent().unwrap())?;
+    fs::write(path, contents)
+}
+
 /// 检查文件是否在dir内(包括子文件夹)， 若不存在则false
 pub fn is_inside_dir(file: &Path, dir: &Path) -> bool {
     if file.exists() {
@@ -138,11 +144,6 @@ where
         .collect::<O>()
 }
 
-/// 检查文件是否在工作区内， 若不存在则false
-pub fn is_inside_workdir(file: &Path) -> bool {
-    is_inside_dir(file, &get_working_dir().unwrap())
-}
-
 /// 检查文件是否在.mit内， 若不存在则false
 pub fn is_inside_repo(file: &Path) -> bool {
     is_inside_dir(file, &get_storage_path().unwrap())
@@ -177,7 +178,8 @@ pub fn list_files(path: &Path) -> io::Result<Vec<PathBuf>> {
 }
 
 /** 列出子文件夹 */
-pub fn list_subpath(path: &Path) -> io::Result<Vec<PathBuf>> {
+#[allow(dead_code)]
+pub fn list_subdir(path: &Path) -> io::Result<Vec<PathBuf>> {
     let mut files = Vec::new();
     let path = get_absolute_path(path);
     if path.is_dir() {
@@ -332,25 +334,6 @@ pub fn get_file_mode(path: &Path) -> String {
     }
 }
 
-/// 清除Windows下的绝对路径前缀"\\\\?\\" (由[PathBuf::canonicalize]函数产生)
-/// <br><a href="https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation">Windows 系统中的文件路径格式</a>
-pub fn clean_win_abs_path_pre(path: PathBuf) -> PathBuf {
-    #[cfg(windows)]
-    {
-        const DOS_PREFIX: &str = "\\\\?\\";
-        let path_str = path.to_string_lossy();
-        if path_str.starts_with(DOS_PREFIX) {
-            PathBuf::from(&path_str[DOS_PREFIX.len()..])
-        } else {
-            path
-        }
-    }
-    #[cfg(not(target_os = "windows"))]
-    {
-        path
-    }
-}
-
 /// 获取绝对路径（相对于目录current_dir） 不论是否存在
 pub fn get_absolute_path(path: &Path) -> PathBuf {
     get_absolute_path_to_dir(path, &std::env::current_dir().unwrap())
@@ -435,6 +418,14 @@ mod tests {
     };
 
     #[test]
+    fn test_write() {
+        test::setup_with_empty_workdir();
+        let path = Path::new("src/test/a.txt");
+        write(path, "test").unwrap();
+        assert!(path.exists());
+    }
+
+    #[test]
     fn test_get_storage_path() {
         let path = get_storage_path();
         match path {
@@ -495,16 +486,6 @@ mod tests {
     }
 
     #[test]
-    fn test_is_inside_repo() {
-        test::setup_with_clean_mit();
-        let path = Path::new("../Cargo.toml");
-        assert_eq!(is_inside_workdir(path), false);
-
-        let path = Path::new(".mit/HEAD");
-        assert_eq!(is_inside_workdir(path), true);
-    }
-
-    #[test]
     fn test_format_time() {
         let time = std::time::SystemTime::now();
         let formatted_time = format_time(&time);
@@ -550,7 +531,7 @@ mod tests {
         list_workdir_files().iter().for_each(|f| {
             fs::remove_file(f).unwrap();
         });
-        list_subpath(Path::new("./")).unwrap().iter().for_each(|f| {
+        list_subdir(Path::new("./")).unwrap().iter().for_each(|f| {
             if include_root_dir(f) {
                 fs::remove_dir_all(f).unwrap();
             }
