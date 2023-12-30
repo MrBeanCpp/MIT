@@ -1,3 +1,4 @@
+use crate::utils::PathExt;
 use crate::{
     models::{head, Commit, Index},
     utils::util,
@@ -45,7 +46,7 @@ impl Changes {
         [&mut change.new, &mut change.modified, &mut change.deleted]
             .iter_mut()
             .for_each(|paths| {
-                **paths = util::map(&**paths, |p| util::to_workdir_absolute_path(p));
+                **paths = util::map(&**paths, |p| p.to_absolute_workdir());
             });
         change
     }
@@ -53,11 +54,10 @@ impl Changes {
     /// 转换为相对路径（to cur_dir）注意：要先转换为绝对路径
     fn to_relative(&self) -> Changes {
         let mut change = self.clone();
-        let cur_dir = util::cur_dir();
         [&mut change.new, &mut change.modified, &mut change.deleted]
             .iter_mut()
             .for_each(|paths| {
-                **paths = util::map(&**paths, |p| util::get_relative_path(p, &cur_dir));
+                **paths = util::map(&**paths, |p| p.to_relative());
             });
         change
     }
@@ -73,7 +73,7 @@ pub fn changes_to_be_committed() -> Changes {
     let tracked_files = index
         .get_tracked_files()
         .iter()
-        .map(|f| util::to_workdir_relative_path(f))
+        .map(|f| f.to_relative_workdir())
         .collect::<Vec<PathBuf>>();
     if head_hash == "" {
         // 初始提交
@@ -89,7 +89,7 @@ pub fn changes_to_be_committed() -> Changes {
     for (tree_file, blob_hash) in tree_files.iter() {
         let index_file = index_files.iter().find(|&f| f == tree_file);
         if let Some(index_file) = index_file {
-            let index_path = util::to_workdir_absolute_path(index_file);
+            let index_path = index_file.to_absolute_workdir();
             if !index.verify_hash(&index_path, blob_hash) {
                 change.modified.push(tree_file.clone());
             }
@@ -112,11 +112,11 @@ pub fn changes_to_be_staged() -> Changes {
     let index = Index::get_instance();
     for file in index.get_tracked_files() {
         if !file.exists() {
-            change.deleted.push(util::to_workdir_relative_path(&file));
+            change.deleted.push(file.to_relative_workdir());
         } else if index.is_modified(&file) {
             // 若文件元数据被修改，才需要比较暂存区与文件的hash来判别内容修改
             if !index.verify_hash(&file, &util::calc_file_hash(&file)) {
-                change.modified.push(util::to_workdir_relative_path(&file));
+                change.modified.push(file.to_relative_workdir());
             }
         }
     }
@@ -124,7 +124,7 @@ pub fn changes_to_be_staged() -> Changes {
     for file in files {
         if !index.tracked(&file) {
             //文件未被跟踪
-            change.new.push(util::to_workdir_relative_path(&file));
+            change.new.push(file.to_relative_workdir());
         }
     }
     change

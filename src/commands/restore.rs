@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     models::*,
-    utils::{util, Store},
+    utils::{util, PathExt, Store},
 };
 
 /// 统计[工作区]中相对于target_blobs已删除的文件（根据filters进行过滤）
@@ -18,7 +18,7 @@ fn get_worktree_deleted_files_in_filters(
         .iter()
         .filter(|(path, _)| {
             assert!(path.is_absolute()); //
-            !path.exists() && util::include_in_paths(path, filters)
+            !path.exists() && path.include_in(filters)
         })
         .map(|(path, _)| path.clone())
         .collect() //HashSet自动去重
@@ -34,7 +34,7 @@ fn get_index_deleted_files_in_filters(
         .iter()
         .filter(|(path, _)| {
             assert!(path.is_absolute());
-            !index.contains(path) && util::include_in_paths(path, filters)
+            !index.contains(path) && path.include_in(filters)
         })
         .map(|(path, _)| path.clone())
         .collect() //HashSet自动去重
@@ -53,7 +53,7 @@ fn preprocess_filters(filters: Option<&Vec<PathBuf>>) -> Vec<PathBuf> {
 fn preprocess_blobs(blobs: &Vec<(PathBuf, Hash)>) -> HashMap<PathBuf, Hash> {
     blobs // 转为绝对路径 //TODO tree改变路径表示方式后，这里需要修改
         .iter()
-        .map(|(path, hash)| (util::to_workdir_absolute_path(path), hash.clone()))
+        .map(|(path, hash)| (path.to_absolute_workdir(), hash.clone()))
         .collect() //to HashMap
 }
 

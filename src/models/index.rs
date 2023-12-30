@@ -1,3 +1,4 @@
+use crate::utils::PathExt;
 use crate::{models::*, utils::util};
 use once_cell::unsync::Lazy;
 use serde::{Deserialize, Serialize};
@@ -76,7 +77,7 @@ impl Index {
 
     /// 预处理路径，统一形式为绝对路径
     fn preprocess(path: &Path) -> PathBuf {
-        util::get_absolute_path(&path)
+        path.to_absolute()
     }
 
     // 添加文件
@@ -173,7 +174,7 @@ impl Index {
             .entries
             .iter()
             .map(|(path, value)| {
-                let relative_path = util::get_relative_path(path, &self.working_dir);
+                let relative_path = util::get_relative_path_to_dir(path, &self.working_dir);
                 (relative_path, value.clone())
             })
             .collect();

@@ -5,7 +5,7 @@ use colored::Colorize;
 use crate::commands::status;
 use crate::models::index::FileMetaData;
 use crate::models::*;
-use crate::utils::util;
+use crate::utils::{util, PathExt};
 
 /// add是对index的操作，不会对工作区产生影响
 /// @see <a href="https://juejin.cn/post/7053831273277554696">git add .，git add -A，git add -u，git add * 的区别与联系</a>
@@ -41,7 +41,7 @@ pub fn add(raw_paths: Vec<String>, all: bool, mut update: bool) {
 
 fn add_a_file(file: &Path, index: &mut Index) {
     let workdir = util::get_working_dir().unwrap();
-    if !util::is_sub_path(file, &workdir) {
+    if !file.is_sub_to(&workdir) {
         //文件不在工作区内
         println!("fatal: '{}' is outside workdir at '{}'", file.display(), workdir.display());
         return;
@@ -52,7 +52,7 @@ fn add_a_file(file: &Path, index: &mut Index) {
         return;
     }
 
-    let rel_path = util::to_cur_relative_path(file);
+    let rel_path = file.to_relative();
     if !file.exists() {
         //文件被删除
         index.remove(file);
