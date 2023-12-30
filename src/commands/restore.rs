@@ -75,7 +75,7 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
             //文件不存在于workdir
             if target_blobs.contains_key(path) {
                 //文件存在于target_commit (deleted)，需要恢复
-                Blob::load(&target_blobs[path]).restore(&path);
+                Blob::restore(&target_blobs[path], &path);
             } else {
                 //在target_commit和workdir中都不存在(非法路径)， 用户输入
                 println!("fatal: pathspec '{}' did not match any files", path.display());
@@ -86,7 +86,7 @@ pub fn restore_worktree(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathB
                 //文件已修改(modified)
                 let file_hash = util::calc_file_hash(&path); //TODO tree没有存修改时间，所以这里只能用hash判断
                 if file_hash != target_blobs[path] {
-                    Blob::load(&target_blobs[path]).restore(&path);
+                    Blob::restore(&target_blobs[path], &path);
                 }
             } else {
                 //新文件，也分两种情况：1.已跟踪，需要删除 2.未跟踪，保留

@@ -24,16 +24,20 @@ impl Blob {
     }
 
     /// 通过hash值加载blob（从/objects/）
-    #[allow(dead_code)]
-    pub fn load(hash: &String) -> Blob {
+    pub fn load(hash: &Hash) -> Blob {
         let s = Store::new();
         let data = s.load(hash);
         Blob { hash: hash.clone(), data }
     }
 
-    ///将hash对应的blob还原到file
-    pub fn restore(&self, file: &Path) {
+    ///blob还原到file
+    pub fn restore_to_file(&self, file: &Path) {
         util::write(file, &self.data).unwrap();
+    }
+
+    /// 将hash对应的blob还原到file, static方法，对[Blob::restore_to_file]的封装
+    pub fn restore(hash: &Hash, file: &Path) {
+        Blob::load(hash).restore_to_file(file);
     }
 
     /// 写入文件；优化：文件已存在时不做操作
