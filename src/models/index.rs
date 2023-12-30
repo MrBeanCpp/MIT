@@ -184,7 +184,7 @@ impl Index {
             .entries
             .iter()
             .map(|(path, value)| {
-                let relative_path = util::get_relative_path(path, &self.working_dir);
+                let relative_path = util::get_relative_path_to_dir(path, &self.working_dir);
                 (relative_path, value.clone())
             })
             .collect();

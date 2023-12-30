@@ -51,7 +51,7 @@ fn add_a_file(file: &Path, index: &mut Index) {
         return;
     }
 
-    let rel_path = util::to_cur_relative_path(file);
+    let rel_path = util::get_relative_path(file);
     if !file.exists() {
         //文件被删除
         index.remove(file);

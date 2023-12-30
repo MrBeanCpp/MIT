@@ -59,7 +59,7 @@ impl Changes {
         [&mut change.new, &mut change.modified, &mut change.deleted]
             .iter_mut()
             .for_each(|paths| {
-                **paths = util::map(&**paths, |p| util::get_relative_path(p, &cur_dir));
+                **paths = util::map(&**paths, |p| util::get_relative_path_to_dir(p, &cur_dir));
             });
         change
     }
