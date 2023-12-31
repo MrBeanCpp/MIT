@@ -138,6 +138,7 @@ pub fn restore_index(filter: Option<&Vec<PathBuf>>, target_blobs: &Vec<(PathBuf,
             }
         }
     }
+    index.save();
 }
 /**
 对于工作区中的新文件，若已跟踪，则删除；若未跟踪，则保留<br>
