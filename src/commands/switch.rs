@@ -31,7 +31,8 @@ fn switch_to_commit(commit_hash: Hash) {
 
 fn switch_to(branch: String, detach: bool) -> Result<(), SwitchErr> {
     // 检查更改
-    if !status::changes_to_be_staged().is_empty() {
+    let unstaged = status::changes_to_be_staged(); // unstaged.new是未跟踪 不需要处理
+    if !unstaged.deleted.is_empty() || !unstaged.modified.is_empty() {
         status::status();
         println!("fatal: 你有未暂存的更改，切换分支会导致更改丢失");
         return Err(SwitchErr::NoClean);
