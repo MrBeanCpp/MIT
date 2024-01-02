@@ -77,6 +77,7 @@ pub fn is_sub_path(path: &Path, parent: &Path) -> bool {
 }
 
 /// 判断文件是否在paths中（包括子目录），不检查存在性
+/// <br>注意，如果paths为空，则返回false
 pub fn include_in_paths<T, U>(path: &Path, paths: U) -> bool
 where
     T: AsRef<Path>,
