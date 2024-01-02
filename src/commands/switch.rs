@@ -103,11 +103,11 @@ mod test {
         /* test 1: NoClean */
         let test_file_1 = PathBuf::from("test_file_1");
         test_util::ensure_test_file(&test_file_1, None);
+        cmd::add(vec![], true, false); // add all
         let result = switch_to(test_branch_1.clone(), false);
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), SwitchErr::NoClean));
 
-        cmd::add(vec![], true, false); // add all
         cmd::commit("add file 1".to_string(), true);
         let test_branch_2 = "test_branch_2".to_string();
         cmd::branch(Some(test_branch_2.clone()), None, false, None, false); // branch2: test_file_1 exists
