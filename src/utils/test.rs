@@ -8,6 +8,7 @@ use std::{
 };
 
 use crate::models::Index;
+use crate::utils::PathExt;
 
 // 执行测试的储存库
 use super::util;
@@ -114,7 +115,7 @@ pub fn ensure_no_file(path: &Path) {
 /** 列出子文件夹 */
 pub fn list_subdir(path: &Path) -> io::Result<Vec<PathBuf>> {
     let mut files = Vec::new();
-    let path = util::get_absolute_path(path);
+    let path = path.to_absolute();
     if path.is_dir() {
         for entry in fs::read_dir(path)? {
             let entry = entry?;

@@ -5,6 +5,7 @@ use colored::Colorize;
 use crate::commands::status;
 use crate::models::index::FileMetaData;
 use crate::models::*;
+use crate::utils::path_ext::PathExt;
 use crate::utils::util;
 
 /// add是对index的操作，不会对工作区产生影响
@@ -40,7 +41,7 @@ pub fn add(raw_paths: Vec<String>, all: bool, mut update: bool) {
 
 fn add_a_file(file: &Path, index: &mut Index) {
     let workdir = util::get_working_dir().unwrap();
-    if !util::is_sub_path(file, &workdir) {
+    if !file.is_sub_to(&workdir) {
         //文件不在工作区内
         println!("fatal: '{}' is outside workdir at '{}'", file.display(), workdir.display());
         return;
@@ -51,7 +52,7 @@ fn add_a_file(file: &Path, index: &mut Index) {
         return;
     }
 
-    let rel_path = util::get_relative_path(file);
+    let rel_path = file.to_relative();
     if !file.exists() {
         //文件被删除
         index.remove(file);

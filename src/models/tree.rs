@@ -2,6 +2,7 @@ use std::{collections::HashSet, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+use crate::utils::PathExt;
 use crate::utils::{store, util};
 
 use super::{Hash, Index};
@@ -41,7 +42,7 @@ fn store_path_to_tree(index: &Index, current_root: PathBuf) -> Tree {
     let path_entries: Vec<PathBuf> = index
         .get_tracked_files()
         .iter()
-        .map(|file| util::to_workdir_relative_path(file))
+        .map(|file| file.to_relative_workdir())
         .filter(|path| path.starts_with(&current_root))
         .collect();
     for path in path_entries.iter() {
