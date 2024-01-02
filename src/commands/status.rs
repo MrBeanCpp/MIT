@@ -32,8 +32,9 @@ impl Changes {
     }
 
     /// 使用paths过滤，返回相对路径(to cur_dir)
+    /// <br> 注意，如果paths为空，则返回空
     pub fn filter_relative(&self, paths: &Vec<PathBuf>) -> Changes {
-        self.filter_abs(paths).to_relative()
+        self.filter_abs(paths).to_relative_from_abs()
     }
 
     /// 转换为绝对路径（from workdir相对路径）
@@ -52,7 +53,7 @@ impl Changes {
     }
 
     /// 转换为相对路径（to cur_dir）注意：要先转换为绝对路径
-    fn to_relative(&self) -> Changes {
+    fn to_relative_from_abs(&self) -> Changes {
         let mut change = self.clone();
         [&mut change.new, &mut change.modified, &mut change.deleted]
             .iter_mut()
@@ -60,6 +61,11 @@ impl Changes {
                 **paths = util::map(&**paths, |p| p.to_relative());
             });
         change
+    }
+
+    ///转换为相对路径（to cur_dir）
+    pub fn to_relative(&self) -> Changes {
+        self.to_absolute().to_relative_from_abs()
     }
 }
 
@@ -146,8 +152,8 @@ pub fn status() {
     }
 
     // 对当前目录进行过滤 & 转换为相对路径
-    let staged = changes_to_be_committed().filter_relative(&vec![util::cur_dir()]);
-    let unstaged = changes_to_be_staged().filter_relative(&vec![util::cur_dir()]);
+    let staged = changes_to_be_committed().to_relative();
+    let unstaged = changes_to_be_staged().to_relative();
     if staged.is_empty() && unstaged.is_empty() {
         println!("nothing to commit, working tree clean");
         return;

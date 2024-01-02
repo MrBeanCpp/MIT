@@ -96,6 +96,7 @@ pub fn is_sub_path(path: &Path, parent: &Path) -> bool {
 }
 
 /// 判断是否在paths中（包括子目录），不检查存在性
+/// <br>注意，如果paths为空，则返回false
 pub fn include_in_paths<T, U>(path: &Path, paths: U) -> bool
 where
     T: AsRef<Path>,
@@ -345,8 +346,6 @@ pub fn get_absolute_path_to_dir(path: &Path, dir: &Path) -> PathBuf {
         path.to_path_buf()
     } else {
         //相对路径
-        /*let abs_path = path.canonicalize().unwrap(); //这一步会统一路径分隔符 //canonicalize()不能处理不存在的文件
-        clean_win_abs_path_pre(abs_path)*/
         // 所以决定手动解析相对路径中的../ ./
         let mut abs_path = dir.to_path_buf();
         // 这里会拆分所有组件，所以会自动统一路径分隔符
@@ -408,6 +407,19 @@ pub fn check_object_type(hash: Hash) -> ObjectType {
 /// 判断hash对应的文件是否是commit
 pub fn is_typeof_commit(hash: Hash) -> bool {
     check_object_type(hash) == ObjectType::Commit
+}
+
+/// 将内容对应的文件内容(主要是blob)还原到file
+pub fn write_workfile(content: String, file: &PathBuf) {
+    let mut parent = file.clone();
+    parent.pop();
+    std::fs::create_dir_all(parent).unwrap();
+    std::fs::write(file, content).unwrap();
+}
+
+/// 从工作区读取文件内容
+pub fn read_workfile(file: &Path) -> String {
+    std::fs::read_to_string(file).unwrap()
 }
 
 #[cfg(test)]
