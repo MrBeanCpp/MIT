@@ -17,6 +17,7 @@ enum Command {
     /// @see <a href="https://juejin.cn/post/7053831273277554696">git add .，git add -A，git add -u，git add * 的区别与联系</a>
     Add {
         /// 要添加的文件
+        #[clap(required = true)]
         files: Vec<String>,
 
         /// 将工作区中所有的文件改动提交至暂存区（包括新增、修改和删除）
