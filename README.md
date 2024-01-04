@@ -52,6 +52,12 @@ Git in Rust. 用 `Rust` 实现的mini `Git`. Called `mit`.
 -   -   [x] Merge(FF)
 
 ## 备注
+### ⚠️测试需要单线程
+⚠️注意：为了避免冲突，执行测试时请加上`--test-threads=1`
+
+如：`cargo test -- --test-threads=1`
+
+因为测试需要对同一个文件夹进行IO
 ### 名词释义
 -   暂存区：`index` or `stage`，保存下一次`commit`需要的的文件快照
 -   工作区：`worktree`，用户直接操作的文件夹
