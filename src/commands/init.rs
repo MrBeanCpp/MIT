@@ -21,7 +21,7 @@ pub fn init() -> io::Result<()> {
     }
     fs::write(mit_dir.join("HEAD"), "ref: refs/heads/master\n")?;
 
-    set_dir_hidden(&mit_dir.to_str().unwrap())?; // 设置目录隐藏 (跨平台)
+    set_dir_hidden(mit_dir.to_str().unwrap())?; // 设置目录隐藏 (跨平台)
     println!("Initialized empty mit repository in {}", dir.display());
     Ok(())
 }

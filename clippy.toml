@@ -1,0 +1,5 @@
+avoid-breaking-exported-api = false
+
+# use the various `span_lint_*` methods instead, which also add a link to the docs
+disallowed-methods = [
+]

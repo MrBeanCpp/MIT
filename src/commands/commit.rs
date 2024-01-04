@@ -55,14 +55,14 @@ mod test {
         let head_one = head::current_head_commit();
         assert!(head_one.is_empty());
 
-        test::ensure_file(&Path::new(test_file), "test content".into());
+        test::ensure_file(Path::new(test_file), "test content".into());
         cmd::add(vec![], true, false);
         cmd::commit("test commit 1".to_string(), true);
         let head_two = head::current_head_commit();
-        assert!(head_two.len() > 0);
+        assert_eq!(head_two.is_empty(), false);
 
         let commit = models::commit::Commit::load(&head_two);
-        assert_eq!(commit.get_parent_hash().len(), 0);
-        assert_eq!(commit.get_message(), "test commit 1");
+        assert!(commit.get_parent_hash().is_empty());
+        assert!(commit.get_message() == "test commit 1");
     }
 }

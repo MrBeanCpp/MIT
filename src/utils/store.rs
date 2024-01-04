@@ -58,10 +58,7 @@ impl Store {
                 result = Some(object);
             }
         }
-        match result {
-            None => None,
-            Some(result) => Some(result),
-        }
+        result
     }
 
     pub fn save(&self, content: &String) -> Hash {
@@ -83,6 +80,7 @@ impl Store {
 
     pub fn dry_save(&self, content: &String) -> Hash {
         /* 不实际保存文件，返回Hash */
+        #[warn(clippy::let_and_return)]
         let hash = Self::calc_hash(content);
         // TODO more such as  check
         hash
@@ -110,7 +108,7 @@ mod tests {
 
     #[test]
     fn test_save_and_load() {
-        let _ = test::setup_with_clean_mit();
+        test::setup_with_clean_mit();
         let store = Store::new();
         let content = "hello world".to_string();
         let hash = store.save(&content);

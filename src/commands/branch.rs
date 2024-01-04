@@ -22,8 +22,7 @@ fn search_hash(commit_hash: Hash) -> Option<Hash> {
     }
     // commit hash
     let store = store::Store::new();
-    let commit = store.search(&commit_hash);
-    commit
+    store.search(&commit_hash)
 }
 
 fn create_branch(branch_name: String, _base_commit: Hash) -> Result<(), BranchErr> {
@@ -70,9 +69,8 @@ fn delete_branch(branch_name: String) -> Result<(), BranchErr> {
 fn show_current_branch() {
     println!("show_current_branch");
     let head = head::current_head();
-    match head {
-        head::Head::Branch(branch_name) => println!("{}", branch_name),
-        _ => (), // do nothing
+    if let head::Head::Branch(branch_name) = head {
+        println!("{}", branch_name);
     }
 }
 
@@ -105,11 +103,7 @@ pub fn branch(
     show_current: bool,
 ) {
     if new_branch.is_some() {
-        let basic_commit = if commit_hash.is_some() {
-            commit_hash.unwrap()
-        } else {
-            head::current_head_commit() // 默认使用当前commit
-        };
+        let basic_commit = commit_hash.unwrap_or_else(head::current_head_commit); // 默认使用当前commit
         let _ = create_branch(new_branch.unwrap(), basic_commit);
     } else if delete.is_some() {
         let _ = delete_branch(delete.unwrap());
@@ -134,10 +128,7 @@ mod test {
         // no commit: invalid object
         let result = create_branch("test_branch".to_string(), head::current_head_commit());
         assert!(result.is_err());
-        assert!(match result.unwrap_err() {
-            BranchErr::InvalidObject => true,
-            _ => false,
-        });
+        assert!(matches!(result.unwrap_err(), BranchErr::InvalidObject));
         assert!(head::list_local_branches().is_empty());
 
         commands::commit::commit("test commit 1".to_string(), true);
@@ -155,10 +146,7 @@ mod test {
         // branch exist
         let result = create_branch(new_branch_one.clone(), commit_hash_two.clone());
         assert!(result.is_err());
-        assert!(match result.unwrap_err() {
-            BranchErr::BranchExist => true,
-            _ => false,
-        });
+        assert!(matches!(result.unwrap_err(), BranchErr::BranchExist));
 
         // use branch name as commit hash, success
         let new_branch_two = "test_branch".to_string() + &rand::random::<u32>().to_string();
@@ -175,10 +163,7 @@ mod test {
         // no commit: invalid object
         let result = delete_branch("test_branch".to_string());
         assert!(result.is_err());
-        assert!(match result.unwrap_err() {
-            BranchErr::BranchNoExist => true,
-            _ => false,
-        });
+        assert!(matches!(result.unwrap_err(), BranchErr::BranchNoExist));
         assert!(head::list_local_branches().is_empty());
 
         commands::commit::commit("test commit 1".to_string(), true);

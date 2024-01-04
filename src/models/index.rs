@@ -59,7 +59,7 @@ impl Index {
     fn new() -> Index {
         let mut index = Index::default();
         index.load();
-        return index;
+        index
     }
 
     /// 单例模式，线程不安全，但是本程序默认单线程
@@ -88,7 +88,7 @@ impl Index {
 
     // 删除文件
     pub fn remove(&mut self, path: &Path) {
-        let path = Index::preprocess(&path);
+        let path = Index::preprocess(path);
         self.entries.remove(&path);
     }
 
@@ -196,7 +196,7 @@ impl Index {
 
     /** 获取跟踪的文件列表 */
     pub fn get_tracked_files(&self) -> Vec<PathBuf> {
-        self.entries.keys().map(|f| f.clone()).collect()
+        self.entries.keys().cloned().collect()
     }
 
     pub fn get_tracked_entries(&self) -> HashMap<PathBuf, FileMetaData> {

@@ -59,7 +59,7 @@ fn __log(all: bool, number: Option<usize>) -> usize {
                 break;
             }
         }
-        if commit.get_parent_hash().len() == 0 {
+        if commit.get_parent_hash().is_empty() {
             break;
         }
         head_commit = commit.get_parent_hash().first().unwrap().clone();

@@ -83,7 +83,7 @@ pub fn changes_to_be_committed() -> Changes {
         .iter()
         .map(|f| f.to_relative_workdir())
         .collect::<Vec<PathBuf>>();
-    if head_hash == "" {
+    if head_hash.is_empty() {
         // 初始提交
         change.new = tracked_files;
         return change;
@@ -147,7 +147,7 @@ pub fn status() {
     util::check_repo_exist();
     match head::current_head() {
         head::Head::Detached(commit) => {
-            println!("HEAD detached at {}", commit[0..7].to_string());
+            println!("HEAD detached at {}", &commit[0..7]);
         }
         head::Head::Branch(branch) => {
             println!("On branch {}", branch);

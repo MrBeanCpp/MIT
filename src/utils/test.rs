@@ -15,22 +15,23 @@ use super::util;
 /* tools for test */
 fn find_cargo_dir() -> PathBuf {
     let cargo_path = std::env::var("CARGO_MANIFEST_DIR");
-    if cargo_path.is_err() {
-        // vscode DEBUG test没有CARGO_MANIFEST_DIR宏，手动尝试查找cargo.toml
-        let mut path = util::cur_dir();
-        loop {
-            path.push("Cargo.toml");
-            if path.exists() {
-                break;
+    match cargo_path {
+        Ok(path) => PathBuf::from(path),
+        Err(_) => {
+            // vscode DEBUG test没有CARGO_MANIFEST_DIR宏，手动尝试查找cargo.toml
+            let mut path = util::cur_dir();
+            loop {
+                path.push("Cargo.toml");
+                if path.exists() {
+                    break;
+                }
+                if !path.pop() {
+                    panic!("找不到CARGO_MANIFEST_DIR");
+                }
             }
-            if !path.pop() {
-                panic!("找不到CARGO_MANIFEST_DIR");
-            }
+            path.pop();
+            path
         }
-        path.pop();
-        path
-    } else {
-        PathBuf::from(cargo_path.unwrap())
     }
 }
 
@@ -88,7 +89,7 @@ pub fn ensure_empty_dir<P: AsRef<Path>>(path: P) -> io::Result<()> {
 
 pub fn setup_with_empty_workdir() {
     let test_dir = find_cargo_dir().join(TEST_DIR);
-    ensure_empty_dir(&test_dir).unwrap();
+    ensure_empty_dir(test_dir).unwrap();
     setup_with_clean_mit();
 }
 
@@ -96,12 +97,12 @@ pub fn ensure_file(path: &Path, content: Option<&str>) {
     // 以测试目录为根目录，创建文件
     fs::create_dir_all(path.parent().unwrap()).unwrap(); // ensure父目录
     let mut file = fs::File::create(util::get_working_dir().unwrap().join(path))
-        .expect(format!("无法创建文件：{:?}", path).as_str());
+        .unwrap_or_else(|_| panic!("无法创建文件：{:?}", path));
     if let Some(content) = content {
-        file.write(content.as_bytes()).unwrap();
+        file.write_all(content.as_bytes()).unwrap();
     } else {
         // 写入文件名
-        file.write(path.file_name().unwrap().to_str().unwrap().as_bytes()).unwrap();
+        file.write_all(path.file_name().unwrap().to_str().unwrap().as_bytes()).unwrap();
     }
 }
 

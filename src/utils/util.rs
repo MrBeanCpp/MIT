@@ -13,10 +13,7 @@ pub const ROOT_DIR: &str = ".mit";
 pub fn storage_exist() -> bool {
     /*检查是否存在储存库 */
     let rt = get_storage_path();
-    match rt {
-        Ok(_) => true,
-        Err(_) => false,
-    }
+    rt.is_ok()
 }
 
 pub fn check_repo_exist() {
@@ -47,11 +44,7 @@ pub fn get_storage_path() -> Result<PathBuf, io::Error> {
 
 /// 获取项目工作区目录, 也就是.mit的父目录
 pub fn get_working_dir() -> Option<PathBuf> {
-    if let Some(path) = get_storage_path().unwrap().parent() {
-        Some(path.to_path_buf())
-    } else {
-        None
-    }
+    get_storage_path().unwrap().parent().map(|path| path.to_path_buf())
 }
 
 /// 检查文件是否在dir内(包括子文件夹)， 若不存在则false
@@ -112,7 +105,7 @@ where
     F: Fn(&T) -> T,
 {
     //items可以是一个引用
-    items.into_iter().map(|item| func(item)).collect::<O>()
+    items.into_iter().map(func).collect::<O>()
 }
 
 /// 过滤列表中的元素，使其在paths中（包括子目录），不检查存在性
@@ -132,7 +125,7 @@ pub fn is_inside_repo(file: &Path) -> bool {
 }
 
 pub fn format_time(time: &std::time::SystemTime) -> String {
-    let datetime: chrono::DateTime<chrono::Utc> = time.clone().into();
+    let datetime: chrono::DateTime<chrono::Utc> = (*time).into();
     datetime.format("%Y-%m-%d %H:%M:%S.%3f").to_string()
 }
 
@@ -172,7 +165,7 @@ pub fn include_root_dir(dir: &Path) -> bool {
             return true;
         }
     }
-    return false;
+    false
 }
 
 /// 级联删除空目录，直到遇到 [工作区根目录 | 当前目录]
@@ -333,7 +326,7 @@ pub fn get_absolute_path_to_dir(path: &Path, dir: &Path) -> PathBuf {
 pub fn integrate_paths(paths: &Vec<PathBuf>) -> HashSet<PathBuf> {
     let mut abs_paths = HashSet::new();
     for path in paths {
-        let path = get_absolute_path(&path); // 统一转换为绝对路径
+        let path = get_absolute_path(path); // 统一转换为绝对路径
         if path.is_dir() {
             // 包括目录下的所有文件(子文件夹)
             let files = list_files(&path).unwrap();
@@ -404,17 +397,17 @@ mod tests {
             Ok(path) => println!("{:?}", path),
             Err(err) => match err.kind() {
                 std::io::ErrorKind::NotFound => println!("Not a git repository"),
-                _ => assert!(false, "Unexpected error"),
+                _ => unreachable!("Unexpected error"),
             },
         }
     }
 
     #[test]
     fn test_integrate_paths() {
-        let mut paths = Vec::new();
-        paths.push(PathBuf::from("src/utils"));
-        paths.push(PathBuf::from("../test_del.txt"));
-        paths.push(PathBuf::from("src/utils/util.rs"));
+        let paths = ["src/utils", "../test_del.txt", "src/utils/util.rs"]
+            .iter()
+            .map(PathBuf::from)
+            .collect::<Vec<PathBuf>>();
         // paths.push(PathBuf::from("."));
         let abs_paths = integrate_paths(&paths);
         for path in abs_paths {
@@ -439,7 +432,7 @@ mod tests {
     fn test_get_relative_path() {
         test::setup_with_clean_mit();
         let path = Path::new("../../src\\main.rs");
-        let rel_path = get_relative_path_to_dir(&path, &cur_dir());
+        let rel_path = get_relative_path_to_dir(path, &cur_dir());
         println!("{:?}", rel_path);
 
         assert_eq!(rel_path, path);
@@ -492,7 +485,7 @@ mod tests {
         let content = util::read_workfile(get_working_dir().unwrap().join("test.txt").as_path());
         let hash = Blob::new(content).get_hash();
         assert_eq!(check_object_type(hash), ObjectType::Blob);
-        let mut commit = Commit::new(&Index::get_instance(), vec![], "test".to_string());
+        let mut commit = Commit::new(Index::get_instance(), vec![], "test".to_string());
         assert_eq!(check_object_type(commit.get_tree_hash()), ObjectType::Tree);
         commit.save();
         assert_eq!(check_object_type(commit.get_hash()), ObjectType::Commit);
@@ -509,10 +502,10 @@ mod tests {
                 fs::remove_dir_all(f).unwrap();
             }
         });
-        assert_eq!(include_root_dir(Path::new("./")), true);
+        assert!(include_root_dir(Path::new("./")));
         fs::create_dir("./src").unwrap_or_default();
         assert_eq!(include_root_dir(Path::new("./src")), false);
         fs::create_dir("./src/.mit").unwrap_or_default();
-        assert_eq!(include_root_dir(Path::new("./src")), true);
+        assert!(include_root_dir(Path::new("./src")));
     }
 }

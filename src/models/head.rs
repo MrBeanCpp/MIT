@@ -22,7 +22,8 @@ pub fn update_branch(branch_name: &String, commit_hash: &String) {
     branch.push("refs");
     branch.push("heads");
     branch.push(branch_name);
-    std::fs::write(&branch, commit_hash).expect(&format!("无法写入branch in {:?} with {}", branch, commit_hash));
+    std::fs::write(&branch, commit_hash)
+        .unwrap_or_else(|_| panic!("无法写入branch in {:?} with {}", branch, commit_hash));
 }
 
 pub fn get_branch_head(branch_name: &String) -> String {
@@ -32,8 +33,7 @@ pub fn get_branch_head(branch_name: &String) -> String {
     branch.push("heads");
     branch.push(branch_name);
     if branch.exists() {
-        let commit_hash = std::fs::read_to_string(branch).expect("无法读取branch");
-        commit_hash
+        std::fs::read_to_string(branch).expect("无法读取branch")
     } else {
         "".to_string() // 分支不存在或者没有commit
     }
@@ -56,8 +56,7 @@ pub fn current_head_commit() -> String {
     let head = current_head();
     match head {
         Head::Branch(branch_name) => {
-            let commit_hash = get_branch_head(&branch_name);
-            commit_hash
+            get_branch_head(&branch_name)
         }
         Head::Detached(commit_hash) => commit_hash,
     }

@@ -34,10 +34,10 @@ impl Blob {
         let mut cmopress_encoder = GzEncoder::new(Vec::new(), Compression::default());
         cmopress_encoder.write_all(data.as_bytes()).unwrap();
         let compressed_data = cmopress_encoder.finish().unwrap();
-        base64::engine::general_purpose::STANDARD_NO_PAD.encode(&compressed_data)
+        base64::engine::general_purpose::STANDARD_NO_PAD.encode(compressed_data)
     }
     fn decode(encoded: String) -> String {
-        let compressed_data = base64::engine::general_purpose::STANDARD_NO_PAD.decode(&encoded).unwrap();
+        let compressed_data = base64::engine::general_purpose::STANDARD_NO_PAD.decode(encoded).unwrap();
         let mut decompress_decoder = GzDecoder::new(&compressed_data[..]);
         let mut data = String::new();
         decompress_decoder.read_to_string(&mut data).unwrap();

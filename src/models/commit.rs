@@ -90,7 +90,7 @@ mod test {
         test::setup_with_clean_mit();
 
         let index = super::Index::get_instance();
-        let mut commit = super::Commit::new(&index, vec!["123".to_string(), "456".to_string()], "test".to_string());
+        let mut commit = super::Commit::new(index, vec!["123".to_string(), "456".to_string()], "test".to_string());
         assert_eq!(commit.hash.len(), 0);
 
         let hash = commit.save();

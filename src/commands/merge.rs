@@ -21,7 +21,7 @@ fn check_ff(current: &Hash, target: Hash) -> Result<bool, MergeErr> {
             return result;
         }
     }
-    return Err(MergeErr::NoFastForward);
+    Err(MergeErr::NoFastForward)
 }
 
 /** commit 以fast forward到形式合并到当前分支 */
@@ -38,9 +38,7 @@ fn merge_ff(commit_hash: String) -> Result<(), MergeErr> {
     // 检查当前分支是否可以fast forward到commit
     let current_commit = head::current_head_commit();
     let check = check_ff(&current_commit, commit_hash.clone());
-    if check.is_err() {
-        return Err(check.unwrap_err());
-    }
+    check?;
 
     // 执行fast forward
     let head = head::current_head();

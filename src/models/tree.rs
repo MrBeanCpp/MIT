@@ -30,12 +30,12 @@ fn store_path_to_tree(index: &Index, current_root: PathBuf) -> Tree {
     let get_blob_entry = |path: &PathBuf| {
         let mete = index.get(path).unwrap().clone();
         let filename = path.file_name().unwrap().to_str().unwrap().to_string();
-        let entry = TreeEntry {
+        
+        TreeEntry {
             filemode: (String::from("blob"), mete.mode),
             object_hash: mete.hash,
             name: filename,
-        };
-        entry
+        }
     };
     let mut tree = Tree { hash: "".to_string(), entries: Vec::new() };
     let mut processed_path: HashSet<String> = HashSet::new();
@@ -145,15 +145,15 @@ mod test {
     fn test_new() {
         test::setup_with_clean_mit();
         let index = Index::get_instance();
-        for test_file in vec!["b.txt", "mit_src/a.txt", "test/test.txt"] {
+        for test_file in ["b.txt", "mit_src/a.txt", "test/test.txt"] {
             let test_file = PathBuf::from(test_file);
             test::ensure_file(&test_file, None);
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&test_file)), &test_file));
         }
 
-        let tree = Tree::new(&index);
+        let tree = Tree::new(index);
         assert!(tree.entries.len() == 3);
-        assert!(tree.hash.len() != 0);
+        assert_eq!(tree.hash.is_empty(), false);
     }
 
     #[test]
@@ -167,7 +167,7 @@ mod test {
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&test_file)), &test_file));
         }
 
-        let tree = Tree::new(&index);
+        let tree = Tree::new(index);
         let tree_hash = tree.get_hash();
 
         let loaded_tree = Tree::load(&tree_hash);
@@ -190,7 +190,7 @@ mod test {
             index.add(test_file.clone(), FileMetaData::new(&Blob::new(util::read_workfile(&test_file)), &test_file));
         }
 
-        let tree = Tree::new(&index);
+        let tree = Tree::new(index);
         let tree_hash = tree.get_hash();
 
         let loaded_tree = Tree::load(&tree_hash);

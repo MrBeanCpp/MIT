@@ -9,7 +9,7 @@ pub trait PathExt {
     fn to_absolute_workdir(&self) -> PathBuf;
     fn to_relative(&self) -> PathBuf;
     fn to_relative_workdir(&self) -> PathBuf;
-    fn is_sub_to(&self, parent: &PathBuf) -> bool;
+    fn is_sub_to(&self, parent: &Path) -> bool;
     fn include_in<T, U>(&self, paths: U) -> bool
     where
         T: AsRef<Path>,
@@ -22,27 +22,27 @@ pub trait PathExt {
 impl PathExt for Path {
     /// 转换为绝对路径
     fn to_absolute(&self) -> PathBuf {
-        util::get_absolute_path(&self)
+        util::get_absolute_path(self)
     }
 
     /// 转换为绝对路径（from workdir相对路径）
     fn to_absolute_workdir(&self) -> PathBuf {
-        util::to_workdir_absolute_path(&self)
+        util::to_workdir_absolute_path(self)
     }
 
     /// 转换为相对路径（to cur_dir）
     fn to_relative(&self) -> PathBuf {
-        util::get_relative_path(&self)
+        util::get_relative_path(self)
     }
 
     /// 转换为相对路径（to workdir）
     fn to_relative_workdir(&self) -> PathBuf {
-        util::to_workdir_relative_path(&self)
+        util::to_workdir_relative_path(self)
     }
 
     /// 从字符串角度判断path是否是parent的子路径（不检测存在性)
-    fn is_sub_to(&self, parent: &PathBuf) -> bool {
-        util::is_sub_path(&self, parent)
+    fn is_sub_to(&self, parent: &Path) -> bool {
+        util::is_sub_path(self, parent)
     }
 
     /// 判断是否在paths中（包括子目录），不检查存在
@@ -51,6 +51,6 @@ impl PathExt for Path {
         T: AsRef<Path>,
         U: IntoIterator<Item = T>,
     {
-        util::include_in_paths(&self, paths)
+        util::include_in_paths(self, paths)
     }
 }
