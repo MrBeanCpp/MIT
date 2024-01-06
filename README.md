@@ -1,5 +1,7 @@
 # MIT: Mini-Git implementation in Rust
 
+[项目链接](https://github.com/MrBeanCpp/MIT)
+
 Git in Rust. 用 `Rust` 实现的mini `Git`. Called `mit`.
 
 > 旨在简洁易读、高效且安全
