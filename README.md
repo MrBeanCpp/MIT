@@ -64,3 +64,6 @@ Git in Rust. 用 `Rust` 实现的mini `Git`. Called `mit`.
 -   工作目录：`working directory` or `repository`，代码仓库的根目录，即`.mit`所在的目录
 -   `HEAD`：指向当前`commit`的指针
 -   已跟踪：`tracked`，指已经在暂存区[`index`]中的文件（即曾经`add`过的文件）
+
+### 介绍视频
+[【Mit】Rust实现的迷你Git - 系统软件开发实践 结课报告_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1p64y1E78W/)
