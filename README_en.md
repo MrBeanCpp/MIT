@@ -1,4 +1,8 @@
-# MIT: Mini-Git implementation in Rust
+<h1 align="center">
+ MIT: Mini-Git implementation in Rust
+</h1>
+
+ **[中文文档](./README.md)** | <u>English</u>
 
 [Project Link](https://github.com/MrBeanCpp/MIT)
 
