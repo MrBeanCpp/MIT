@@ -2,7 +2,7 @@
  MIT: Mini-Git implementation in Rust
 </h1>
 
-<u>中文文档</u> | **[English](https://sli.dev)** 
+<u>中文文档</u> | **[English](./README_en.md)** 
 
 [项目链接](https://github.com/MrBeanCpp/MIT)
 
